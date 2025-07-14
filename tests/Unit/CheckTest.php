@@ -4,7 +4,7 @@ use Laravel\Using\Enums\Packages;
 use Laravel\Using\Using;
 
 it('adds found composer packages to using class', function () {
-    $path = __DIR__ . '/../fixtures/fog';
+    $path = __DIR__.'/../fixtures/fog';
 
     $using = Using::scan($path);
 

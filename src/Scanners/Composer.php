@@ -40,11 +40,9 @@ class Composer
     ];
 
     /**
-     * @param string $path - composer.lock
+     * @param  string  $path  - composer.lock
      */
-    public function __construct(protected string $path)
-    {
-    }
+    public function __construct(protected string $path) {}
 
     /**
      * @return \Illuminate\Support\Collection<int, \Laravel\Using\Package|\Laravel\Using\Approach>
@@ -53,33 +51,33 @@ class Composer
     {
         $mappedItems = collect([]);
 
-        if (!file_exists($this->path)) {
-            error_log('Failed to scan Composer: ' . $this->path);
+        if (! file_exists($this->path)) {
+            error_log('Failed to scan Composer: '.$this->path);
 
             return $mappedItems;
         }
 
-        if (!is_readable($this->path)) {
-            error_log('File not readable: ' . $this->path);
+        if (! is_readable($this->path)) {
+            error_log('File not readable: '.$this->path);
 
             return $mappedItems;
         }
 
         $contents = file_get_contents($this->path);
         if ($contents === false) {
-            error_log('Failed to read Composer: ' . $this->path);
+            error_log('Failed to read Composer: '.$this->path);
 
             return $mappedItems;
         }
 
         $json = json_decode($contents, true);
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($json)) {
-            error_log('Failed to decode Composer: ' . $this->path . '. ' . json_last_error_msg());
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
+            error_log('Failed to decode Composer: '.$this->path.'. '.json_last_error_msg());
 
             return $mappedItems;
         }
 
-        if (!array_key_exists('packages', $json)) {
+        if (! array_key_exists('packages', $json)) {
             error_log('Malformed composer.lock');
 
             return $mappedItems;
@@ -97,8 +95,8 @@ class Composer
     /**
      * Process packages and add them to the mapped items collection
      *
-     * @param array<int, array<string, string>> $packages
-     * @param Collection<int, Package|Approach> $mappedItems
+     * @param  array<int, array<string, string>>  $packages
+     * @param  Collection<int, Package|Approach>  $mappedItems
      */
     private function processPackages(array $packages, Collection $mappedItems, bool $isDev): void
     {
@@ -111,7 +109,7 @@ class Composer
                 continue;
             }
 
-            if (!is_array($mappedPackage)) {
+            if (! is_array($mappedPackage)) {
                 $mappedPackage = [$mappedPackage];
             }
 
