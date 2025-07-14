@@ -1,12 +1,14 @@
 {
-    "name": "laravel/package-template",
-    "description": "Laravel Package ...",
-    "keywords": ["laravel"],
-    "homepage": "https://github.com/laravel/package-template",
+    "name": "laravel/using",
+    "description": "Laravel Using ...",
+    "keywords": [
+        "laravel"
+    ],
+    "homepage": "https://github.com/laravel/using",
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/laravel/package-template/issues",
-        "source": "https://github.com/laravel/package-template"
+        "issues": "https://github.com/laravel/using/issues",
+        "source": "https://github.com/laravel/using"
     },
     "authors": [
         {
@@ -16,10 +18,11 @@
     ],
     "require": {
         "php": "^8.2",
-        "illuminate/contracts": "^11.0|^12.0",
         "illuminate/console": "^11.0|^12.0",
+        "illuminate/contracts": "^11.0|^12.0",
+        "illuminate/routing": "^11.0|^12.0",
         "illuminate/support": "^11.0|^12.0",
-        "illuminate/routing": "^11.0|^12.0"
+        "laravel/pint": "^1.24"
     },
     "require-dev": {
         "mockery/mockery": "^1.6",
@@ -29,8 +32,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Laravel\\Package\\": "src/",
-            "Laravel\\Package\\Database\\Factories\\": "database/factories"
+            "Laravel\\Using\\": "src/",
+            "Laravel\\Using\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
@@ -44,7 +47,7 @@
         },
         "laravel": {
             "providers": [
-                "Laravel\\Package\\LaravelPackageServiceProvider"
+                "Laravel\\Using\\UsingServiceProvider"
             ]
         }
     },
@@ -53,6 +56,19 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true
         }
+    },
+    "scripts": {
+        "lint": [
+            "vendor/bin/pint",
+            "vendor/bin/phpstan"
+        ],
+        "test": [
+            "vendor/bin/pest"
+        ],
+        "check": [
+            "@composer lint",
+            "@composer test"
+        ]
     },
     "minimum-stability": "dev",
     "prefer-stable": true

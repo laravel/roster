@@ -1,26 +1,26 @@
-<p align="center"><img src="/art/logo.svg" alt="Logo Laravel Package"></p>
+<p align="center"><img src="/art/logo.svg" alt="Logo Laravel Using"></p>
 
 <p align="center">
-<a href="https://github.com/laravel/package-template/actions"><img src="https://github.com/laravel/package-template/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/package-template"><img src="https://img.shields.io/packagist/dt/laravel/package-template" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/package-template"><img src="https://img.shields.io/packagist/v/laravel/package-template" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/package-template"><img src="https://img.shields.io/packagist/l/laravel/package-template" alt="License"></a>
+<a href="https://github.com/laravel/using/actions"><img src="https://github.com/laravel/using/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/using"><img src="https://img.shields.io/packagist/dt/laravel/using" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/using"><img src="https://img.shields.io/packagist/v/laravel/using" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/using"><img src="https://img.shields.io/packagist/l/laravel/using" alt="License"></a>
 </p>
 
-> This is a template repository for new Laravel packages. [Start a new repo with this](https://github.com/laravel/package-template/generate), clone it locally and search & replace the relevant things below:
+> This is a template repository for new Laravel Usings. [Start a new repo with this](https://github.com/laravel/using/generate), clone it locally and search & replace the relevant things below:
 >
-> - `Laravel Package` with the package name (e.g. `Laravel Horizon`)
-> - `laravel/package-template` references to the vendor name / GitHub url (e.g. `laravel/horizon`) (*)
-> - `laravel-package` references to the publishing name (e.g. `horizon`) (*)
-> - `Laravel\Package` references to the package namespace (e.g. `Laravel\Horizon`) (*)
-> - `LaravelPackage` references to the short package name (e.g. `Horizon`) (*)
+> - `Laravel Using` with the package name (e.g. `Laravel Horizon`)
+> - `laravel/using` references to the vendor name / GitHub url (e.g. `laravel/horizon`) (*)
+> - `using` references to the publishing name (e.g. `horizon`) (*)
+> - `Laravel\Using` references to the package namespace (e.g. `Laravel\Horizon`) (*)
+> - `Using` references to the short package name (e.g. `Horizon`) (*)
 > - `LARAVEL_PACKAGE` references to the env variable names (e.g. `HORIZON`) (*)
 >
 > (*) Name cannot contain spaces.
 > 
 > After replacing keywords, take the following steps:
 >
-> 1. Rename any `LaravelPackage` prefixes in `.php` file names in [`src`](./src) to the package name (e.g. `Horizon`)
+> 1. Rename any `Using` prefixes in `.php` file names in [`src`](./src) to the package name (e.g. `Horizon`)
 > 2. Remove things you don't need like migrations, routes, resources, etc
 > 3. Fill the package short intro and keywords in the [composer.json](./composer.json) file
 > 4. Set the same short intro and keywords in the GitHub repository sidebar and set the website url to the package docs
@@ -38,11 +38,11 @@ Package introduction...
 
 ## Official Documentation
 
-Documentation for LaravelPackage can be found on the [Laravel website](https://laravel.com/docs).
+Documentation for Using can be found on the [Laravel website](https://laravel.com/docs).
 
 ## Contributing
 
-Thank you for considering contributing to LaravelPackage! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Thank you for considering contributing to Using! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
 ## Code of Conduct
 
@@ -54,4 +54,4 @@ Please review [our security policy](https://github.com/laravel/envoy/security/po
 
 ## License
 
-Laravel Package is open-sourced software licensed under the [MIT license](LICENSE.md).
+Laravel Using is open-sourced software licensed under the [MIT license](LICENSE.md).
