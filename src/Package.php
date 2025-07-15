@@ -23,6 +23,11 @@ class Package
         return $this->version;
     }
 
+    public function majorVersion(): string
+    {
+        return explode('.', $this->version)[0];
+    }
+
     public function isDev(): bool
     {
         return $this->dev;
