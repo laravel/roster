@@ -3,5 +3,6 @@
 /public/app.js.LICENSE.txt
 /vendor
 composer.lock
+!tests/fixtures/fog/composer.lock
 /phpunit.xml
 .phpunit.result.cache
