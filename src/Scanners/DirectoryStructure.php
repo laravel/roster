@@ -2,6 +2,7 @@
 
 namespace Laravel\Using\Scanners;
 
+use Illuminate\Support\Collection;
 use Laravel\Using\Approach;
 use Laravel\Using\Enums\Approaches;
 
@@ -9,7 +10,10 @@ class DirectoryStructure
 {
     public function __construct(protected string $path) {}
 
-    public function scan()
+    /**
+     * @return \Illuminate\Support\Collection<int, \Laravel\Using\Package|\Laravel\Using\Approach>
+     */
+    public function scan(): Collection
     {
         $items = collect();
 

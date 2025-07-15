@@ -8,11 +8,14 @@ it('adds found composer packages to using class', function () {
 
     $using = Using::scan($path);
 
-    // Overall - 6 packages from composer (laravel, pest, pint, filament, livewire, flux) and 2 from package lock (tailwind, alpine)
-    expect($using->packages())->toHaveCount(8);
+    // Overall - 9 packages from composer (folio, volt, fluxui_free, laravel, pest, pint, filament, livewire, flux) and 2 from package lock (tailwind, alpine)
+    expect($using->packages())->toHaveCount(11);
 
     // From composer
     expect($using->uses(Packages::PEST))->toBeTrue();
+    expect($using->uses(Packages::FOLIO))->toBeTrue();
+    expect($using->uses(Packages::VOLT))->toBeTrue();
+    expect($using->uses(Packages::FLUXUI_FREE))->toBeTrue();
     expect($using->uses(Packages::PINT))->toBeTrue();
     expect($using->uses(Packages::LARAVEL))->toBeTrue();
     expect($using->uses(Packages::INERTIA))->toBeFalse();

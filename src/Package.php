@@ -8,6 +8,11 @@ class Package
 {
     public function __construct(protected Packages $package, protected string $version, protected bool $dev = false) {}
 
+    public function name(): string
+    {
+        return $this->package->name;
+    }
+
     public function package(): Packages
     {
         return $this->package;
