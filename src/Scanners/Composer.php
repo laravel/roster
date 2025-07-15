@@ -1,12 +1,12 @@
 <?php
 
-namespace Laravel\Using\Scanners;
+namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Collection;
-use Laravel\Using\Approach;
-use Laravel\Using\Enums\Approaches;
-use Laravel\Using\Enums\Packages;
-use Laravel\Using\Package;
+use Laravel\Roster\Approach;
+use Laravel\Roster\Enums\Approaches;
+use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Package;
 
 class Composer
 {
@@ -45,7 +45,7 @@ class Composer
     public function __construct(protected string $path) {}
 
     /**
-     * @return \Illuminate\Support\Collection<int, \Laravel\Using\Package|\Laravel\Using\Approach>
+     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
      */
     public function scan(): Collection
     {

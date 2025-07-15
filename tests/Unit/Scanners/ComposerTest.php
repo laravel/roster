@@ -1,7 +1,7 @@
 <?php
 
-use Laravel\Using\Enums\Packages;
-use Laravel\Using\Scanners\Composer;
+use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Scanners\Composer;
 
 it('can parse installed packages', function () {
     $path = __DIR__.'/../../fixtures/fog/composer.lock';

@@ -1,23 +1,26 @@
-<p align="center"><img src="/art/logo.svg" alt="Logo Laravel Using"></p>
+<p align="center"><img src="/art/logo.svg" alt="Logo Laravel Roster"></p>
 
 <p align="center">
-<a href="https://github.com/laravel/using/actions"><img src="https://github.com/laravel/using/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/using"><img src="https://img.shields.io/packagist/dt/laravel/using" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/using"><img src="https://img.shields.io/packagist/v/laravel/using" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/using"><img src="https://img.shields.io/packagist/l/laravel/using" alt="License"></a>
+<a href="https://github.com/laravel/roster/actions"><img src="https://github.com/laravel/roster/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/dt/laravel/roster" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/v/laravel/roster" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/l/laravel/roster" alt="License"></a>
 </p>
 
-> This is a template repository for new Laravel Usings. [Start a new repo with this](https://github.com/laravel/using/generate), clone it locally and search & replace the relevant things below:
+> This is a template repository for new Laravel
+> Roster. [Start a new repo with this](https://github.com/laravel/roster/generate), clone it locally and search &
+> replace
+> the relevant things below:
 >
-> - `Laravel Using` with the package name (e.g. `Laravel Horizon`)
-> - `laravel/using` references to the vendor name / GitHub url (e.g. `laravel/horizon`) (*)
-> - `using` references to the publishing name (e.g. `horizon`) (*)
-> - `Laravel\Using` references to the package namespace (e.g. `Laravel\Horizon`) (*)
-> - `Using` references to the short package name (e.g. `Horizon`) (*)
+> - `Laravel Roster` with the package name (e.g. `Laravel Horizon`)
+> - `laravel/roster` references to the vendor name / GitHub url (e.g. `laravel/horizon`) (*)
+> - `roster` references to the publishing name (e.g. `horizon`) (*)
+> - `Laravel\Roster` references to the package namespace (e.g. `Laravel\Horizon`) (*)
+> - `Roster` references to the short package name (e.g. `Horizon`) (*)
 > - `LARAVEL_PACKAGE` references to the env variable names (e.g. `HORIZON`) (*)
 >
 > (*) Name cannot contain spaces.
-> 
+>
 > After replacing keywords, take the following steps:
 >
 > 1. Rename any `Using` prefixes in `.php` file names in [`src`](./src) to the package name (e.g. `Horizon`)
@@ -42,15 +45,18 @@ Documentation for Using can be found on the [Laravel website](https://laravel.co
 
 ## Contributing
 
-Thank you for considering contributing to Using! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Thank you for considering contributing to Using! The contribution guide can be found in
+the [Laravel documentation](https://laravel.com/docs/contributions).
 
 ## Code of Conduct
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+In order to ensure that the Laravel community is welcoming to all, please review and abide by
+the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
 ## Security Vulnerabilities
 
-Please review [our security policy](https://github.com/laravel/envoy/security/policy) on how to report security vulnerabilities.
+Please review [our security policy](https://github.com/laravel/envoy/security/policy) on how to report security
+vulnerabilities.
 
 ## License
 

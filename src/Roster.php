@@ -1,23 +1,23 @@
 <?php
 
-namespace Laravel\Using;
+namespace Laravel\Roster;
 
 use Illuminate\Support\Collection;
-use Laravel\Using\Enums\Approaches;
-use Laravel\Using\Enums\Packages;
-use Laravel\Using\Scanners\Composer;
-use Laravel\Using\Scanners\DirectoryStructure;
-use Laravel\Using\Scanners\PackageLock;
+use Laravel\Roster\Enums\Approaches;
+use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Scanners\Composer;
+use Laravel\Roster\Scanners\DirectoryStructure;
+use Laravel\Roster\Scanners\PackageLock;
 
-class Using
+class Roster
 {
     /**
-     * @var Collection<int, \Laravel\Using\Approach>
+     * @var Collection<int, \Laravel\Roster\Approach>
      */
     protected Collection $approaches;
 
     /**
-     * @var Collection<int, \Laravel\Using\Package>
+     * @var Collection<int, \Laravel\Roster\Package>
      */
     protected Collection $packages;
 
@@ -86,7 +86,7 @@ class Using
     }
 
     /**
-     * @return Collection<int, \Laravel\Using\Approach>
+     * @return Collection<int, \Laravel\Roster\Approach>
      */
     public function approaches(): Collection
     {
@@ -94,7 +94,7 @@ class Using
     }
 
     /**
-     * @return Collection<int, \Laravel\Using\Package>
+     * @return Collection<int, \Laravel\Roster\Package>
      */
     public function packages(): Collection
     {
@@ -102,7 +102,7 @@ class Using
     }
 
     /**
-     * @return Collection<int, \Laravel\Using\Package>
+     * @return Collection<int, \Laravel\Roster\Package>
      */
     public function nonDevPackages()
     {
@@ -110,7 +110,7 @@ class Using
     }
 
     /**
-     * @return Collection<int, \Laravel\Using\Package>
+     * @return Collection<int, \Laravel\Roster\Package>
      */
     public function devPackages()
     {
@@ -119,21 +119,21 @@ class Using
 
     public static function scan(?string $basePath = null): self
     {
-        $using = new self;
+        $roster = new self;
         $basePath = ($basePath ?? base_path()).DIRECTORY_SEPARATOR;
 
         (new Composer($basePath.'composer.lock'))
             ->scan()
-            ->each(fn ($item) => $using->add($item));
+            ->each(fn ($item) => $roster->add($item));
 
         (new PackageLock($basePath.'package-lock.json'))
             ->scan()
-            ->each(fn ($item) => $using->add($item));
+            ->each(fn ($item) => $roster->add($item));
 
         (new DirectoryStructure($basePath))
             ->scan()
-            ->each(fn ($item) => $using->add($item));
+            ->each(fn ($item) => $roster->add($item));
 
-        return $using;
+        return $roster;
     }
 }

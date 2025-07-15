@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Using\Enums;
+namespace Laravel\Roster\Enums;
 
 enum Approaches: string
 {

@@ -1,18 +1,18 @@
 <?php
 
-namespace Laravel\Using\Console;
+namespace Laravel\Roster\Console;
 
 use Illuminate\Console\Command;
-use Laravel\Using\Using;
+use Laravel\Roster\Roster;
 
-class CheckCommand extends Command
+class ScanCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'using:check {directory}';
+    protected $signature = 'roster:scan {directory}';
 
     protected $description = 'Detect packages & approaches in use';
 
@@ -31,7 +31,7 @@ class CheckCommand extends Command
             return self::FAILURE;
         }
 
-        $items = Using::scan($directory);
+        $items = Roster::scan($directory);
         dump($items);
 
         return self::SUCCESS;

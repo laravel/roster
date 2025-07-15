@@ -1,8 +1,8 @@
 <?php
 
-use Laravel\Using\Enums\Packages;
-use Laravel\Using\Package;
-use Laravel\Using\Scanners\PackageLock;
+use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Package;
+use Laravel\Roster\Scanners\PackageLock;
 
 it('scans valid package-lock.json', function () {
     $path = __DIR__.'/../../fixtures/fog/package-lock.json';

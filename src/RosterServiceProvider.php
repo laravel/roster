@@ -1,10 +1,10 @@
 <?php
 
-namespace Laravel\Using;
+namespace Laravel\Roster;
 
 use Illuminate\Support\ServiceProvider;
 
-class UsingServiceProvider extends ServiceProvider
+class RosterServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap any package services.
@@ -25,7 +25,7 @@ class UsingServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Console\CheckCommand::class,
+                Console\ScanCommand::class,
             ]);
         }
     }

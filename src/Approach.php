@@ -1,8 +1,8 @@
 <?php
 
-namespace Laravel\Using;
+namespace Laravel\Roster;
 
-use Laravel\Using\Enums\Approaches;
+use Laravel\Roster\Enums\Approaches;
 
 class Approach
 {

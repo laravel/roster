@@ -2,23 +2,19 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Artisan;
-use Laravel\Using\Using;
-use Laravel\Using\UsingServiceProvider;
+use Laravel\Roster\Roster;
+use Laravel\Roster\RosterServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
 {
-    protected function defineEnvironment($app)
-    {
-        Artisan::call('vendor:publish', ['--tag' => 'using-assets']);
-    }
+    protected function defineEnvironment($app) {}
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        Using::$authUsing = function () {
+        Roster::$authUsing = function () {
             return true;
         };
     }
@@ -27,11 +23,11 @@ abstract class TestCase extends OrchestraTestCase
     {
         parent::tearDown();
 
-        Using::$authUsing = null;
+        Roster::$authUsing = null;
     }
 
     protected function getPackageProviders($app)
     {
-        return [UsingServiceProvider::class];
+        return [RosterServiceProvider::class];
     }
 }

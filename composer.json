@@ -1,14 +1,15 @@
 {
-    "name": "laravel/using",
-    "description": "Laravel Using ...",
+    "name": "laravel/roster",
+    "description": "Detect packages & approaches in use within a Laravel project",
     "keywords": [
+        "dev",
         "laravel"
     ],
-    "homepage": "https://github.com/laravel/using",
+    "homepage": "https://github.com/laravel/roster",
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/laravel/using/issues",
-        "source": "https://github.com/laravel/using"
+        "issues": "https://github.com/laravel/roster/issues",
+        "source": "https://github.com/laravel/roster"
     },
     "authors": [
         {
@@ -32,8 +33,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Laravel\\Using\\": "src/",
-            "Laravel\\Using\\Database\\Factories\\": "database/factories"
+            "Laravel\\Roster\\": "src/"
         }
     },
     "autoload-dev": {
@@ -47,7 +47,7 @@
         },
         "laravel": {
             "providers": [
-                "Laravel\\Using\\UsingServiceProvider"
+                "RosterServiceProvider"
             ]
         }
     },
