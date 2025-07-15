@@ -101,6 +101,11 @@ class Roster
         return $this->packages;
     }
 
+    public function package(Packages $package): null|Package|Approach
+    {
+        return $this->findItem($package);
+    }
+
     /**
      * @return Collection<int, \Laravel\Roster\Package>
      */

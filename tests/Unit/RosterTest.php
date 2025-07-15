@@ -71,3 +71,11 @@ it('can return dev packages', function () {
 
     expect($roster->devPackages()->toArray())->toBe([$devPackage]);
 });
+
+it('can return a specific package', function () {
+    $package = new Package(Packages::PEST, '1.0.1');
+    $roster = (new Roster)->add($package);
+
+    expect($roster->package(Packages::PEST))->toBe($package);
+    expect($roster->package(Packages::INERTIA))->toBeNull();
+});
