@@ -65,8 +65,8 @@ class Roster
     protected function findItem(Packages|Approaches $item): Package|Approach|null
     {
         return match (get_class($item)) {
-            Packages::class => $this->packages->first(fn (Package $package) => $package->package()->value === $item->value),
-            Approaches::class => $this->approaches->first(fn (Approach $approach) => $approach->approach()->value === $item->value),
+            Packages::class => $this->package($item),
+            Approaches::class => $this->approach($item),
             default => null,
         };
     }
@@ -101,9 +101,14 @@ class Roster
         return $this->packages;
     }
 
-    public function package(Packages $package): null|Package|Approach
+    public function package(Packages $package): ?Package
     {
-        return $this->findItem($package);
+        return $this->packages->first(fn (Package $item) => $item->package()->value === $package->value);
+    }
+
+    public function approach(Approaches $approach): ?Approach
+    {
+        return $this->approaches->first(fn (Approach $item) => $item->approach()->value === $approach->value);
     }
 
     /**
