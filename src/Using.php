@@ -29,7 +29,7 @@ class Using
 
     public function add(Package|Approach $item): self
     {
-        $method = 'add' . ucfirst(strtolower(class_basename($item)));
+        $method = 'add'.ucfirst(strtolower(class_basename($item)));
 
         return $this->$method($item);
     }
@@ -44,12 +44,12 @@ class Using
      */
     public function usesVersion(Packages $package, string $version, string $operator = '='): bool
     {
-        if (!preg_match('/[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}/', $version)) {
+        if (! preg_match('/[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}/', $version)) {
             throw new \InvalidArgumentException('SEMVER required');
         }
 
         $validOperators = ['<', '<=', '>', '>=', '==', '=', '!=', '<>'];
-        if (!in_array($operator, $validOperators)) {
+        if (! in_array($operator, $validOperators)) {
             throw new \InvalidArgumentException('Invalid operator');
         }
 
@@ -65,8 +65,8 @@ class Using
     protected function findItem(Packages|Approaches $item): Package|Approach|null
     {
         return match (get_class($item)) {
-            Packages::class => $this->packages->first(fn(Package $package) => $package->package()->value === $item->value),
-            Approaches::class => $this->approaches->first(fn(Approach $approach) => $approach->approach()->value === $item->value),
+            Packages::class => $this->packages->first(fn (Package $package) => $package->package()->value === $item->value),
+            Approaches::class => $this->approaches->first(fn (Approach $approach) => $approach->approach()->value === $item->value),
             default => null,
         };
     }
@@ -106,7 +106,7 @@ class Using
      */
     public function nonDevPackages()
     {
-        return $this->packages->filter(fn(Package $package) => $package->isDev() === false);
+        return $this->packages->filter(fn (Package $package) => $package->isDev() === false);
     }
 
     /**
@@ -114,25 +114,25 @@ class Using
      */
     public function devPackages()
     {
-        return $this->packages->filter(fn(Package $package) => $package->isDev() === true);
+        return $this->packages->filter(fn (Package $package) => $package->isDev() === true);
     }
 
     public static function scan(?string $basePath = null): self
     {
         $using = new self;
-        $basePath = ($basePath ?? base_path()) . DIRECTORY_SEPARATOR;
+        $basePath = ($basePath ?? base_path()).DIRECTORY_SEPARATOR;
 
-        (new Composer($basePath . 'composer.lock'))
+        (new Composer($basePath.'composer.lock'))
             ->scan()
-            ->each(fn($item) => $using->add($item));
+            ->each(fn ($item) => $using->add($item));
 
-        (new PackageLock($basePath . 'package-lock.json'))
+        (new PackageLock($basePath.'package-lock.json'))
             ->scan()
-            ->each(fn($item) => $using->add($item));
+            ->each(fn ($item) => $using->add($item));
 
         (new DirectoryStructure($basePath))
             ->scan()
-            ->each(fn($item) => $using->add($item));
+            ->each(fn ($item) => $using->add($item));
 
         return $using;
     }

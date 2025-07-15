@@ -19,13 +19,13 @@ class CheckCommand extends Command
     public function handle(): int
     {
         $directory = $this->argument('directory');
-        if (!is_string($directory)) {
+        if (! is_string($directory)) {
             $this->error('Pass a directory');
 
             return self::FAILURE;
         }
 
-        if (!is_dir($directory) || !is_readable($directory)) {
+        if (! is_dir($directory) || ! is_readable($directory)) {
             $this->error("Directory '{$directory}' isn't a directory");
 
             return self::FAILURE;
