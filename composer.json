@@ -47,7 +47,7 @@
         },
         "laravel": {
             "providers": [
-                "RosterServiceProvider"
+                "Laravel\\Roster\\RosterServiceProvider"
             ]
         }
     },
