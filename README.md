@@ -1,5 +1,9 @@
 <p align="center"><img src="/art/logo.svg" alt="Logo Laravel Roster"></p>
 
+# Laravel Roster
+
+Which Laravel packages is a project using?
+
 <p align="center">
 <a href="https://github.com/laravel/roster/actions"><img src="https://github.com/laravel/roster/workflows/tests/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/dt/laravel/roster" alt="Total Downloads"></a>
@@ -7,41 +11,33 @@
 <a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/l/laravel/roster" alt="License"></a>
 </p>
 
-> This is a template repository for new Laravel
-> Roster. [Start a new repo with this](https://github.com/laravel/roster/generate), clone it locally and search &
-> replace
-> the relevant things below:
->
-> - `Laravel Roster` with the package name (e.g. `Laravel Horizon`)
-> - `laravel/roster` references to the vendor name / GitHub url (e.g. `laravel/horizon`) (*)
-> - `roster` references to the publishing name (e.g. `horizon`) (*)
-> - `Laravel\Roster` references to the package namespace (e.g. `Laravel\Horizon`) (*)
-> - `Roster` references to the short package name (e.g. `Horizon`) (*)
-> - `LARAVEL_PACKAGE` references to the env variable names (e.g. `HORIZON`) (*)
->
-> (*) Name cannot contain spaces.
->
-> After replacing keywords, take the following steps:
->
-> 1. Rename any `Using` prefixes in `.php` file names in [`src`](./src) to the package name (e.g. `Horizon`)
-> 2. Remove things you don't need like migrations, routes, resources, etc
-> 3. Fill the package short intro and keywords in the [composer.json](./composer.json) file
-> 4. Set the same short intro and keywords in the GitHub repository sidebar and set the website url to the package docs
 > 5. Fill out the package long introduction in the readme
-> 6. Set the correct link to the docs in the readme
 > 7. Replace the `art/logo.svg` with the new package logo
 > 8. Replace the `public/favicon.ico` with the new package favicon (optional)
 > 9. Remove this quote block from your readme
->
-> All that's left for you is to start building your new package! 🛠
 
 ## Introduction
 
-Package introduction...
+`composer install laravel/roster`
 
-## Official Documentation
+## Usage
 
-Documentation for Using can be found on the [Laravel website](https://laravel.com/docs).
+```php
+use Laravel\Roster\Roster;
+
+$roster = Roster::scan($directory);
+
+// Get all packages
+$roster->packages();
+$roster->nonDevPackages();
+$roster->devPackages();
+
+// Check if a package is in use
+$roster->uses(Packages::INERTIA);
+
+// Check if a particular version of a package is in use
+$roster->usesVersion(Packages::INERTIA, '2.0.0', '>=');
+```
 
 ## Contributing
 
