@@ -6,6 +6,7 @@ enum Packages: string
 {
     // Compound
     case INERTIA = 'inertia';
+    case WAYFINDER = 'wayfinder';
 
     // BACKEND
     case FILAMENT = 'filament';
@@ -29,6 +30,7 @@ enum Packages: string
     case SCOUT = 'scout';
     case STATAMIC = 'statamic';
     case VOLT = 'volt';
+    case WAYFINDER_LARAVEL = 'wayfinder_laravel';
     case ZIGGY = 'ziggy';
 
     // NPM
@@ -39,4 +41,5 @@ enum Packages: string
     case INERTIA_VUE = 'inertia-vue';
     case REACT = 'react';
     case TAILWINDCSS = 'tailwindcss';
+    case WAYFINDER_VITE = 'wayfinder_vite';
 }

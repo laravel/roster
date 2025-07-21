@@ -16,13 +16,14 @@ class PackageLock
      * @var array<string, Packages|Approaches|array<int, Packages|Approaches>>
      */
     protected array $map = [
-        'tailwindcss' => [Packages::TAILWINDCSS],
-        '@inertiajs/vue3' => [Packages::INERTIA, Packages::INERTIA_VUE],
+        'alpinejs' => Packages::ALPINEJS,
         '@inertiajs/react' => [Packages::INERTIA, Packages::INERTIA_REACT],
         '@inertiajs/svelte' => [Packages::INERTIA, Packages::INERTIA_SVELTE],
-        'alpinejs' => Packages::ALPINEJS,
+        '@inertiajs/vue3' => [Packages::INERTIA, Packages::INERTIA_VUE],
         'laravel-echo' => Packages::ECHO,
+        '@laravel/vite-plugin-wayfinder' => [Packages::WAYFINDER, Packages::WAYFINDER_VITE],
         'react' => Packages::REACT,
+        'tailwindcss' => [Packages::TAILWINDCSS],
     ];
 
     /**

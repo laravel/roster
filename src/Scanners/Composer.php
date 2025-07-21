@@ -36,6 +36,7 @@ class Composer
         'rector/rector' => Packages::RECTOR,
         'statamic/cms' => Packages::STATAMIC,
         'livewire/volt' => Packages::VOLT,
+        'laravel/wayfinder' => [Packages::WAYFINDER, Packages::WAYFINDER_LARAVEL],
         'tightenco/ziggy' => Packages::ZIGGY,
     ];
 
