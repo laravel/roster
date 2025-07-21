@@ -6,3 +6,4 @@ composer.lock
 !tests/fixtures/fog/composer.lock
 /phpunit.xml
 .phpunit.result.cache
+.claude

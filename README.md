@@ -1,5 +1,3 @@
-<p align="center"><img src="/art/logo.svg" alt="Logo Laravel Roster"></p>
-
 # Laravel Roster
 
 Which Laravel packages is a project using?
@@ -10,23 +8,31 @@ Which Laravel packages is a project using?
 <a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/v/laravel/roster" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/l/laravel/roster" alt="License"></a>
 </p>
-
-> 5. Fill out the package long introduction in the readme
-> 7. Replace the `art/logo.svg` with the new package logo
-> 8. Replace the `public/favicon.ico` with the new package favicon (optional)
-> 9. Remove this quote block from your readme
-
 ## Introduction
 
-`composer install laravel/roster`
+Laravel Roster detects which Laravel ecosystem packages are in use within a project, and gives you an easy to use API to work with that data.
+
+
+## Installation
+To get started, install Roster via Composer:
+
+```bash
+composer install laravel/roster
+```
 
 ## Usage
+
+**Scan a directory**
+Get a roster of installed packages by scanning a directory:
 
 ```php
 use Laravel\Roster\Roster;
 
 $roster = Roster::scan($directory);
+```
 
+**Query the roster**
+```php
 // Get all packages
 $roster->packages();
 

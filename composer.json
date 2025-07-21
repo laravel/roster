@@ -11,12 +11,6 @@
         "issues": "https://github.com/laravel/roster/issues",
         "source": "https://github.com/laravel/roster"
     },
-    "authors": [
-        {
-            "name": "Taylor Otwell",
-            "email": "taylor@laravel.com"
-        }
-    ],
     "require": {
         "php": "^8.2",
         "illuminate/console": "^11.0|^12.0",
