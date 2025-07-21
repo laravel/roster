@@ -108,10 +108,10 @@ class Roster
     public function json(): string
     {
         return json_encode([
-            'approaches' => $this->approaches->map(fn(Approach $approach) => [
+            'approaches' => $this->approaches->map(fn (Approach $approach) => [
                 'name' => $approach->name(),
             ])->toArray(),
-            'packages' => $this->packages->map(fn(Package $package) => [
+            'packages' => $this->packages->map(fn (Package $package) => [
                 'name' => $package->name(),
                 'version' => $package->version(),
             ])->toArray(),
