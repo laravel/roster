@@ -1,5 +1,5 @@
 {
-    "name": "laravel/roster",
+    "name": "laravel/roster-dev",
     "description": "Detect packages & approaches in use within a Laravel project",
     "keywords": [
         "dev",

@@ -138,7 +138,7 @@ class Roster
             ->scan()
             ->each(fn ($item) => $roster->add($item));
 
-        (new PackageLock($basePath.'package-lock.json'))
+        (new PackageLock($basePath))
             ->scan()
             ->each(fn ($item) => $roster->add($item));
 

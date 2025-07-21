@@ -8,6 +8,7 @@ use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
+use Symfony\Component\Yaml\Yaml;
 
 class PackageLock
 {
@@ -28,7 +29,7 @@ class PackageLock
     ];
 
     /**
-     * @param  string  $path  - package-lock.json
+     * @param  string  $path  - Base path to scan for lock files (package-lock.json, pnpm-lock.yaml, yarn.lock)
      */
     public function __construct(protected string $path) {}
 
@@ -39,28 +40,62 @@ class PackageLock
     {
         $mappedItems = collect([]);
 
-        if (! file_exists($this->path)) {
-            Log::warning('Failed to scan Package: '.$this->path);
+        // Check for lock files in priority order: npm -> pnpm -> yarn
+        $lockFilePaths = [
+            $this->path.'package-lock.json',
+            $this->path.'pnpm-lock.yaml',
+            $this->path.'yarn.lock',
+        ];
+
+        foreach ($lockFilePaths as $lockFilePath) {
+            if (file_exists($lockFilePath)) {
+                $fileName = basename($lockFilePath);
+
+                return match ($fileName) {
+                    'package-lock.json' => $this->scanPackageLockJson($lockFilePath),
+                    'pnpm-lock.yaml' => $this->scanPnpmLock($lockFilePath),
+                    'yarn.lock' => $this->scanYarnLock($lockFilePath),
+                    default => collect()
+                };
+            }
+        }
+
+        Log::warning('No Node.js lock file found in: '.$this->path);
+        return $mappedItems;
+    }
+
+    /**
+     * Scan package-lock.json file
+     *
+     * @param  string  $path
+     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
+     */
+    protected function scanPackageLockJson(string $path): Collection
+    {
+        $mappedItems = collect([]);
+
+        if (! file_exists($path)) {
+            Log::warning('Failed to scan Package: '.$path);
 
             return $mappedItems;
         }
 
-        if (! is_readable($this->path)) {
-            Log::warning('File not readable: '.$this->path);
+        if (! is_readable($path)) {
+            Log::warning('File not readable: '.$path);
 
             return $mappedItems;
         }
 
-        $contents = file_get_contents($this->path);
+        $contents = file_get_contents($path);
         if ($contents === false) {
-            Log::warning('Failed to read Package: '.$this->path);
+            Log::warning('Failed to read Package: '.$path);
 
             return $mappedItems;
         }
 
         $json = json_decode($contents, true);
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            Log::warning('Failed to decode Package: '.$this->path.'. '.json_last_error_msg());
+            Log::warning('Failed to decode Package: '.$path.'. '.json_last_error_msg());
 
             return $mappedItems;
         }
@@ -107,5 +142,118 @@ class PackageLock
                 });
             }
         }
+    }
+
+    /**
+     * Scan pnpm-lock.yaml file
+     *
+     * @param  string  $path
+     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
+     */
+    protected function scanPnpmLock(string $path): Collection
+    {
+        $mappedItems = collect();
+
+        if (! is_readable($path)) {
+            Log::warning('File not readable: ' . $path);
+            return $mappedItems;
+        }
+
+        $contents = file_get_contents($path);
+        if ($contents === false) {
+            Log::warning('Failed to read PNPM lock: ' . $path);
+            return $mappedItems;
+        }
+
+        try {
+            /** @var array<string, mixed> $parsed */
+            $parsed = Yaml::parse($contents);
+        } catch (\Exception $e) {
+            Log::error('Failed to parse YAML: ' . $e->getMessage());
+            return $mappedItems;
+        }
+
+        /** @var array<string, string> $dependencies */
+        $dependencies = [];
+        /** @var array<string, string> $devDependencies */
+        $devDependencies = [];
+
+        /** @var array<string, array<string, mixed>> $importers */
+        $importers = $parsed['importers'] ?? [];
+        $root = $importers['.'] ?? [];
+        /** @var array<string, array<string, mixed>> $rootDependencies */
+        $rootDependencies = $root['dependencies'] ?? [];
+        /** @var array<string, array<string, mixed>> $rootDevDependencies */
+        $rootDevDependencies = $root['devDependencies'] ?? [];
+
+        foreach ($rootDependencies as $name => $data) {
+            if (isset($data['version'])) {
+                $dependencies[$name] = $data['version'];
+            }
+        }
+
+        foreach ($rootDevDependencies as $name => $data) {
+            if (isset($data['version'])) {
+                $devDependencies[$name] = $data['version'];
+            }
+        }
+
+        /** @var array<string, string> $dependencies */
+        /** @var array<string, string> $devDependencies */
+        $this->processDependencies($dependencies, $mappedItems, false);
+        $this->processDependencies($devDependencies, $mappedItems, true);
+
+        return $mappedItems;
+    }
+
+    /**
+     * Scan yarn.lock file
+     *
+     * @param  string  $path
+     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
+     */
+    protected function scanYarnLock(string $path): Collection
+    {
+        $mappedItems = collect([]);
+
+        if (!is_readable($path)) {
+            Log::warning('File not readable: ' . $path);
+            return $mappedItems;
+        }
+
+        $contents = file_get_contents($path);
+        if ($contents === false) {
+            Log::warning('Failed to read Yarn lock: ' . $path);
+            return $mappedItems;
+        }
+
+        $dependencies = [];
+        $lines = explode("\n", $contents);
+        $currentPackage = null;
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            // Skip comments and empty lines
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            // Package header line (e.g. lodash@^4.17.21:)
+            if (preg_match('/^("?)([^@"]+)(@[^:]+)?:\1$/', $line, $matches)) {
+                $currentPackage = $matches[2];
+            }
+            // Version line
+            elseif ($currentPackage && preg_match('/^version\s+"?([^"]+)"?$/', $line, $matches)) {
+                $version = $matches[1];
+                $dependencies[$currentPackage] = $version;
+                $currentPackage = null; // Reset until next package block
+            }
+        }
+
+        // Yarn lock does not distinguish devDependencies
+        $this->processDependencies($dependencies, $mappedItems, false);
+
+        return $mappedItems;
     }
 }
