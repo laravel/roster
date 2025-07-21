@@ -14,7 +14,7 @@ class ScanCommand extends Command
      */
     protected $signature = 'roster:scan {directory}';
 
-    protected $description = 'Detect packages & approaches in use';
+    protected $description = 'Detect packages & approaches in use and output as JSON';
 
     public function handle(): int
     {
@@ -31,8 +31,8 @@ class ScanCommand extends Command
             return self::FAILURE;
         }
 
-        $items = Roster::scan($directory);
-        dump($items);
+        $roster = Roster::scan($directory);
+        $this->line($roster->json());
 
         return self::SUCCESS;
     }

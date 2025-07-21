@@ -105,6 +105,19 @@ class Roster
         return $this->approaches->first(fn(Approach $item) => $item->approach()->value === $approach->value);
     }
 
+    public function json(): string
+    {
+        return json_encode([
+            'approaches' => $this->approaches->map(fn(Approach $approach) => [
+                'name' => $approach->name(),
+            ])->toArray(),
+            'packages' => $this->packages->map(fn(Package $package) => [
+                'name' => $package->name(),
+                'version' => $package->version(),
+            ])->toArray(),
+        ], JSON_PRETTY_PRINT) ?: '{}';
+    }
+
     public static function scan(?string $basePath = null): self
     {
         $roster = new self;
