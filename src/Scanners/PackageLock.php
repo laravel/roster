@@ -61,13 +61,13 @@ class PackageLock
         }
 
         Log::warning('No Node.js lock file found in: '.$this->path);
+
         return $mappedItems;
     }
 
     /**
      * Scan package-lock.json file
      *
-     * @param  string  $path
      * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
      */
     protected function scanPackageLockJson(string $path): Collection
@@ -147,7 +147,6 @@ class PackageLock
     /**
      * Scan pnpm-lock.yaml file
      *
-     * @param  string  $path
      * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
      */
     protected function scanPnpmLock(string $path): Collection
@@ -155,13 +154,15 @@ class PackageLock
         $mappedItems = collect();
 
         if (! is_readable($path)) {
-            Log::warning('File not readable: ' . $path);
+            Log::warning('File not readable: '.$path);
+
             return $mappedItems;
         }
 
         $contents = file_get_contents($path);
         if ($contents === false) {
-            Log::warning('Failed to read PNPM lock: ' . $path);
+            Log::warning('Failed to read PNPM lock: '.$path);
+
             return $mappedItems;
         }
 
@@ -169,7 +170,8 @@ class PackageLock
             /** @var array<string, mixed> $parsed */
             $parsed = Yaml::parse($contents);
         } catch (\Exception $e) {
-            Log::error('Failed to parse YAML: ' . $e->getMessage());
+            Log::error('Failed to parse YAML: '.$e->getMessage());
+
             return $mappedItems;
         }
 
@@ -209,21 +211,22 @@ class PackageLock
     /**
      * Scan yarn.lock file
      *
-     * @param  string  $path
      * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
      */
     protected function scanYarnLock(string $path): Collection
     {
         $mappedItems = collect([]);
 
-        if (!is_readable($path)) {
-            Log::warning('File not readable: ' . $path);
+        if (! is_readable($path)) {
+            Log::warning('File not readable: '.$path);
+
             return $mappedItems;
         }
 
         $contents = file_get_contents($path);
         if ($contents === false) {
-            Log::warning('Failed to read Yarn lock: ' . $path);
+            Log::warning('Failed to read Yarn lock: '.$path);
+
             return $mappedItems;
         }
 
