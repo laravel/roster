@@ -60,8 +60,6 @@ class PackageLock
             }
         }
 
-        Log::warning('No Node.js lock file found in: '.$this->path);
-
         return $mappedItems;
     }
 

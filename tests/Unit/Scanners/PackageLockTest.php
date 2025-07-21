@@ -1,13 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Log;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\Scanners\PackageLock;
-
-beforeEach(function () {
-    Log::spy();
-});
 
 it('scans valid package-lock.json', function () {
     $path = __DIR__.'/../../fixtures/fog/';
