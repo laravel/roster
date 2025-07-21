@@ -51,7 +51,7 @@ $roster->usesVersion(Packages::INERTIA, '2.0.0', '>=');
 
 ## Contributing
 
-Thank you for considering contributing to Using! The contribution guide can be found in
+Thank you for considering contributing to Roster! The contribution guide can be found in
 the [Laravel documentation](https://laravel.com/docs/contributions).
 
 ## Code of Conduct
