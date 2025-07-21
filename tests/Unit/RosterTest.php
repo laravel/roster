@@ -69,7 +69,7 @@ it('can return dev packages', function () {
     expect($roster->uses(Packages::INERTIA))->toBeTrue();
     expect($roster->uses(Packages::PEST))->toBeTrue();
 
-    expect($roster->devPackages()->toArray())->toBe([$devPackage]);
+    expect($roster->packages()->dev()->toArray())->toBe([$devPackage]);
 });
 
 it('can return a specific package', function () {

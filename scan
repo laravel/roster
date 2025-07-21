@@ -56,8 +56,8 @@ function printItems(array $items, string $color, array $colors): void
 }
 
 // Get and sort packages
-$packages = $roster->nonDevPackages()->map(fn($pkg) => $pkg->package()->value . ' (' . $pkg->version() . ')')->sort()->values()->all();
-$devPackages = $roster->devPackages()->map(fn($pkg) => $pkg->package()->value . ' (' . $pkg->version() . ')')->sort()->values()->all();
+$packages = $roster->packages()->production()->map(fn($pkg) => $pkg->package()->value . ' (' . $pkg->version() . ')')->sort()->values()->all();
+$devPackages = $roster->packages()->dev()->map(fn($pkg) => $pkg->package()->value . ' (' . $pkg->version() . ')')->sort()->values()->all();
 $approaches = $roster->approaches()->map(fn($approach) => $approach->approach()->value)->sort()->values()->all();
 
 // Print results

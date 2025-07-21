@@ -29,8 +29,12 @@ $roster = Roster::scan($directory);
 
 // Get all packages
 $roster->packages();
-$roster->nonDevPackages();
-$roster->devPackages();
+
+// Get only packages that will be used in production
+$roster->packages()->production();
+
+// Packages that are only used for dev
+$roster->packages()->dev();
 
 // Check if a package is in use
 $roster->uses(Packages::INERTIA);

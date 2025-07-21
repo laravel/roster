@@ -16,20 +16,17 @@ class Roster
      */
     protected Collection $approaches;
 
-    /**
-     * @var Collection<int, \Laravel\Roster\Package>
-     */
-    protected Collection $packages;
+    protected PackageCollection $packages;
 
     public function __construct()
     {
         $this->approaches = collect();
-        $this->packages = collect();
+        $this->packages = new PackageCollection;
     }
 
     public function add(Package|Approach $item): self
     {
-        $method = 'add'.ucfirst(strtolower(class_basename($item)));
+        $method = 'add' . ucfirst(strtolower(class_basename($item)));
 
         return $this->$method($item);
     }
@@ -44,21 +41,21 @@ class Roster
      */
     public function usesVersion(Packages $package, string $version, string $operator = '='): bool
     {
-        if (! preg_match('/[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}/', $version)) {
+        if (!preg_match('/[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}/', $version)) {
             throw new \InvalidArgumentException('SEMVER required');
         }
 
         $validOperators = ['<', '<=', '>', '>=', '==', '=', '!=', '<>'];
-        if (! in_array($operator, $validOperators)) {
+        if (!in_array($operator, $validOperators)) {
             throw new \InvalidArgumentException('Invalid operator');
         }
 
-        /** @var Package|null $package */
         $package = $this->findItem($package);
         if (is_null($package)) {
             return false;
         }
 
+        /** @var \Laravel\Roster\Package $package */
         return version_compare($package->version(), $version, $operator);
     }
 
@@ -93,56 +90,37 @@ class Roster
         return $this->approaches;
     }
 
-    /**
-     * @return Collection<int, \Laravel\Roster\Package>
-     */
-    public function packages(): Collection
+    public function packages(): PackageCollection
     {
         return $this->packages;
     }
 
     public function package(Packages $package): ?Package
     {
-        return $this->packages->first(fn (Package $item) => $item->package()->value === $package->value);
+        return $this->packages->first(fn(Package $item) => $item->package()->value === $package->value);
     }
 
     public function approach(Approaches $approach): ?Approach
     {
-        return $this->approaches->first(fn (Approach $item) => $item->approach()->value === $approach->value);
-    }
-
-    /**
-     * @return Collection<int, \Laravel\Roster\Package>
-     */
-    public function nonDevPackages()
-    {
-        return $this->packages->filter(fn (Package $package) => $package->isDev() === false);
-    }
-
-    /**
-     * @return Collection<int, \Laravel\Roster\Package>
-     */
-    public function devPackages()
-    {
-        return $this->packages->filter(fn (Package $package) => $package->isDev() === true);
+        return $this->approaches->first(fn(Approach $item) => $item->approach()->value === $approach->value);
     }
 
     public static function scan(?string $basePath = null): self
     {
         $roster = new self;
-        $basePath = ($basePath ?? base_path()).DIRECTORY_SEPARATOR;
+        $basePath = ($basePath ?? base_path()) . DIRECTORY_SEPARATOR;
 
-        (new Composer($basePath.'composer.lock'))
+        (new Composer($basePath . 'composer.lock'))
             ->scan()
-            ->each(fn ($item) => $roster->add($item));
+            ->each(fn($item) => $roster->add($item));
 
-        (new PackageLock($basePath.'package-lock.json'))
+        (new PackageLock($basePath . 'package-lock.json'))
             ->scan()
-            ->each(fn ($item) => $roster->add($item));
+            ->each(fn($item) => $roster->add($item));
 
         (new DirectoryStructure($basePath))
             ->scan()
-            ->each(fn ($item) => $roster->add($item));
+            ->each(fn($item) => $roster->add($item));
 
         return $roster;
     }
