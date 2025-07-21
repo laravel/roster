@@ -7,9 +7,7 @@ use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
 {
-    protected function defineEnvironment($app)
-    {
-    }
+    protected function defineEnvironment($app) {}
 
     protected function setUp(): void
     {
