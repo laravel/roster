@@ -1,13 +1,12 @@
 # Laravel Roster
 
-Which Laravel packages is a project using?
-
 <p align="center">
 <a href="https://github.com/laravel/roster/actions"><img src="https://github.com/laravel/roster/workflows/tests/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/dt/laravel/roster" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/v/laravel/roster" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/l/laravel/roster" alt="License"></a>
 </p>
+
 ## Introduction
 
 Laravel Roster detects which Laravel ecosystem packages are in use within a project, and gives you an easy to use API to work with that data.
