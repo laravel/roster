@@ -9,6 +9,12 @@ use Laravel\Roster\Scanners\Composer;
 use Laravel\Roster\Scanners\DirectoryStructure;
 use Laravel\Roster\Scanners\PackageLock;
 
+/**
+ * Package and approach detection service for Laravel projects.
+ *
+ * Scans composer.lock, package-lock.json, and directory structure to identify
+ * packages and development approaches in use.
+ */
 class Roster
 {
     /**
@@ -24,11 +30,16 @@ class Roster
         $this->packages = new PackageCollection;
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function add(Package|Approach $item): self
     {
-        $method = 'add'.ucfirst(strtolower(class_basename($item)));
-
-        return $this->$method($item);
+        return match (get_class($item)) {
+            Package::class => $this->addPackage($item),
+            Approach::class => $this->addApproach($item),
+            default => throw new \InvalidArgumentException('Unexpected match value'),
+        };
     }
 
     public function uses(Packages|Approaches $item): bool

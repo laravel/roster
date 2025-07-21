@@ -3,6 +3,7 @@
 namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\Packages;
@@ -53,33 +54,33 @@ class Composer
         $mappedItems = collect([]);
 
         if (! file_exists($this->path)) {
-            error_log('Failed to scan Composer: '.$this->path);
+            Log::warning('Failed to scan Composer: '.$this->path);
 
             return $mappedItems;
         }
 
         if (! is_readable($this->path)) {
-            error_log('File not readable: '.$this->path);
+            Log::warning('File not readable: '.$this->path);
 
             return $mappedItems;
         }
 
         $contents = file_get_contents($this->path);
         if ($contents === false) {
-            error_log('Failed to read Composer: '.$this->path);
+            Log::warning('Failed to read Composer: '.$this->path);
 
             return $mappedItems;
         }
 
         $json = json_decode($contents, true);
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            error_log('Failed to decode Composer: '.$this->path.'. '.json_last_error_msg());
+            Log::warning('Failed to decode Composer: '.$this->path.'. '.json_last_error_msg());
 
             return $mappedItems;
         }
 
         if (! array_key_exists('packages', $json)) {
-            error_log('Malformed composer.lock');
+            Log::warning('Malformed composer.lock');
 
             return $mappedItems;
         }
