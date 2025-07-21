@@ -22,6 +22,7 @@ composer install laravel/roster
 ## Usage
 
 **Scan a directory**
+
 Get a roster of installed packages by scanning a directory:
 
 ```php
