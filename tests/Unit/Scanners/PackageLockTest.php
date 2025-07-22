@@ -37,7 +37,7 @@ it('scans valid package-lock.json', function () {
     expect($inertiaReact)->toBeNull();
 });
 
-it('scans valid pnpm-lock.yaml', function () {
+it('scans valid pnpm-lock.yaml', function () use($packageLockPath, $tempPackagePath) {
     // Remove package-lock.json temporarily to test pnpm priority
     if (file_exists($packageLockPath)) {
         rename($packageLockPath, $tempPackagePath);
