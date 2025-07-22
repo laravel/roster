@@ -61,9 +61,9 @@ the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
 ## Security Vulnerabilities
 
-Please review [our security policy](https://github.com/laravel/envoy/security/policy) on how to report security
+Please review [our security policy](https://github.com/laravel/roster/security/policy) on how to report security
 vulnerabilities.
 
 ## License
 
-Laravel Using is open-sourced software licensed under the [MIT license](LICENSE.md).
+Laravel Roster is open-sourced software licensed under the [MIT license](LICENSE.md).
