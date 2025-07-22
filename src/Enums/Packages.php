@@ -42,4 +42,5 @@ enum Packages: string
     case REACT = 'react';
     case TAILWINDCSS = 'tailwindcss';
     case WAYFINDER_VITE = 'wayfinder_vite';
+    case VUE = 'vue';
 }
