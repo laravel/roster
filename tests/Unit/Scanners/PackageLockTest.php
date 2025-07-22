@@ -107,3 +107,46 @@ it('handles missing lock files gracefully', function () {
 
     expect($items)->toBeEmpty();
 });
+
+it('scans valid bun.lock', function () use($packageLockPath, $pnpmLockPath, $yarnLockPath, $tempPackagePath, $tempPnpmPath, $tempYarnPath) {
+    // Remove other lock files temporarily to test bun priority
+    if (file_exists($packageLockPath)) {
+        rename($packageLockPath, $tempPackagePath);
+    }
+    if (file_exists($pnpmLockPath)) {
+        rename($pnpmLockPath, $tempPnpmPath);
+    }
+    if (file_exists($yarnLockPath)) {
+        rename($yarnLockPath, $tempYarnPath);
+    }
+
+    $path = __DIR__.'/../../fixtures/fog/';
+    $packageLock = new PackageLock($path);
+    $items = $packageLock->scan();
+
+    /** @var Package $tailwind */
+    $tailwind = $items->first(
+        fn ($item) => $item instanceof Package && $item->package() === Packages::TAILWINDCSS
+    );
+
+    /** @var Package $alpine */
+    $alpine = $items->first(
+        fn ($item) => $item instanceof Package && $item->package() === Packages::ALPINEJS
+    );
+
+    expect($tailwind->version())->toEqual('3.4.3')
+        ->and($alpine->version())->toEqual('3.4.2')
+        ->and($alpine->isDev())->toBeTrue()
+        ->and($tailwind->isDev())->toBeFalse();
+
+    // Restore files
+    if (file_exists($tempPackagePath)) {
+        rename($tempPackagePath, $packageLockPath);
+    }
+    if (file_exists($tempPnpmPath)) {
+        rename($tempPnpmPath, $pnpmLockPath);
+    }
+    if (file_exists($tempYarnPath)) {
+        rename($tempYarnPath, $yarnLockPath);
+    }
+});

@@ -16,11 +16,12 @@ class PackageLock
      */
     public function scan(): Collection
     {
-        // Priority order: npm -> pnpm -> yarn
+        // Priority order: npm -> pnpm -> yarn -> bun
         $scanners = [
             new NpmPackageLock($this->path),
             new PnpmPackageLock($this->path),
             new YarnPackageLock($this->path),
+            new BunPackageLock($this->path),
         ];
 
         foreach ($scanners as $scanner) {
