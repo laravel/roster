@@ -16,10 +16,6 @@ class PnpmPackageLock extends BasePackageScanner
         $mappedItems = collect();
         $lockFilePath = $this->path.'pnpm-lock.yaml';
 
-        if (! $this->canScan()) {
-            return $mappedItems;
-        }
-
         $contents = $this->validateFile($lockFilePath, 'PNPM lock');
         if ($contents === null) {
             return $mappedItems;

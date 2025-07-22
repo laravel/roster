@@ -14,10 +14,6 @@ class YarnPackageLock extends BasePackageScanner
         $mappedItems = collect([]);
         $lockFilePath = $this->path.'yarn.lock';
 
-        if (! $this->canScan()) {
-            return $mappedItems;
-        }
-
         $contents = $this->validateFile($lockFilePath, 'Yarn lock');
         if ($contents === null) {
             return $mappedItems;

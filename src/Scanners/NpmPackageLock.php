@@ -15,10 +15,6 @@ class NpmPackageLock extends BasePackageScanner
         $mappedItems = collect();
         $lockFilePath = $this->path.'package-lock.json';
 
-        if (! $this->canScan()) {
-            return $mappedItems;
-        }
-
         $contents = $this->validateFile($lockFilePath);
         if ($contents === null) {
             return $mappedItems;
