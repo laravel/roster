@@ -4,6 +4,27 @@ use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\Scanners\PackageLock;
 
+
+$packageLockPath = __DIR__.'/../../fixtures/fog/package-lock.json';
+$pnpmLockPath = __DIR__.'/../../fixtures/fog/pnpm-lock.yaml';
+$yarnLockPath = __DIR__.'/../../fixtures/fog/yarn.lock';
+$tempPackagePath = $packageLockPath.".bac";
+$tempPnpmPath = $pnpmLockPath.".bac";
+$tempYarnPath = $yarnLockPath.".bac";
+
+afterEach(function () use($packageLockPath, $pnpmLockPath, $yarnLockPath, $tempPackagePath, $tempPnpmPath, $tempYarnPath) {
+    // Restore original files after each test
+    if (file_exists($tempPackagePath)) {
+        rename($tempPackagePath, $packageLockPath);
+    }
+    if (file_exists($tempPnpmPath)) {
+        rename($tempPnpmPath, $pnpmLockPath);
+    }
+    if (file_exists($tempYarnPath)) {
+        rename($tempYarnPath, $yarnLockPath);
+    }
+});
+
 it('scans valid package-lock.json', function () {
     $path = __DIR__.'/../../fixtures/fog/';
     $packageLock = new PackageLock($path);
@@ -22,7 +43,7 @@ it('scans valid pnpm-lock.yaml', function () {
     $tempPath = __DIR__.'/../../fixtures/fog/package-lock.json';
 
     if (file_exists($packageLockPath)) {
-        rename($packageLockPath, $tempPath);
+        rename($packageLockPath, $tempPackagePath);
     }
 
     $path = __DIR__.'/../../fixtures/fog/';
@@ -36,12 +57,12 @@ it('scans valid pnpm-lock.yaml', function () {
     expect($alpine->version())->toEqual('3.4.2');
 
     // Restore package-lock.json
-    if (file_exists($tempPath)) {
-        rename($tempPath, $packageLockPath);
+    if (file_exists($tempPackagePath)) {
+        rename($tempPackagePath, $packageLockPath);
     }
 });
 
-it('scans valid yarn.lock', function () {
+it('scans valid yarn.lock', function () use($packageLockPath, $pnpmLockPath, $tempPackagePath, $tempPnpmPath) {
     // Remove package-lock.json and pnpm-lock.yaml temporarily to test yarn priority
     $packageLockPath = __DIR__.'/../../fixtures/fog/package-lock.json';
     $pnpmLockPath = __DIR__.'/../../fixtures/fog/pnpm-lock.yaml';
