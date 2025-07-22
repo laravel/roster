@@ -4,15 +4,14 @@ use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\Scanners\PackageLock;
 
-
 $packageLockPath = __DIR__.'/../../fixtures/fog/package-lock.json';
 $pnpmLockPath = __DIR__.'/../../fixtures/fog/pnpm-lock.yaml';
 $yarnLockPath = __DIR__.'/../../fixtures/fog/yarn.lock';
-$tempPackagePath = $packageLockPath.".bac";
-$tempPnpmPath = $pnpmLockPath.".bac";
-$tempYarnPath = $yarnLockPath.".bac";
+$tempPackagePath = $packageLockPath.'.bac';
+$tempPnpmPath = $pnpmLockPath.'.bac';
+$tempYarnPath = $yarnLockPath.'.bac';
 
-afterEach(function () use($packageLockPath, $pnpmLockPath, $yarnLockPath, $tempPackagePath, $tempPnpmPath, $tempYarnPath) {
+afterEach(function () use ($packageLockPath, $pnpmLockPath, $yarnLockPath, $tempPackagePath, $tempPnpmPath, $tempYarnPath) {
     // Restore original files after each test
     if (file_exists($tempPackagePath)) {
         rename($tempPackagePath, $packageLockPath);
@@ -37,7 +36,7 @@ it('scans valid package-lock.json', function () {
     expect($inertiaReact)->toBeNull();
 });
 
-it('scans valid pnpm-lock.yaml', function () use($packageLockPath, $tempPackagePath) {
+it('scans valid pnpm-lock.yaml', function () use ($packageLockPath, $tempPackagePath) {
     // Remove package-lock.json temporarily to test pnpm priority
     if (file_exists($packageLockPath)) {
         rename($packageLockPath, $tempPackagePath);
@@ -59,7 +58,7 @@ it('scans valid pnpm-lock.yaml', function () use($packageLockPath, $tempPackageP
     }
 });
 
-it('scans valid yarn.lock', function () use($packageLockPath, $pnpmLockPath, $tempPackagePath, $tempPnpmPath) {
+it('scans valid yarn.lock', function () use ($packageLockPath, $pnpmLockPath, $tempPackagePath, $tempPnpmPath) {
     // Remove package-lock.json and pnpm-lock.yaml temporarily to test yarn priority
     if (file_exists($packageLockPath)) {
         rename($packageLockPath, $tempPackagePath);
@@ -108,7 +107,7 @@ it('handles missing lock files gracefully', function () {
     expect($items)->toBeEmpty();
 });
 
-it('scans valid bun.lock', function () use($packageLockPath, $pnpmLockPath, $yarnLockPath, $tempPackagePath, $tempPnpmPath, $tempYarnPath) {
+it('scans valid bun.lock', function () use ($packageLockPath, $pnpmLockPath, $yarnLockPath, $tempPackagePath, $tempPnpmPath, $tempYarnPath) {
     // Remove other lock files temporarily to test bun priority
     if (file_exists($packageLockPath)) {
         rename($packageLockPath, $tempPackagePath);

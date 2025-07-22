@@ -25,12 +25,14 @@ class BunPackageLock extends BasePackageScanner
         $json = json_decode($contents, true);
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
             Log::warning('Failed to decode Package: '.$lockFilePath.'. '.json_last_error_msg());
+
             return $mappedItems;
         }
 
         /** @var array<string, array<string, mixed>> $json */
-        if (!isset($json['workspaces']['']) || !isset($json['packages'])) {
+        if (! isset($json['workspaces']['']) || ! isset($json['packages'])) {
             Log::warning('Malformed bun.lock');
+
             return $mappedItems;
         }
 
