@@ -39,9 +39,6 @@ it('scans valid package-lock.json', function () {
 
 it('scans valid pnpm-lock.yaml', function () {
     // Remove package-lock.json temporarily to test pnpm priority
-    $packageLockPath = __DIR__.'/../../fixtures/fog/package-lock.json';
-    $tempPath = __DIR__.'/../../fixtures/fog/package-lock.json';
-
     if (file_exists($packageLockPath)) {
         rename($packageLockPath, $tempPackagePath);
     }
@@ -64,11 +61,6 @@ it('scans valid pnpm-lock.yaml', function () {
 
 it('scans valid yarn.lock', function () use($packageLockPath, $pnpmLockPath, $tempPackagePath, $tempPnpmPath) {
     // Remove package-lock.json and pnpm-lock.yaml temporarily to test yarn priority
-    $packageLockPath = __DIR__.'/../../fixtures/fog/package-lock.json';
-    $pnpmLockPath = __DIR__.'/../../fixtures/fog/pnpm-lock.yaml';
-    $tempPackagePath = __DIR__.'/../../fixtures/fog/package-lock.json';
-    $tempPnpmPath = __DIR__.'/../../fixtures/fog/pnpm-lock.yaml.bak';
-
     if (file_exists($packageLockPath)) {
         rename($packageLockPath, $tempPackagePath);
     }
