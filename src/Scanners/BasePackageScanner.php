@@ -75,17 +75,20 @@ abstract class BasePackageScanner
     {
         if (! file_exists($path)) {
             Log::warning("Failed to scan $type: $path");
+
             return null;
         }
 
         if (! is_readable($path)) {
             Log::warning("File not readable: $path");
+
             return null;
         }
 
         $contents = file_get_contents($path);
         if ($contents === false) {
             Log::warning("Failed to read $type: $path");
+
             return null;
         }
 

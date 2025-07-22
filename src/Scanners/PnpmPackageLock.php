@@ -14,7 +14,7 @@ class PnpmPackageLock extends BasePackageScanner
     public function scan(): Collection
     {
         $mappedItems = collect();
-        $lockFilePath = $this->path . 'pnpm-lock.yaml';
+        $lockFilePath = $this->path.'pnpm-lock.yaml';
 
         if (! $this->canScan()) {
             return $mappedItems;
@@ -29,7 +29,8 @@ class PnpmPackageLock extends BasePackageScanner
             /** @var array<string, mixed> $parsed */
             $parsed = Yaml::parse($contents);
         } catch (\Exception $e) {
-            Log::error('Failed to parse YAML: ' . $e->getMessage());
+            Log::error('Failed to parse YAML: '.$e->getMessage());
+
             return $mappedItems;
         }
 
@@ -71,6 +72,6 @@ class PnpmPackageLock extends BasePackageScanner
      */
     public function canScan(): bool
     {
-        return file_exists($this->path . 'pnpm-lock.yaml');
+        return file_exists($this->path.'pnpm-lock.yaml');
     }
 }

@@ -13,7 +13,7 @@ class NpmPackageLock extends BasePackageScanner
     public function scan(): Collection
     {
         $mappedItems = collect();
-        $lockFilePath = $this->path . 'package-lock.json';
+        $lockFilePath = $this->path.'package-lock.json';
 
         if (! $this->canScan()) {
             return $mappedItems;
@@ -26,12 +26,14 @@ class NpmPackageLock extends BasePackageScanner
 
         $json = json_decode($contents, true);
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            Log::warning('Failed to decode Package: ' . $lockFilePath . '. ' . json_last_error_msg());
+            Log::warning('Failed to decode Package: '.$lockFilePath.'. '.json_last_error_msg());
+
             return $mappedItems;
         }
 
         if (! array_key_exists('packages', $json)) {
             Log::warning('Malformed package-lock');
+
             return $mappedItems;
         }
 
@@ -49,6 +51,6 @@ class NpmPackageLock extends BasePackageScanner
      */
     public function canScan(): bool
     {
-        return file_exists($this->path . 'package-lock.json');
+        return file_exists($this->path.'package-lock.json');
     }
 }
