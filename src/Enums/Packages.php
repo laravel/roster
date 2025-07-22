@@ -41,5 +41,6 @@ enum Packages: string
     case INERTIA_VUE = 'inertia-vue';
     case REACT = 'react';
     case TAILWINDCSS = 'tailwindcss';
+    case VUE = 'vue';
     case WAYFINDER_VITE = 'wayfinder_vite';
 }
