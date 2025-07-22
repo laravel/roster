@@ -24,8 +24,8 @@ class PackageLock
         'laravel-echo' => Packages::ECHO,
         '@laravel/vite-plugin-wayfinder' => [Packages::WAYFINDER, Packages::WAYFINDER_VITE],
         'react' => Packages::REACT,
-        'vue' => Packages::VUE,
         'tailwindcss' => [Packages::TAILWINDCSS],
+        'vue' => Packages::VUE,
     ];
 
     /**
