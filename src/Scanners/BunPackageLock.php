@@ -21,6 +21,7 @@ class BunPackageLock extends BasePackageScanner
         }
 
         // Remove trailing commas before decoding
+        /** @var string $contents */
         $contents = preg_replace('/,\s*([]}])/m', '$1', $contents);
         $json = json_decode($contents, true);
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
