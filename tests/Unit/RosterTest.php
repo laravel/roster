@@ -82,7 +82,7 @@ it('can return a specific package', function () {
 
 it('can return raw package name', function () {
     $package = new Package(Packages::PEST, 'pestphp/pest', '1.0.1');
-    
+
     expect($package->rawName())->toBe('pestphp/pest');
     expect($package->name())->toBe('PEST');
 });
