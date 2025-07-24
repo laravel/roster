@@ -61,7 +61,7 @@ abstract class BasePackageScanner
             foreach ($mappedPackage as $mapped) {
                 $niceVersion = preg_replace('/[^0-9.]/', '', $version) ?? '';
                 $mappedItems->push(match (get_class($mapped)) {
-                    Packages::class => new Package($mapped, $niceVersion, $isDev),
+                    Packages::class => new Package($mapped, $packageName, $niceVersion, $isDev),
                     Approaches::class => new Approach($mapped),
                     default => throw new \InvalidArgumentException('Unsupported mapping')
                 });
