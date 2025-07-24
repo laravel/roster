@@ -7,7 +7,7 @@ use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 
 it('can add packages and approaches to roster', function () {
-    $package = new Package(Packages::PEST, '1.0.1');
+    $package = new Package(Packages::PEST, 'pestphp/pest', '1.0.1');
     $approach = new Approach(Approaches::DDD);
     $roster = new Roster;
     $roster->add($package);
@@ -18,7 +18,7 @@ it('can add packages and approaches to roster', function () {
 });
 
 it('knows if a package is in use', function () {
-    $package = new Package(Packages::PEST, '1.0.1');
+    $package = new Package(Packages::PEST, 'pestphp/pest', '1.0.1');
     $roster = (new Roster)->add($package);
 
     expect($roster->uses(Packages::PEST))->toBeTrue();
@@ -26,7 +26,7 @@ it('knows if a package is in use', function () {
 });
 
 it('knows if a specific version of a package is in use', function () {
-    $usedPackage = new Package(Packages::PEST, '1.0.1');
+    $usedPackage = new Package(Packages::PEST, 'pestphp/pest', '1.0.1');
     $roster = (new Roster)->add($usedPackage);
 
     expect($roster->uses(Packages::PEST))->toBeTrue();
@@ -62,8 +62,8 @@ it('knows if an approach is in use', function () {
 });
 
 it('can return dev packages', function () {
-    $devPackage = new Package(Packages::PEST, '1.0.1', true);
-    $package = new Package(Packages::INERTIA, '2.0.0');
+    $devPackage = new Package(Packages::PEST, 'pestphp/pest', '1.0.1', true);
+    $package = new Package(Packages::INERTIA, 'inertiajs/inertia-laravel', '2.0.0');
     $roster = (new Roster)->add($devPackage)->add($package);
 
     expect($roster->uses(Packages::INERTIA))->toBeTrue();
@@ -73,9 +73,16 @@ it('can return dev packages', function () {
 });
 
 it('can return a specific package', function () {
-    $package = new Package(Packages::PEST, '1.0.1');
+    $package = new Package(Packages::PEST, 'pestphp/pest', '1.0.1');
     $roster = (new Roster)->add($package);
 
     expect($roster->package(Packages::PEST))->toBe($package);
     expect($roster->package(Packages::INERTIA))->toBeNull();
+});
+
+it('can return raw package name', function () {
+    $package = new Package(Packages::PEST, 'pestphp/pest', '1.0.1');
+    
+    expect($package->rawName())->toBe('pestphp/pest');
+    expect($package->name())->toBe('PEST');
 });

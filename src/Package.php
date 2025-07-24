@@ -6,7 +6,7 @@ use Laravel\Roster\Enums\Packages;
 
 class Package
 {
-    public function __construct(protected Packages $package, protected string $version, protected bool $dev = false) {}
+    public function __construct(protected Packages $package, protected string $packageName, protected string $version, protected bool $dev = false) {}
 
     public function name(): string
     {
@@ -31,5 +31,10 @@ class Package
     public function isDev(): bool
     {
         return $this->dev;
+    }
+
+    public function rawName(): string
+    {
+        return $this->packageName;
     }
 }
