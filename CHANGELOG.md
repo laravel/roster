@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.1...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.2.2...main)
+
+## [v0.2.2](https://github.com/laravel/roster/compare/v0.2.1...v0.2.2) - 2025-07-24
+
+### What's Changed
+
+* feat: add raw package name support fixes #7 by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/roster/pull/8
+
+### New Contributors
+
+* [@ashleyhindle](https://github.com/ashleyhindle) made their first contribution in https://github.com/laravel/roster/pull/8
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.1...v0.2.2
 
 ## [v0.2.1](https://github.com/laravel/roster/compare/v0.2.0...v0.2.1) - 2025-07-23
 
