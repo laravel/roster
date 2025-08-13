@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.2...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.2.3...main)
+
+## [v0.2.3](https://github.com/laravel/roster/compare/v0.2.2...v0.2.3) - 2025-08-13
+
+### What's Changed
+
+* add symfony yaml dependency by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/roster/pull/9
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.2...v0.2.3
 
 ## [v0.2.2](https://github.com/laravel/roster/compare/v0.2.1...v0.2.2) - 2025-07-24
 
