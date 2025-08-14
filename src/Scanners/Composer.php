@@ -20,6 +20,7 @@ class Composer
         'filament/filament' => Packages::FILAMENT,
         'inertiajs/inertia-laravel' => [Packages::INERTIA, Packages::INERTIA_LARAVEL],
         'larastan/larastan' => Packages::LARASTAN,
+        'laravel/breeze' => Packages::BREEZE,
         'laravel/folio' => Packages::FOLIO,
         'laravel/framework' => Packages::LARAVEL,
         'laravel/nightwatch' => Packages::NIGHTWATCH,
