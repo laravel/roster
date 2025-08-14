@@ -27,6 +27,7 @@ enum Packages: string
     case PROMPTS = 'prompts';
     case RECTOR = 'rector';
     case REVERB = 'reverb';
+    case SAIL = 'sail';
     case SCOUT = 'scout';
     case STATAMIC = 'statamic';
     case VOLT = 'volt';
