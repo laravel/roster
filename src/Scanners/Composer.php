@@ -29,6 +29,7 @@ class Composer
         'laravel/pint' => Packages::PINT,
         'laravel/prompts' => Packages::PROMPTS,
         'laravel/reverb' => Packages::REVERB,
+        'laravel/sail' => Packages::SAIL,
         'laravel/scout' => Packages::SCOUT,
         'livewire/flux' => Packages::FLUXUI_FREE,
         'livewire/flux-pro' => Packages::FLUXUI_PRO,
