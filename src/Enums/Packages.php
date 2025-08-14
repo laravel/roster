@@ -9,6 +9,7 @@ enum Packages: string
     case WAYFINDER = 'wayfinder';
 
     // BACKEND
+    case BREEZE = 'breeze';
     case FILAMENT = 'filament';
     case FOLIO = 'folio';
     case FLUXUI_FREE = 'flux_free';
