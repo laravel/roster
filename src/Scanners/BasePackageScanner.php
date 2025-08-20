@@ -18,11 +18,13 @@ abstract class BasePackageScanner
      */
     protected array $map = [
         'alpinejs' => Packages::ALPINEJS,
+        'eslint' => Packages::ESLINT,
         '@inertiajs/react' => [Packages::INERTIA, Packages::INERTIA_REACT],
         '@inertiajs/svelte' => [Packages::INERTIA, Packages::INERTIA_SVELTE],
         '@inertiajs/vue3' => [Packages::INERTIA, Packages::INERTIA_VUE],
         'laravel-echo' => Packages::ECHO,
         '@laravel/vite-plugin-wayfinder' => [Packages::WAYFINDER, Packages::WAYFINDER_VITE],
+        'prettier' => Packages::PRETTIER,
         'react' => Packages::REACT,
         'tailwindcss' => [Packages::TAILWINDCSS],
         'vue' => Packages::VUE,
