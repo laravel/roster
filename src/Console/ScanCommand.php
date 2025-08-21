@@ -34,6 +34,29 @@ class ScanCommand extends Command
         $roster = Roster::scan($directory);
         $this->line($roster->json());
 
+        $this->printMiniSummary($roster);
+
         return self::SUCCESS;
+    }
+
+    private function printMiniSummary(Roster $roster): void
+    {
+        $approaches_count = $roster->approaches()->count();
+        $packages_count = $roster->packages()->count();
+
+        $summary = match($approaches_count) {
+            0 => [],
+            1 => ["Approach: " . ucfirst($roster->approaches()->first()->approach()->value) . "."],
+            default => ["Approaches: $approaches_count."]
+
+        };
+
+        $summary[] = match($packages_count) {
+            0 => "",
+            1 => "Package: " . ucfirst(strtolower($roster->packages()->first()->name())),
+            default => "Packages: $packages_count."
+        };
+        
+        $this->line(implode(" ", $summary));
     }
 }
