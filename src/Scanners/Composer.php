@@ -41,6 +41,16 @@ class Composer
         'livewire/volt' => Packages::VOLT,
         'laravel/wayfinder' => [Packages::WAYFINDER, Packages::WAYFINDER_LARAVEL],
         'tightenco/ziggy' => Packages::ZIGGY,
+        'laravel/passport' => Packages::PASSPORT,
+        'laravel/sanctum' => Packages::SANCTUM,
+        'laravel/telescope' => Packages::TELESCOPE,
+        'laravel/horizon' => Packages::HORIZON,
+        'laravel/cashier' => Packages::CASHIER,
+        'laravel/dusk' => Packages::DUSK,
+        'laravel/envoy' => Packages::ENVOY,
+        'laravel/fortify' => Packages::FORTIFY,
+        'laravel/pulse' => Packages::PULSE,
+        'laravel/socialite' => Packages::SOCIALITE,
     ];
 
     /**

@@ -10,10 +10,15 @@ enum Packages: string
 
     // BACKEND
     case BREEZE = 'breeze';
+    case CASHIER = 'cashier';
+    case DUSK = 'dusk';
+    case ENVOY = 'envoy';
     case FILAMENT = 'filament';
     case FOLIO = 'folio';
+    case FORTIFY = 'fortify';
     case FLUXUI_FREE = 'flux_free';
     case FLUXUI_PRO = 'flux_pro';
+    case HORIZON = 'horizon';
     case INERTIA_LARAVEL = 'inertia-laravel';
     case LARASTAN = 'larastan';
     case LARAVEL = 'laravel';
@@ -21,16 +26,21 @@ enum Packages: string
     case NIGHTWATCH = 'nightwatch';
     case NOVA = 'nova';
     case OCTANE = 'octane';
+    case PASSPORT = 'passport';
     case PENNANT = 'pennant';
     case PEST = 'pest';
     case PHPUNIT = 'phpunit';
     case PINT = 'pint';
     case PROMPTS = 'prompts';
+    case PULSE = 'pulse';
     case RECTOR = 'rector';
     case REVERB = 'reverb';
     case SAIL = 'sail';
+    case SANCTUM = 'sanctum';
     case SCOUT = 'scout';
+    case SOCIALITE = 'socialite';
     case STATAMIC = 'statamic';
+    case TELESCOPE = 'telescope';
     case VOLT = 'volt';
     case WAYFINDER_LARAVEL = 'wayfinder_laravel';
     case ZIGGY = 'ziggy';
