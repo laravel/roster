@@ -5,12 +5,21 @@ use Tests\TestCase;
 
 uses(TestCase::class);
 
+/**
+ * Remove the summary line from the command output
+ * to allow existing tests to pass
+ */
+function clearSummaryFromOutput($output): string
+{
+    return implode("\n", array_slice(explode("\n", $output), 0, -2));
+}
+
 it('outputs JSON for directory with packages', function () {
     $path = __DIR__.'/../fixtures/fog';
 
     Artisan::call('roster:scan', ['directory' => $path]);
 
-    $output = Artisan::output();
+    $output = clearSummaryFromOutput(Artisan::output());
     $decoded = json_decode($output, true);
 
     expect($decoded)->toBeArray();
@@ -49,4 +58,15 @@ it('returns failure for unreadable directory', function () {
     $exitCode = Artisan::call('roster:scan', ['directory' => $invalidArg]);
 
     expect($exitCode)->toBe(1);
+});
+
+it('returns the summary output', function () {
+    $path = __DIR__.'/../fixtures/fog';
+
+    Artisan::call('roster:scan', ['directory' => $path]);
+
+    $output = Artisan::output();
+    $summary = implode("\n", array_slice(explode("\n", $output), -2, 1));
+
+    expect(str_contains($summary, 'Package'))->toBe(true);
 });

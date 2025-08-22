@@ -46,17 +46,16 @@ class ScanCommand extends Command
 
         $summary = match($approaches_count) {
             0 => [],
-            1 => ["Approach: " . ucfirst($roster->approaches()->first()->approach()->value) . "."],
+            1 => ["Approach: " . ucfirst($roster->approaches()->first()?->approach()->value ?? "") . "."],
             default => ["Approaches: $approaches_count."]
-
         };
 
         $summary[] = match($packages_count) {
             0 => "",
-            1 => "Package: " . ucfirst(strtolower($roster->packages()->first()->name())),
+            1 => "Package: " . ucfirst(strtolower($roster->packages()->first()?->name() ?? "")),
             default => "Packages: $packages_count."
         };
-        
+
         $this->line(implode(" ", $summary));
     }
 }
