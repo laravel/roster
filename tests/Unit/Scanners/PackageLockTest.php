@@ -32,7 +32,7 @@ it('scans valid package-lock.json', function () {
     $tailwind = $items->first(fn (Package $package) => $package->package() === Packages::TAILWINDCSS);
     $inertiaReact = $items->first(fn (Package $package) => $package->package() === Packages::INERTIA_REACT);
 
-    expect($tailwind->version())->toEqual('3.4.3');
+    expect($tailwind->version())->toEqual('3.4.16'); // Installed version, not dependency constraint
     expect($inertiaReact)->toBeNull();
 });
 
@@ -81,8 +81,8 @@ it('scans valid yarn.lock', function () use ($packageLockPath, $pnpmLockPath, $t
         fn ($item) => $item instanceof Package && $item->package() === Packages::ALPINEJS
     );
 
-    expect($tailwind->version())->toEqual('3.4.3')
-        ->and($alpine->version())->toEqual('3.4.2');
+    expect($tailwind->version())->toEqual('3.4.16')
+        ->and($alpine->version())->toEqual('3.4.4');
 
     // Restore files
     if (file_exists($tempPackagePath)) {
