@@ -45,8 +45,9 @@ abstract class BasePackageScanner
      *
      * @param  array<string, string>  $dependencies
      * @param  Collection<int, Package|Approach>  $mappedItems
+     * @param  ?callable  $versionCb  - callback to override version
      */
-    protected function processDependencies(array $dependencies, Collection $mappedItems, bool $isDev): void
+    protected function processDependencies(array $dependencies, Collection $mappedItems, bool $isDev, ?callable $versionCb = null): void
     {
         foreach ($dependencies as $packageName => $version) {
             $mappedPackage = $this->map[$packageName] ?? null;
@@ -56,6 +57,10 @@ abstract class BasePackageScanner
 
             if (! is_array($mappedPackage)) {
                 $mappedPackage = [$mappedPackage];
+            }
+
+            if (! is_null($versionCb)) {
+                $version = $versionCb($packageName, $version);
             }
 
             foreach ($mappedPackage as $mapped) {

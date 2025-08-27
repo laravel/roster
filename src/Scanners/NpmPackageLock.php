@@ -35,9 +35,19 @@ class NpmPackageLock extends BasePackageScanner
 
         $dependencies = $json['packages']['']['dependencies'] ?? [];
         $devDependencies = $json['packages']['']['devDependencies'] ?? [];
+        $packages = array_filter($json['packages'], fn ($key) => $key !== '', ARRAY_FILTER_USE_KEY);
 
-        $this->processDependencies($dependencies, $mappedItems, false);
-        $this->processDependencies($devDependencies, $mappedItems, true);
+        $versionCb = function (string $packageName, string $version) use ($packages): string {
+            $key = "node_modules/{$packageName}";
+            if (array_key_exists($key, $packages)) {
+                return $packages[$key]['version'];
+            }
+
+            return $version;
+        };
+
+        $this->processDependencies($dependencies, $mappedItems, false, $versionCb);
+        $this->processDependencies($devDependencies, $mappedItems, true, $versionCb);
 
         return $mappedItems;
     }
