@@ -38,9 +38,11 @@ enum Packages: string
     // NPM
     case ALPINEJS = 'alpinejs';
     case ECHO = 'laravel-echo';
+    case ESLINT = 'eslint';
     case INERTIA_REACT = 'inertia-react';
     case INERTIA_SVELTE = 'inertia-svelte';
     case INERTIA_VUE = 'inertia-vue';
+    case PRETTIER = 'prettier';
     case REACT = 'react';
     case TAILWINDCSS = 'tailwindcss';
     case VUE = 'vue';
