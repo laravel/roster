@@ -1,6 +1,21 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.3...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.2.4...main)
+
+## [v0.2.4](https://github.com/laravel/roster/compare/v0.2.3...v0.2.4) - 2025-08-27
+
+### What's Changed
+
+* Add support for Laravel Sail enumeration by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/11
+* Add support for Laravel Breeze by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/12
+* feat: use installed version for PackageScans, not version constraint by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/roster/pull/16
+* Add prettier and eslint to detectable packages by [@laserhybiz](https://github.com/laserhybiz) in https://github.com/laravel/roster/pull/13
+
+### New Contributors
+
+* [@laserhybiz](https://github.com/laserhybiz) made their first contribution in https://github.com/laravel/roster/pull/13
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.3...v0.2.4
 
 ## [v0.2.3](https://github.com/laravel/roster/compare/v0.2.2...v0.2.3) - 2025-08-13
 
