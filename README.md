@@ -33,6 +33,8 @@ $roster = Roster::scan($directory);
 
 **Query the roster**
 ```php
+use Laravel\Roster\Packages;
+
 // Get all packages
 $roster->packages();
 
