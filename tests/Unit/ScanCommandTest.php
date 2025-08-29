@@ -5,7 +5,6 @@ use Tests\TestCase;
 
 uses(TestCase::class);
 
-
 it('outputs JSON for directory with packages', function () {
     $path = __DIR__.'/../fixtures/fog';
 
