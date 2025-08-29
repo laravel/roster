@@ -1,6 +1,20 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.4...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.2.5...main)
+
+## [v0.2.5](https://github.com/laravel/roster/compare/v0.2.4...v0.2.5) - 2025-08-29
+
+### What's Changed
+
+* Docs: Add missing import to usage example by [@AmadulHaque](https://github.com/AmadulHaque) in https://github.com/laravel/roster/pull/17
+* Feat:  Add in missing laravel packages by [@jjoek](https://github.com/jjoek) in https://github.com/laravel/roster/pull/14
+
+### New Contributors
+
+* [@AmadulHaque](https://github.com/AmadulHaque) made their first contribution in https://github.com/laravel/roster/pull/17
+* [@jjoek](https://github.com/jjoek) made their first contribution in https://github.com/laravel/roster/pull/14
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.4...v0.2.5
 
 ## [v0.2.4](https://github.com/laravel/roster/compare/v0.2.3...v0.2.4) - 2025-08-27
 
