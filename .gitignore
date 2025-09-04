@@ -4,6 +4,7 @@
 /vendor
 composer.lock
 !tests/fixtures/fog/composer.lock
+!tests/fixtures/phpunit/composer.lock
 /phpunit.xml
 .phpunit.result.cache
 .claude

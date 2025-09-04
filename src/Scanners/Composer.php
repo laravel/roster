@@ -48,6 +48,7 @@ class Composer
         'livewire/livewire' => Packages::LIVEWIRE,
         'livewire/volt' => Packages::VOLT,
         'pestphp/pest' => Packages::PEST,
+        'phpunit/phpunit' => Packages::PHPUNIT,
         'rector/rector' => Packages::RECTOR,
         'statamic/cms' => Packages::STATAMIC,
         'tightenco/ziggy' => Packages::ZIGGY,
