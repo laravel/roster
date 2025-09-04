@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.5...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.2.6...main)
+
+## [v0.2.6](https://github.com/laravel/roster/compare/v0.2.5...v0.2.6) - 2025-09-04
+
+### What's Changed
+
+* feat: add PHPUnit package detection support by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/roster/pull/19
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.5...v0.2.6
 
 ## [v0.2.5](https://github.com/laravel/roster/compare/v0.2.4...v0.2.5) - 2025-08-29
 
