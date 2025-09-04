@@ -54,3 +54,13 @@ it('adds 2 entries for inertia', function () {
     expect($inertia->version())->toEqual('123.456.789');
     expect($inertia->isDev())->toBeFalse();
 });
+
+it('detects PHPUnit from fixture', function () {
+    $path = __DIR__.'/../../fixtures/phpunit/composer.lock';
+    $uses = (new Composer($path))->scan();
+
+    $phpunit = $uses->first(fn ($item) => $item->package() === Packages::PHPUNIT);
+    expect($phpunit)->not()->toBeNull();
+    expect($phpunit->version())->toEqual('11.4.3');
+    expect($phpunit->isDev())->toBeTrue();
+});
