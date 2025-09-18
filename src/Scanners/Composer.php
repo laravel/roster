@@ -28,6 +28,7 @@ class Composer
         'laravel/fortify' => Packages::FORTIFY,
         'laravel/framework' => Packages::LARAVEL,
         'laravel/horizon' => Packages::HORIZON,
+        'laravel/mcp' => Packages::MCP,
         'laravel/nightwatch' => Packages::NIGHTWATCH,
         'laravel/nova' => Packages::NOVA,
         'laravel/octane' => Packages::OCTANE,
