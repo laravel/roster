@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.6...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.2.7...main)
+
+## [v0.2.7](https://github.com/laravel/roster/compare/v0.2.6...v0.2.7) - 2025-09-18
+
+### What's Changed
+
+* Add laravel/mcp detection by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/roster/pull/20
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.6...v0.2.7
 
 ## [v0.2.6](https://github.com/laravel/roster/compare/v0.2.5...v0.2.6) - 2025-09-04
 
