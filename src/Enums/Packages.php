@@ -23,6 +23,7 @@ enum Packages: string
     case LARASTAN = 'larastan';
     case LARAVEL = 'laravel';
     case LIVEWIRE = 'livewire';
+    case MCP = 'mcp';
     case NIGHTWATCH = 'nightwatch';
     case NOVA = 'nova';
     case OCTANE = 'octane';
