@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.7...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.2.8...main)
+
+## [v0.2.8](https://github.com/laravel/roster/compare/v0.2.7...v0.2.8) - 2025-09-22
+
+### What's Changed
+
+* Detect package direct or indirect by [@ashleyhindle](https://github.com/ashleyhindle) in https://github.com/laravel/roster/pull/21
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.7...v0.2.8
 
 ## [v0.2.7](https://github.com/laravel/roster/compare/v0.2.6...v0.2.7) - 2025-09-18
 
