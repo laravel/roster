@@ -1,0 +1,124 @@
+{
+    "name": "laravel/laravel",
+    "description": "The Laravel Framework.",
+    "keywords": ["framework", "laravel"],
+    "license": "MIT",
+    "type": "project",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../boost"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:laravel/mcp.git"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "ext-exif": "*",
+        "ext-fileinfo": "*",
+        "ext-gd": "*",
+        "ext-imagick": "*",
+        "codeat3/blade-phosphor-icons": "^2.0",
+        "devdojo/app": "0.11.0",
+        "devdojo/auth": "^1.0",
+        "devdojo/themes": "0.0.11",
+        "filament/filament": "^3.2",
+        "gehrisandro/tailwind-merge-laravel": "^1.2",
+        "guzzlehttp/guzzle": "^7.2",
+        "hidehalo/nanoid-php": "^2.0",
+        "inertiajs/inertia-laravel": "^2.0",
+        "intervention/image": "^2.7",
+        "lab404/laravel-impersonate": "^1.7.5",
+        "laravel/folio": "^1.1",
+        "laravel/framework": "^11.0",
+        "laravel/pint": "^1.20",
+        "laravel/tinker": "^2.7",
+        "laravel/ui": "^4.5",
+        "livewire/flux": "^2.1",
+        "livewire/livewire": "^3.0",
+        "ralphjsmit/livewire-urls": "^1.4",
+        "spatie/browsershot": "^5.0",
+        "spatie/crawler": "^8.4",
+        "spatie/image": "^3.8",
+        "spatie/laravel-flare": "^1.1",
+        "spatie/laravel-honeypot": "^4.5",
+        "spatie/laravel-mailcoach-mailer": "^1.5",
+        "spatie/laravel-permission": "^6.4",
+        "spatie/laravel-slack-alerts": "^1.5",
+        "stripe/stripe-php": "^15.3",
+        "tempest/highlight": "^2.11",
+        "tymon/jwt-auth": "@dev"
+    },
+    "require-dev": {
+        "alebatistella/duskapiconf": "^1.2",
+        "ashleyhindle/croft": "dev-main",
+        "barryvdh/laravel-debugbar": "^3.14",
+        "fakerphp/faker": "^1.9.1",
+        "laravel/boost": "1.x-dev",
+        "laravel/dusk": "^8.0",
+        "mockery/mockery": "^1.4.4",
+        "nunomaduro/collision": "6.4.0|^7.0|^8.1",
+        "pestphp/pest": "^3.4",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "phpunit/phpunit": "^11.0",
+        "soloterm/solo": "^0.3.1",
+        "spatie/laravel-ignition": "^2.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/",
+            "Wave\\": "wave/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": [],
+            "providers": [
+                "Wave\\WaveServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": [
+            "vendor/bin/pest"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate"
+        ],
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover",
+            "@php artisan storage:link",
+            "@php artisan filament:upgrade"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=livewire:assets --ansi --force"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan queue:listen --tries=1\" \"npm run dev\" \"npm run dev:og\" --names=queue,vite,vite-og"
+        ]
+    },
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
