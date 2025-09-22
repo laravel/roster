@@ -53,6 +53,11 @@ class Package
         return $this->direct;
     }
 
+    public function indirect(): bool
+    {
+        return ! $this->direct;
+    }
+
     public function constraint(): string
     {
         return $this->constraint;
