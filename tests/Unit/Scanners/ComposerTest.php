@@ -10,6 +10,8 @@ it('can parse installed packages', function () {
     $laravel = $uses->first(fn ($item) => $item->package() === Packages::LARAVEL);
     expect($laravel->version())->toEqual('11.44.2');
     expect($laravel->isDev())->toBeFalse();
+    expect($laravel->direct())->toBeTrue();
+    expect($laravel->constraint())->toEqual('^11.0');
 
     $pest = $uses->first(fn ($item) => $item->package() === Packages::PEST);
     expect($pest->version())->toEqual('3.8.1');
