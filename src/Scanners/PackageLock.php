@@ -3,7 +3,7 @@
 namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Collection;
-use Laravel\Roster\Enums\NodePackageManagers;
+use Laravel\Roster\Enums\NodePackageManager;
 
 class PackageLock
 {
@@ -17,7 +17,7 @@ class PackageLock
      */
     public function scan(): Collection
     {
-        foreach (NodePackageManagers::cases() as $case) {
+        foreach (NodePackageManager::cases() as $case) {
             $scanner = $case->scanner($this->path);
             if ($scanner->canScan()) {
                 return $scanner->scan();
@@ -27,15 +27,15 @@ class PackageLock
         return collect();
     }
 
-    public function detect(): NodePackageManagers
+    public function detect(): NodePackageManager
     {
-        foreach (NodePackageManagers::cases() as $case) {
+        foreach (NodePackageManager::cases() as $case) {
             $scanner = $case->scanner($this->path);
             if ($scanner->canScan()) {
                 return $case;
             }
         }
 
-        return NodePackageManagers::NPM;
+        return NodePackageManager::NPM;
     }
 }

@@ -2,7 +2,7 @@
 
 use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
-use Laravel\Roster\Enums\NodePackageManagers;
+use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
@@ -108,7 +108,7 @@ describe('node package manager detection', function () {
         }
     });
 
-    it('can detect :manager as node package manager', function (string $requiredFile, NodePackageManagers $expected) {
+    it('can detect :manager as node package manager', function (string $requiredFile, NodePackageManager $expected) {
         foreach ($this->lockFiles as $fileName => $filePath) {
             if ($fileName !== $requiredFile && file_exists($filePath)) {
                 rename($filePath, $filePath.'.bac');
@@ -119,16 +119,16 @@ describe('node package manager detection', function () {
 
         expect($roster->nodePackageManager())->toBe($expected);
     })->with([
-        'npm' => ['package-lock.json', NodePackageManagers::NPM],
-        'pnpm' => ['pnpm-lock.yaml', NodePackageManagers::PNPM],
-        'yarn' => ['yarn.lock', NodePackageManagers::YARN],
-        'bun' => ['bun.lock', NodePackageManagers::BUN],
+        'npm' => ['package-lock.json', NodePackageManager::NPM],
+        'pnpm' => ['pnpm-lock.yaml', NodePackageManager::PNPM],
+        'yarn' => ['yarn.lock', NodePackageManager::YARN],
+        'bun' => ['bun.lock', NodePackageManager::BUN],
     ]);
 
     it('defaults to npm when no lock files exist', function () {
         $path = __DIR__.'/../fixtures/phpunit/';
         $roster = Roster::scan($path);
 
-        expect($roster->nodePackageManager())->toBe(NodePackageManagers::NPM);
+        expect($roster->nodePackageManager())->toBe(NodePackageManager::NPM);
     });
 });

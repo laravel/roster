@@ -7,7 +7,7 @@ use Laravel\Roster\Scanners\NpmPackageLock;
 use Laravel\Roster\Scanners\PnpmPackageLock;
 use Laravel\Roster\Scanners\YarnPackageLock;
 
-enum NodePackageManagers: string
+enum NodePackageManager: string
 {
     case NPM = 'npm';
     case PNPM = 'pnpm';
