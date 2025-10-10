@@ -88,7 +88,7 @@ it('can return raw package name', function () {
     expect($package->name())->toBe('PEST');
 });
 
-describe('package manager detection', function () {
+describe('node package manager detection', function () {
     beforeEach(function () {
         $this->path = __DIR__.'/../fixtures/fog/';
         $this->lockFiles = [
@@ -108,7 +108,7 @@ describe('package manager detection', function () {
         }
     });
 
-    it('can detect :manager as js package manager', function (string $requiredFile, NodePackageManagers $expected) {
+    it('can detect :manager as node package manager', function (string $requiredFile, NodePackageManagers $expected) {
         foreach ($this->lockFiles as $fileName => $filePath) {
             if ($fileName !== $requiredFile && file_exists($filePath)) {
                 rename($filePath, $filePath.'.bac');
