@@ -4,6 +4,7 @@ namespace Laravel\Roster;
 
 use Illuminate\Support\Collection;
 use Laravel\Roster\Enums\Approaches;
+use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Scanners\Composer;
 use Laravel\Roster\Scanners\DirectoryStructure;
@@ -23,6 +24,8 @@ class Roster
     protected Collection $approaches;
 
     protected PackageCollection $packages;
+
+    protected ?NodePackageManager $nodePackageManager = null;
 
     public function __construct()
     {
@@ -116,6 +119,11 @@ class Roster
         return $this->approaches->first(fn (Approach $item) => $item->approach()->value === $approach->value);
     }
 
+    public function nodePackageManager(): ?NodePackageManager
+    {
+        return $this->nodePackageManager;
+    }
+
     public function json(): string
     {
         return json_encode([
@@ -126,6 +134,7 @@ class Roster
                 'name' => $package->name(),
                 'version' => $package->version(),
             ])->toArray(),
+            'nodePackageManager' => $this->nodePackageManager?->value,
         ], JSON_PRETTY_PRINT) ?: '{}';
     }
 
@@ -138,13 +147,16 @@ class Roster
             ->scan()
             ->each(fn ($item) => $roster->add($item));
 
-        (new PackageLock($basePath))
-            ->scan()
+        $packageLock = new PackageLock($basePath);
+
+        $packageLock->scan()
             ->each(fn ($item) => $roster->add($item));
 
         (new DirectoryStructure($basePath))
             ->scan()
             ->each(fn ($item) => $roster->add($item));
+
+        $roster->nodePackageManager = $packageLock->detect();
 
         return $roster;
     }

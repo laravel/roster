@@ -3,6 +3,7 @@
 namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Collection;
+use Laravel\Roster\Enums\NodePackageManager;
 
 class PackageLock
 {
@@ -16,20 +17,25 @@ class PackageLock
      */
     public function scan(): Collection
     {
-        // Priority order: npm -> pnpm -> yarn -> bun
-        $scanners = [
-            new NpmPackageLock($this->path),
-            new PnpmPackageLock($this->path),
-            new YarnPackageLock($this->path),
-            new BunPackageLock($this->path),
-        ];
-
-        foreach ($scanners as $scanner) {
+        foreach (NodePackageManager::cases() as $case) {
+            $scanner = $case->scanner($this->path);
             if ($scanner->canScan()) {
                 return $scanner->scan();
             }
         }
 
         return collect();
+    }
+
+    public function detect(): NodePackageManager
+    {
+        foreach (NodePackageManager::cases() as $case) {
+            $scanner = $case->scanner($this->path);
+            if ($scanner->canScan()) {
+                return $case;
+            }
+        }
+
+        return NodePackageManager::NPM;
     }
 }
