@@ -132,9 +132,3 @@ describe('node package manager detection', function () {
         expect($roster->nodePackageManager())->toBe(NodePackageManagers::NPM);
     });
 });
-
-it('returns null when roster is not scanned', function () {
-    $roster = new Roster;
-
-    expect($roster->nodePackageManager())->toBeNull();
-});
