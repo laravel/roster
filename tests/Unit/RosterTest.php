@@ -2,6 +2,7 @@
 
 use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
+use Laravel\Roster\Enums\NodePackageManagers;
 use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
@@ -85,4 +86,55 @@ it('can return raw package name', function () {
 
     expect($package->rawName())->toBe('pestphp/pest');
     expect($package->name())->toBe('PEST');
+});
+
+describe('package manager detection', function () {
+    beforeEach(function () {
+        $this->path = __DIR__.'/../fixtures/fog/';
+        $this->lockFiles = [
+            'package-lock.json' => $this->path.'package-lock.json',
+            'pnpm-lock.yaml' => $this->path.'pnpm-lock.yaml',
+            'yarn.lock' => $this->path.'yarn.lock',
+            'bun.lock' => $this->path.'bun.lock',
+        ];
+    });
+
+    afterEach(function () {
+        foreach ($this->lockFiles as $file) {
+            $tempPath = $file.'.bac';
+            if (file_exists($tempPath)) {
+                rename($tempPath, $file);
+            }
+        }
+    });
+
+    it('can detect :manager as js package manager', function (string $requiredFile, NodePackageManagers $expected) {
+        foreach ($this->lockFiles as $fileName => $filePath) {
+            if ($fileName !== $requiredFile && file_exists($filePath)) {
+                rename($filePath, $filePath.'.bac');
+            }
+        }
+
+        $roster = Roster::scan($this->path);
+
+        expect($roster->nodePackageManager())->toBe($expected);
+    })->with([
+        'npm' => ['package-lock.json', NodePackageManagers::NPM],
+        'pnpm' => ['pnpm-lock.yaml', NodePackageManagers::PNPM],
+        'yarn' => ['yarn.lock', NodePackageManagers::YARN],
+        'bun' => ['bun.lock', NodePackageManagers::BUN],
+    ]);
+
+    it('defaults to npm when no lock files exist', function () {
+        $path = __DIR__.'/../fixtures/phpunit/';
+        $roster = Roster::scan($path);
+
+        expect($roster->nodePackageManager())->toBe(NodePackageManagers::NPM);
+    });
+});
+
+it('returns null when roster is not scanned', function () {
+    $roster = new Roster;
+
+    expect($roster->nodePackageManager())->toBeNull();
 });

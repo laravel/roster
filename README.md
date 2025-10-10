@@ -49,6 +49,9 @@ $roster->uses(Packages::INERTIA);
 
 // Check if a particular version of a package is in use
 $roster->usesVersion(Packages::INERTIA, '2.0.0', '>=');
+
+// Detect which JavaScript package manager is in use
+$packageManager = $roster->nodePackageManager();
 ```
 
 ## Contributing
