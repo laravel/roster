@@ -16,7 +16,7 @@ Laravel Roster detects which Laravel ecosystem packages are in use within a proj
 To get started, install Roster via Composer:
 
 ```bash
-composer require laravel/roster
+composer require laravel/roster --dev
 ```
 
 ## Usage
