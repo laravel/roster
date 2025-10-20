@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.8...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.2.9...main)
+
+## [v0.2.9](https://github.com/laravel/roster/compare/v0.2.8...v0.2.9) - 2025-10-20
+
+### What's Changed
+
+* Add --dev option to Composer command in README by [@ylynfatt](https://github.com/ylynfatt) in https://github.com/laravel/roster/pull/25
+* Implement node package manager detection by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/24
+
+### New Contributors
+
+* [@ylynfatt](https://github.com/ylynfatt) made their first contribution in https://github.com/laravel/roster/pull/25
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.8...v0.2.9
 
 ## [v0.2.8](https://github.com/laravel/roster/compare/v0.2.7...v0.2.8) - 2025-09-22
 
