@@ -9,6 +9,7 @@ enum Packages: string
     case WAYFINDER = 'wayfinder';
 
     // BACKEND
+    case BOOST = 'boost';
     case BREEZE = 'breeze';
     case CASHIER = 'cashier';
     case DUSK = 'dusk';
@@ -27,6 +28,7 @@ enum Packages: string
     case NIGHTWATCH = 'nightwatch';
     case NOVA = 'nova';
     case OCTANE = 'octane';
+    case PAIL = 'pail';
     case PASSPORT = 'passport';
     case PENNANT = 'pennant';
     case PEST = 'pest';
