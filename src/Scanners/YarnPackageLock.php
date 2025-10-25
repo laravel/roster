@@ -6,6 +6,11 @@ use Illuminate\Support\Collection;
 
 class YarnPackageLock extends BasePackageScanner
 {
+    public function lockFile(): string
+    {
+        return 'yarn.lock';
+    }
+
     /**
      * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
      */
@@ -47,10 +52,5 @@ class YarnPackageLock extends BasePackageScanner
         $this->processDependencies($dependencies, $mappedItems, false);
 
         return $mappedItems;
-    }
-
-    public function lockFile(): string
-    {
-        return 'yarn.lock';
     }
 }
