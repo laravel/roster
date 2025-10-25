@@ -41,11 +41,6 @@ abstract class BasePackageScanner
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
-     */
-    abstract public function scan(): Collection;
-
-    /**
      * Returns the expected lock file name
      */
     abstract public function lockFile(): string;
@@ -57,6 +52,11 @@ abstract class BasePackageScanner
     {
         return $this->path.$this->lockFile();
     }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
+     */
+    abstract public function scan(): Collection;
 
     /**
      * Process dependencies and add them to the mapped items collection
