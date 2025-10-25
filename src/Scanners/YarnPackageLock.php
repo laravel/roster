@@ -12,7 +12,7 @@ class YarnPackageLock extends BasePackageScanner
     public function scan(): Collection
     {
         $mappedItems = collect([]);
-        $lockFilePath = $this->path.'yarn.lock';
+        $lockFilePath = $this->lockFilePath();
 
         $contents = $this->validateFile($lockFilePath, 'Yarn lock');
         if ($contents === null) {
@@ -49,11 +49,8 @@ class YarnPackageLock extends BasePackageScanner
         return $mappedItems;
     }
 
-    /**
-     * Check if the scanner can handle the given path
-     */
-    public function canScan(): bool
+    public function lockFile(): string
     {
-        return file_exists($this->path.'yarn.lock');
+        return 'yarn.lock';
     }
 }
