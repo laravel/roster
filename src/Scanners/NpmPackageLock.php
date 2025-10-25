@@ -7,13 +7,18 @@ use Illuminate\Support\Facades\Log;
 
 class NpmPackageLock extends BasePackageScanner
 {
+    public function lockFile(): string
+    {
+        return 'package-lock.json';
+    }
+
     /**
      * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
      */
     public function scan(): Collection
     {
         $mappedItems = collect();
-        $lockFilePath = $this->path.'package-lock.json';
+        $lockFilePath = $this->lockFilePath();
 
         $contents = $this->validateFile($lockFilePath);
         if ($contents === null) {
@@ -50,13 +55,5 @@ class NpmPackageLock extends BasePackageScanner
         $this->processDependencies($devDependencies, $mappedItems, true, $versionCb);
 
         return $mappedItems;
-    }
-
-    /**
-     * Check if the scanner can handle the given path
-     */
-    public function canScan(): bool
-    {
-        return file_exists($this->path.'package-lock.json');
     }
 }

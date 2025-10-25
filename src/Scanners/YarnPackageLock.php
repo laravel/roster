@@ -6,13 +6,18 @@ use Illuminate\Support\Collection;
 
 class YarnPackageLock extends BasePackageScanner
 {
+    public function lockFile(): string
+    {
+        return 'yarn.lock';
+    }
+
     /**
      * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
      */
     public function scan(): Collection
     {
         $mappedItems = collect([]);
-        $lockFilePath = $this->path.'yarn.lock';
+        $lockFilePath = $this->lockFilePath();
 
         $contents = $this->validateFile($lockFilePath, 'Yarn lock');
         if ($contents === null) {
@@ -47,13 +52,5 @@ class YarnPackageLock extends BasePackageScanner
         $this->processDependencies($dependencies, $mappedItems, false);
 
         return $mappedItems;
-    }
-
-    /**
-     * Check if the scanner can handle the given path
-     */
-    public function canScan(): bool
-    {
-        return file_exists($this->path.'yarn.lock');
     }
 }
