@@ -36,6 +36,26 @@ it('scans valid package-lock.json', function () {
     expect($inertiaReact)->toBeNull();
 });
 
+it('detects direct and indirect dependencies with constraints from package.json', function () {
+    $path = __DIR__ . '/../../fixtures/fog/';
+    $packageLock = new PackageLock($path);
+    $items = $packageLock->scan();
+
+    // Tailwind is a direct dependency
+    $tailwind = $items->first(fn(Package $package) => $package->package() === Packages::TAILWINDCSS);
+    expect($tailwind->direct())->toBeTrue();
+    expect($tailwind->indirect())->toBeFalse();
+    expect($tailwind->constraint())->toEqual('^3.4.3');
+    expect($tailwind->isDev())->toBeFalse();
+
+    // Alpine is a direct dev dependency
+    $alpine = $items->first(fn(Package $package) => $package->package() === Packages::ALPINEJS);
+    expect($alpine->direct())->toBeTrue();
+    expect($alpine->indirect())->toBeFalse();
+    expect($alpine->constraint())->toEqual('^3.4.2');
+    expect($alpine->isDev())->toBeTrue();
+});
+
 it('scans valid pnpm-lock.yaml', function () use ($packageLockPath, $tempPackagePath) {
     // Remove package-lock.json temporarily to test pnpm priority
     if (file_exists($packageLockPath)) {
