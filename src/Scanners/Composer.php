@@ -18,6 +18,13 @@ class Composer
      */
     protected array $map = [
         'filament/filament' => Packages::FILAMENT,
+        'filament/actions' => Packages::FILAMENT_ACTIONS,
+        'filament/forms' => Packages::FILAMENT_FORMS,
+        'filament/infolists' => Packages::FILAMENT_INFOLISTS,
+        'filament/notifications' => Packages::FILAMENT_NOTIFICATIONS,
+        'filament/schemas' => Packages::FILAMENT_SCHEMAS,
+        'filament/tables' => Packages::FILAMENT_TABLES,
+        'filament/widgets' => Packages::FILAMENT_WIDGETS,
         'inertiajs/inertia-laravel' => [Packages::INERTIA, Packages::INERTIA_LARAVEL],
         'larastan/larastan' => Packages::LARASTAN,
         'laravel/breeze' => Packages::BREEZE,
