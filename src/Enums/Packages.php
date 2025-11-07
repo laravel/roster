@@ -14,6 +14,13 @@ enum Packages: string
     case DUSK = 'dusk';
     case ENVOY = 'envoy';
     case FILAMENT = 'filament';
+    case FILAMENT_ACTIONS = 'filament-actions';
+    case FILAMENT_FORMS = 'filament-forms';
+    case FILAMENT_INFOLISTS = 'filament-infolists';
+    case FILAMENT_NOTIFICATIONS = 'filament-notifications';
+    case FILAMENT_SCHEMAS = 'filament-schemas';
+    case FILAMENT_TABLES = 'filament-tables';
+    case FILAMENT_WIDGETS = 'filament-widgets';
     case FOLIO = 'folio';
     case FORTIFY = 'fortify';
     case FLUXUI_FREE = 'flux_free';
