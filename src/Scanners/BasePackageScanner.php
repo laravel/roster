@@ -30,6 +30,9 @@ abstract class BasePackageScanner
         'vue' => Packages::VUE,
     ];
 
+    /** @var array<string, array{constraint: string, isDev: bool}> */
+    protected array $directPackages = [];
+
     public function __construct(protected string $path) {}
 
     /**
@@ -49,8 +52,12 @@ abstract class BasePackageScanner
      * @param  Collection<int, Package|Approach>  $mappedItems
      * @param  ?callable  $versionCb  - callback to override version
      */
-    protected function processDependencies(array $dependencies, Collection $mappedItems, bool $isDev, ?callable $versionCb = null): void
+    protected function processDependencies(array $dependencies, Collection $mappedItems, bool $isDev = false, ?callable $versionCb = null): void
     {
+        if ($this->directPackages === []) {
+            $this->directPackages = $this->direct();
+        }
+
         foreach ($dependencies as $packageName => $version) {
             $mappedPackage = $this->map[$packageName] ?? null;
             if (is_null($mappedPackage)) {
@@ -67,8 +74,20 @@ abstract class BasePackageScanner
 
             foreach ($mappedPackage as $mapped) {
                 $niceVersion = preg_replace('/[^0-9.]/', '', $version) ?? '';
+                $direct = false;
+                $constraint = $version;
+                $packageIsDev = $isDev;
+
+                if (array_key_exists($packageName, $this->directPackages)) {
+                    $direct = true;
+                    $constraint = $this->directPackages[$packageName]['constraint'];
+                    $packageIsDev = $this->directPackages[$packageName]['isDev'];
+                }
+
                 $mappedItems->push(match (get_class($mapped)) {
-                    Packages::class => new Package($mapped, $packageName, $niceVersion, $isDev),
+                    Packages::class => (new Package($mapped, $packageName, $niceVersion, $packageIsDev))
+                        ->setDirect($direct)
+                        ->setConstraint($constraint),
                     Approaches::class => new Approach($mapped),
                     default => throw new \InvalidArgumentException('Unsupported mapping')
                 });
@@ -101,5 +120,45 @@ abstract class BasePackageScanner
         }
 
         return $contents;
+    }
+
+    /**
+     * Returns direct dependencies as defined in package.json
+     *
+     * @return array<string, array{constraint: string, isDev: bool}>
+     */
+    protected function direct(): array
+    {
+        $packages = [];
+        $filename = $this->path . 'package.json';
+        if (file_exists($filename) === false || is_readable($filename) === false) {
+            return $packages;
+        }
+
+        $json = file_get_contents($filename);
+        if ($json === false) {
+            return $packages;
+        }
+
+        $json = json_decode($json, true);
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
+            return $packages;
+        }
+
+        foreach (($json['dependencies'] ?? []) as $name => $constraint) {
+            $packages[$name] = [
+                'constraint' => (string) $constraint,
+                'isDev' => false,
+            ];
+        }
+
+        foreach (($json['devDependencies'] ?? []) as $name => $constraint) {
+            $packages[$name] = [
+                'constraint' => (string) $constraint,
+                'isDev' => true,
+            ];
+        }
+
+        return $packages;
     }
 }
