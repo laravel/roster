@@ -130,7 +130,7 @@ abstract class BasePackageScanner
     protected function direct(): array
     {
         $packages = [];
-        $filename = $this->path . 'package.json';
+        $filename = $this->path.'package.json';
         if (file_exists($filename) === false || is_readable($filename) === false) {
             return $packages;
         }
