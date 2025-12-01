@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.9...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.3.0...main)
+
+## [v0.3.0](https://github.com/laravel/roster/compare/v0.2.9...v0.3.0) - 2025-12-01
+
+### What's Changed
+
+* Add PHP 8.5 Support by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/30
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.9...v0.3.0
 
 ## [v0.2.9](https://github.com/laravel/roster/compare/v0.2.8...v0.2.9) - 2025-10-20
 
