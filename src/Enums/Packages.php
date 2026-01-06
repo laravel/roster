@@ -36,7 +36,7 @@ enum Packages: string
     case PINT = 'pint';
     case PROMPTS = 'prompts';
     case PULSE = 'pulse';
-    const PHPSTAN = 'phpstan';
+    case PHPSTAN = 'phpstan';
     case RECTOR = 'rector';
     case REVERB = 'reverb';
     case SAIL = 'sail';
