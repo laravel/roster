@@ -31,8 +31,9 @@ class YarnPackageLock extends BasePackageScanner
                 continue;
             }
 
-            // Package header line (e.g. tailwindcss@^3.4.3:)
-            if (preg_match('/^("?)([^@"]+)(@[^:]+)?:\1$/', $line, $matches)) {
+            // Package header line (e.g. tailwindcss@^3.4.3: or "@inertiajs/react@^2.0.12":)
+            // Pattern handles both regular packages (name@version:) and scoped packages (@scope/name@version:)
+            if (preg_match('/^("?)(@[^@"\/]+\/[^@"]+|[^@"]+)(@[^:"]+)?\1:$/', $line, $matches)) {
                 $currentPackage = $matches[2];
             }
             // Version line
