@@ -27,9 +27,15 @@ class DirectoryStructure
             $items->push(new Approach(Approaches::DDD));
         }
 
-        $modules = $this->path.DIRECTORY_SEPARATOR.'modules';
-        if (is_dir($modules)) {
-            $items->push(new Approach(Approaches::MODULAR));
+        $moduleDirs = [
+            $this->path.DIRECTORY_SEPARATOR.'modules',
+            $this->path.DIRECTORY_SEPARATOR.'Modules',
+        ];
+        foreach ($moduleDirs as $modules) {
+            if (is_dir($modules)) {
+                $items->push(new Approach(Approaches::MODULAR));
+                break;
+            }
         }
 
         return $items;
