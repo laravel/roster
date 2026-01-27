@@ -4,8 +4,10 @@ use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Package;
 use Laravel\Roster\Scanners\YarnPackageLock;
 
+use function Pest\testDirectory;
+
 it('detects scoped npm packages in yarn.lock', function () {
-    $path = __DIR__.'/../../fixtures/yarn-scoped-quoted/';
+    $path = testDirectory('fixtures/yarn-scoped-quoted/');
     $scanner = new YarnPackageLock($path);
     $items = $scanner->scan();
 
@@ -24,7 +26,7 @@ it('detects scoped npm packages in yarn.lock', function () {
 });
 
 it('detects unquoted scoped packages in yarn.lock', function () {
-    $path = __DIR__.'/../../fixtures/yarn-scoped-unquoted/';
+    $path = testDirectory('fixtures/yarn-scoped-unquoted/');
     $scanner = new YarnPackageLock($path);
     $items = $scanner->scan();
 
