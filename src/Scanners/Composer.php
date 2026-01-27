@@ -137,14 +137,14 @@ class Composer
             return $packages;
         }
 
-        foreach (($json['require'] ?? []) as $name => $constraint) {
+        foreach ((array) ($json['require'] ?? []) as $name => $constraint) {
             $packages[$name] = [
                 'constraint' => $constraint,
                 'isDev' => false,
             ];
         }
 
-        foreach (($json['require-dev'] ?? []) as $name => $constraint) {
+        foreach ((array) ($json['require-dev'] ?? []) as $name => $constraint) {
             $packages[$name] = [
                 'constraint' => $constraint,
                 'isDev' => true,

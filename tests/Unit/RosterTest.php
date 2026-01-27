@@ -60,6 +60,7 @@ it('knows if an approach is in use', function () {
 
     expect($roster->uses(Approaches::DDD))->toBeTrue();
     expect($roster->uses(Approaches::ACTION))->toBeFalse();
+    expect($roster->uses(Approaches::MODULAR))->toBeFalse();
 });
 
 it('can return dev packages', function () {
