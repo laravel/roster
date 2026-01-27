@@ -48,8 +48,8 @@ class YarnPackageLock extends BasePackageScanner
 
     private function parsePackageHeader(string $line): ?string
     {
-        // Yarn v1 format: tailwindcss@^3.4.3: or "tailwindcss@^3.4.3":
-        if (preg_match('/^("?)([^@"]+)(@[^:]+)?:\1$/', $line, $matches)) {
+        // Package header line (e.g. tailwindcss@^3.4.3: or "@inertiajs/react@^2.0.12":)
+        if (preg_match('/^("?)(@[^@"\/]+\/[^@"]+|[^@"]+)(@[^:"]+)?\1:$/', $line, $matches)) {
             return $matches[2];
         }
 

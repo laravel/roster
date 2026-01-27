@@ -20,6 +20,7 @@ class Composer
         'filament/filament' => Packages::FILAMENT,
         'inertiajs/inertia-laravel' => [Packages::INERTIA, Packages::INERTIA_LARAVEL],
         'larastan/larastan' => Packages::LARASTAN,
+        'laravel/boost' => Packages::BOOST,
         'laravel/breeze' => Packages::BREEZE,
         'laravel/cashier' => Packages::CASHIER,
         'laravel/dusk' => Packages::DUSK,
@@ -32,6 +33,7 @@ class Composer
         'laravel/nightwatch' => Packages::NIGHTWATCH,
         'laravel/nova' => Packages::NOVA,
         'laravel/octane' => Packages::OCTANE,
+        'laravel/pail' => Packages::PAIL,
         'laravel/passport' => Packages::PASSPORT,
         'laravel/pennant' => Packages::PENNANT,
         'laravel/pint' => Packages::PINT,
@@ -135,14 +137,14 @@ class Composer
             return $packages;
         }
 
-        foreach (($json['require'] ?? []) as $name => $constraint) {
+        foreach ((array) ($json['require'] ?? []) as $name => $constraint) {
             $packages[$name] = [
                 'constraint' => $constraint,
                 'isDev' => false,
             ];
         }
 
-        foreach (($json['require-dev'] ?? []) as $name => $constraint) {
+        foreach ((array) ($json['require-dev'] ?? []) as $name => $constraint) {
             $packages[$name] = [
                 'constraint' => $constraint,
                 'isDev' => true,

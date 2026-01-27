@@ -1,6 +1,30 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.2.9...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.3.1...main)
+
+## [v0.3.1](https://github.com/laravel/roster/compare/v0.3.0...v0.3.1) - 2026-01-27
+
+### What's Changed
+
+* feat: Add Boost and Pail detection by [@chris-ware](https://github.com/chris-ware) in https://github.com/laravel/roster/pull/23
+* feat(roster): add modular approach detection via root modules directory by [@soleinjast](https://github.com/soleinjast) in https://github.com/laravel/roster/pull/33
+* Fix YarnPackageLock scanner to detect scoped npm packages  by [@zcuric](https://github.com/zcuric) in https://github.com/laravel/roster/pull/35
+
+### New Contributors
+
+* [@chris-ware](https://github.com/chris-ware) made their first contribution in https://github.com/laravel/roster/pull/23
+* [@soleinjast](https://github.com/soleinjast) made their first contribution in https://github.com/laravel/roster/pull/33
+* [@zcuric](https://github.com/zcuric) made their first contribution in https://github.com/laravel/roster/pull/35
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.3.0...v0.3.1
+
+## [v0.3.0](https://github.com/laravel/roster/compare/v0.2.9...v0.3.0) - 2025-12-01
+
+### What's Changed
+
+* Add PHP 8.5 Support by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/30
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.2.9...v0.3.0
 
 ## [v0.2.9](https://github.com/laravel/roster/compare/v0.2.8...v0.2.9) - 2025-10-20
 
