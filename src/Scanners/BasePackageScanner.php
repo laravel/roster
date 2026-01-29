@@ -33,6 +33,11 @@ abstract class BasePackageScanner
     public function __construct(protected string $path) {}
 
     /**
+     * Returns the expected lock file name
+     */
+    abstract protected function lockFile(): string;
+
+    /**
      * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
      */
     abstract public function scan(): Collection;
@@ -40,7 +45,19 @@ abstract class BasePackageScanner
     /**
      * Check if the scanner can handle the given path
      */
-    abstract public function canScan(): bool;
+    public function canScan(): bool
+    {
+        return file_exists($this->lockFilePath());
+    }
+
+    /**
+     * Get the file path of the lock file
+     */
+    protected function lockFilePath(): string
+    {
+        return $this->path.$this->lockFile();
+    }
+
 
     /**
      * Process dependencies and add them to the mapped items collection

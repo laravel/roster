@@ -16,13 +16,18 @@ class YarnPackageLock extends BasePackageScanner
 
     private const YARN_V4_VERSION = '/^version:\s+(.+)$/';
 
+    protected function lockFile(): string
+    {
+        return 'yarn.lock';
+    }
+
     /**
      * @return Collection<int, Package|Approach>
      */
     public function scan(): Collection
     {
         $mappedItems = collect();
-        $lockFilePath = $this->path.'yarn.lock';
+        $lockFilePath = $this->lockFilePath();
 
         $contents = $this->validateFile($lockFilePath, 'Yarn lock');
         if ($contents === null) {
@@ -86,13 +91,5 @@ class YarnPackageLock extends BasePackageScanner
         }
 
         return null;
-    }
-
-    /**
-     * Check if the scanner can handle the given path
-     */
-    public function canScan(): bool
-    {
-        return file_exists($this->path.'yarn.lock');
     }
 }

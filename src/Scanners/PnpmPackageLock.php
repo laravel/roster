@@ -8,13 +8,18 @@ use Symfony\Component\Yaml\Yaml;
 
 class PnpmPackageLock extends BasePackageScanner
 {
+    protected function lockFile(): string
+    {
+        return 'pnpm-lock.yaml';
+    }
+
     /**
      * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
      */
     public function scan(): Collection
     {
         $mappedItems = collect();
-        $lockFilePath = $this->path.'pnpm-lock.yaml';
+        $lockFilePath = $this->lockFilePath();
 
         $contents = $this->validateFile($lockFilePath, 'PNPM lock');
         if ($contents === null) {
@@ -61,13 +66,5 @@ class PnpmPackageLock extends BasePackageScanner
         $this->processDependencies($devDependencies, $mappedItems, true);
 
         return $mappedItems;
-    }
-
-    /**
-     * Check if the scanner can handle the given path
-     */
-    public function canScan(): bool
-    {
-        return file_exists($this->path.'pnpm-lock.yaml');
     }
 }
