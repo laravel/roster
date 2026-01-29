@@ -33,17 +33,17 @@ abstract class BasePackageScanner
     public function __construct(protected string $path) {}
 
     /**
+     * Returns the expected lock file name
+     */
+    abstract public function lockFile(): string;
+
+    /**
      * Check if the scanner can handle the given path
      */
     public function canScan(): bool
     {
         return file_exists($this->lockFilePath());
     }
-
-    /**
-     * Returns the expected lock file name
-     */
-    abstract public function lockFile(): string;
 
     /**
      * Get the file path of the lock file
