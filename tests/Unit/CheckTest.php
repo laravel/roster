@@ -8,8 +8,8 @@ it('adds found composer packages to roster class', function () {
 
     $roster = Roster::scan($path);
 
-    // Overall - 12 packages from composer (dusk, socialite, folio, volt, fluxui_free, laravel, pest, pint, filament, livewire, flux, phpunit) and 2 from package lock (tailwind, alpine)
-    expect($roster->packages())->toHaveCount(15);
+    // Overall - 12 packages from composer (dusk, socialite, folio, volt, fluxui_free, laravel, pest, pint, filament, livewire, flux, phpunit, boost) and 2 from package lock (tailwind, alpine)
+    expect($roster->packages())->toHaveCount(16);
 
     // From composer
     expect($roster->uses(Packages::PEST))->toBeTrue();
@@ -18,6 +18,7 @@ it('adds found composer packages to roster class', function () {
     expect($roster->uses(Packages::FLUXUI_FREE))->toBeTrue();
     expect($roster->uses(Packages::PINT))->toBeTrue();
     expect($roster->uses(Packages::LARAVEL))->toBeTrue();
+    expect($roster->uses(Packages::BOOST))->toBeTrue();
     expect($roster->uses(Packages::INERTIA))->toBeFalse();
 
     expect($roster->usesVersion(Packages::PEST, '3.8.1'))->toBeTrue();

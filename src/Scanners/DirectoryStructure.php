@@ -27,6 +27,10 @@ class DirectoryStructure
             $items->push(new Approach(Approaches::DDD));
         }
 
+        if (is_dir($this->path.DIRECTORY_SEPARATOR.'modules') || is_dir($this->path.DIRECTORY_SEPARATOR.'Modules') || is_dir($this->path.DIRECTORY_SEPARATOR.'app-modules')) {
+            $items->push(new Approach(Approaches::MODULAR));
+        }
+
         return $items;
     }
 }
