@@ -92,12 +92,4 @@ class YarnPackageLock extends BasePackageScanner
 
         return null;
     }
-
-    /**
-     * Check if the scanner can handle the given path
-     */
-    public function canScan(): bool
-    {
-        return file_exists($this->path.'yarn.lock');
-    }
 }
