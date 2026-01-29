@@ -58,7 +58,6 @@ abstract class BasePackageScanner
         return $this->path.$this->lockFile();
     }
 
-
     /**
      * Process dependencies and add them to the mapped items collection
      *
