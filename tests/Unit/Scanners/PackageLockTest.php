@@ -6,8 +6,8 @@ use Laravel\Roster\Scanners\PackageLock;
 
 $packageLockPath = __DIR__.'/../../fixtures/fog/package-lock.json';
 $pnpmLockPath = __DIR__.'/../../fixtures/fog/pnpm-lock.yaml';
-$yarnV1LockPath = __DIR__ . '/../../fixtures/fog/yarn-v1.lock';
-$yarnLockPath = __DIR__ . '/../../fixtures/fog/yarn.lock';
+$yarnV1LockPath = __DIR__.'/../../fixtures/fog/yarn-v1.lock';
+$yarnLockPath = __DIR__.'/../../fixtures/fog/yarn.lock';
 $tempPackagePath = $packageLockPath.'.bac';
 $tempPnpmPath = $pnpmLockPath.'.bac';
 $tempYarnV1Path = $yarnV1LockPath.'.bac';
@@ -75,6 +75,9 @@ it('scans valid yarn.lock v1', function () use ($yarnV1LockPath, $yarnLockPath, 
         rename($yarnLockPath, $tempYarnPath);
     }
 
+    // Backup yarn-v1.lock so afterEach can restore it if the test fails
+    copy($yarnV1LockPath, $tempYarnV1Path);
+
     // Use yarn-v1.lock as yarn.lock for this test
     rename($yarnV1LockPath, $yarnLockPath);
 
@@ -95,19 +98,8 @@ it('scans valid yarn.lock v1', function () use ($yarnV1LockPath, $yarnLockPath, 
     expect($tailwind->version())->toEqual('3.4.16')
         ->and($alpine->version())->toEqual('3.4.4');
 
-    // Restore files
-
-    rename($yarnLockPath, $yarnV1LockPath);
-
-    if (file_exists($tempPackagePath)) {
-        rename($tempPackagePath, $packageLockPath);
-    }
-    if (file_exists($tempPnpmPath)) {
-        rename($tempPnpmPath, $pnpmLockPath);
-    }
-    if (file_exists($tempYarnPath)) {
-        rename($tempYarnPath, $yarnLockPath);
-    }
+    // Cleanup: delete the swapped yarn.lock so afterEach can restore originals
+    unlink($yarnLockPath);
 });
 
 it('scans valid yarn.lock', function () use ($packageLockPath, $pnpmLockPath, $yarnV1LockPath, $tempPackagePath, $tempPnpmPath, $tempYarnV1Path) {
