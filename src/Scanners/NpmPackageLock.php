@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class NpmPackageLock extends BasePackageScanner
 {
-    public function lockFile(): string
+    protected function lockFile(): string
     {
         return 'package-lock.json';
     }

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class BunPackageLock extends BasePackageScanner
 {
-    public function lockFile(): string
+    protected function lockFile(): string
     {
         return 'bun.lock';
     }

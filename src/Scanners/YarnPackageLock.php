@@ -16,7 +16,7 @@ class YarnPackageLock extends BasePackageScanner
 
     private const YARN_V4_VERSION = '/^version:\s+(.+)$/';
 
-    public function lockFile(): string
+    protected function lockFile(): string
     {
         return 'yarn.lock';
     }

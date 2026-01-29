@@ -8,7 +8,7 @@ use Symfony\Component\Yaml\Yaml;
 
 class PnpmPackageLock extends BasePackageScanner
 {
-    public function lockFile(): string
+    protected function lockFile(): string
     {
         return 'pnpm-lock.yaml';
     }
