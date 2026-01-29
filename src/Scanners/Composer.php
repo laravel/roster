@@ -61,7 +61,10 @@ class Composer
     /**
      * @param  string  $path  - composer.lock
      */
-    public function __construct(protected string $path) {}
+    public function __construct(protected string $path)
+    {
+        //
+    }
 
     /**
      * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
@@ -121,7 +124,7 @@ class Composer
     {
         $packages = [];
         $filename = realpath(dirname($this->path)).DIRECTORY_SEPARATOR.'composer.json';
-        if (file_exists($filename) === false || is_readable($filename) === false) {
+        if (! file_exists($filename) || ! is_readable($filename)) {
             return $packages;
         }
 
@@ -135,14 +138,18 @@ class Composer
             return $packages;
         }
 
-        foreach (($json['require'] ?? []) as $name => $constraint) {
+        /** @var array<string, string> $require */
+        $require = $json['require'] ?? [];
+        foreach ($require as $name => $constraint) {
             $packages[$name] = [
                 'constraint' => $constraint,
                 'isDev' => false,
             ];
         }
 
-        foreach (($json['require-dev'] ?? []) as $name => $constraint) {
+        /** @var array<string, string> $requireDev */
+        $requireDev = $json['require-dev'] ?? [];
+        foreach ($requireDev as $name => $constraint) {
             $packages[$name] = [
                 'constraint' => $constraint,
                 'isDev' => true,
@@ -157,9 +164,8 @@ class Composer
      *
      * @param  array<int, array<string, string>>  $packages
      * @param  Collection<int, Package|Approach>  $mappedItems
-     * @return Collection<int, Package|Approach>
      */
-    private function processPackages(array $packages, Collection $mappedItems, bool $isDev): Collection
+    private function processPackages(array $packages, Collection $mappedItems, bool $isDev): void
     {
         foreach ($packages as $package) {
             $packageName = $package['name'] ?? '';
@@ -168,7 +174,7 @@ class Composer
             $direct = false;
             $constraint = $version;
 
-            if (is_null($mappedPackage)) {
+            if ($mappedPackage === null) {
                 continue;
             }
 
@@ -176,7 +182,7 @@ class Composer
                 $mappedPackage = [$mappedPackage];
             }
 
-            if (array_key_exists($packageName, $this->directPackages) === true) {
+            if (array_key_exists($packageName, $this->directPackages)) {
                 $direct = true;
                 $constraint = $this->directPackages[$packageName]['constraint'];
             }
@@ -190,7 +196,5 @@ class Composer
                 });
             }
         }
-
-        return $mappedItems;
     }
 }

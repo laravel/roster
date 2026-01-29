@@ -37,22 +37,22 @@ it('scans valid package-lock.json', function () {
 });
 
 it('detects direct and indirect dependencies with constraints from package.json', function () {
-    $path = __DIR__ . '/../../fixtures/fog/';
+    $path = __DIR__.'/../../fixtures/fog/';
     $packageLock = new PackageLock($path);
     $items = $packageLock->scan();
 
     // Tailwind is a direct dependency
-    $tailwind = $items->first(fn(Package $package) => $package->package() === Packages::TAILWINDCSS);
+    $tailwind = $items->first(fn (Package $package) => $package->package() === Packages::TAILWINDCSS);
     expect($tailwind->direct())->toBeTrue();
     expect($tailwind->indirect())->toBeFalse();
     expect($tailwind->constraint())->toEqual('^3.4.3');
     expect($tailwind->isDev())->toBeFalse();
 
     // Alpine is a direct dev dependency
-    $alpine = $items->first(fn(Package $package) => $package->package() === Packages::ALPINEJS);
+    $alpine = $items->first(fn (Package $package) => $package->package() === Packages::ALPINEJS);
     expect($alpine->direct())->toBeTrue();
     expect($alpine->indirect())->toBeFalse();
-    expect($alpine->constraint())->toEqual('^3.4.2');
+    expect($alpine->constraint())->toEqual('^3.14.8');
     expect($alpine->isDev())->toBeTrue();
 });
 
@@ -70,7 +70,7 @@ it('scans valid pnpm-lock.yaml', function () use ($packageLockPath, $tempPackage
     $alpine = $items->first(fn (Package $package) => $package->package() === Packages::ALPINEJS);
 
     expect($tailwind->version())->toEqual('3.4.3');
-    expect($alpine->version())->toEqual('3.4.2');
+    expect($alpine->version())->toEqual('3.14.8');
 
     // Restore package-lock.json
     if (file_exists($tempPackagePath)) {
@@ -102,7 +102,7 @@ it('scans valid yarn.lock', function () use ($packageLockPath, $pnpmLockPath, $t
     );
 
     expect($tailwind->version())->toEqual('3.4.16')
-        ->and($alpine->version())->toEqual('3.4.4');
+        ->and($alpine->version())->toEqual('3.14.8');
 
     // Restore files
     if (file_exists($tempPackagePath)) {
@@ -154,7 +154,7 @@ it('scans valid bun.lock', function () use ($packageLockPath, $pnpmLockPath, $ya
     );
 
     expect($tailwind->version())->toEqual('3.4.3')
-        ->and($alpine->version())->toEqual('3.4.2')
+        ->and($alpine->version())->toEqual('3.14.8')
         ->and($alpine->isDev())->toBeTrue()
         ->and($tailwind->isDev())->toBeFalse();
 
