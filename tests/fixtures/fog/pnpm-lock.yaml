@@ -13,8 +13,8 @@ importers:
         version: 3.4.3
     devDependencies:
       alpinejs:
-        specifier: ^3.4.2
-        version: 3.4.2
+        specifier: ^3.14.8
+        version: 3.14.8
 
 packages:
 
@@ -61,7 +61,7 @@ packages:
   '@vue/shared@3.1.5':
     resolution: {integrity: sha512-oJ4F3TnvpXaQwZJNF3ZK+kLPHKarDmJjJ6jyzVNDKH9md1dptjC7lWR//jrGuLdek/U6iltWxqAnYOu8gCiOvA==}
 
-  alpinejs@3.4.2:
+  alpinejs@3.14.8:
     resolution: {integrity: sha512-gqSOhTEyryU9FhviNqiHBHzgjkvtukq9tevew29fTj+ofZtfsYriw4zPirHHOAy9bw8QoL3WGhyk7QqCh5AYlw==}
 
   ansi-regex@5.0.1:
@@ -491,7 +491,7 @@ snapshots:
 
   '@vue/shared@3.1.5': {}
 
-  alpinejs@3.4.2:
+  alpinejs@3.14.8:
     dependencies:
       '@vue/reactivity': 3.1.5
 

@@ -41,6 +41,26 @@ it('scans valid package-lock.json', function () {
     expect($inertiaReact)->toBeNull();
 });
 
+it('detects direct and indirect dependencies with constraints from package.json', function () {
+    $path = __DIR__.'/../../fixtures/fog/';
+    $packageLock = new PackageLock($path);
+    $items = $packageLock->scan();
+
+    // Tailwind is a direct dependency
+    $tailwind = $items->first(fn (Package $package) => $package->package() === Packages::TAILWINDCSS);
+    expect($tailwind->direct())->toBeTrue();
+    expect($tailwind->indirect())->toBeFalse();
+    expect($tailwind->constraint())->toEqual('^3.4.3');
+    expect($tailwind->isDev())->toBeFalse();
+
+    // Alpine is a direct dev dependency
+    $alpine = $items->first(fn (Package $package) => $package->package() === Packages::ALPINEJS);
+    expect($alpine->direct())->toBeTrue();
+    expect($alpine->indirect())->toBeFalse();
+    expect($alpine->constraint())->toEqual('^3.14.8');
+    expect($alpine->isDev())->toBeTrue();
+});
+
 it('scans valid pnpm-lock.yaml', function () use ($packageLockPath, $tempPackagePath) {
     // Remove package-lock.json temporarily to test pnpm priority
     if (file_exists($packageLockPath)) {
@@ -55,7 +75,7 @@ it('scans valid pnpm-lock.yaml', function () use ($packageLockPath, $tempPackage
     $alpine = $items->first(fn (Package $package) => $package->package() === Packages::ALPINEJS);
 
     expect($tailwind->version())->toEqual('3.4.3');
-    expect($alpine->version())->toEqual('3.4.2');
+    expect($alpine->version())->toEqual('3.14.8');
 
     // Restore package-lock.json
     if (file_exists($tempPackagePath)) {
@@ -96,7 +116,40 @@ it('scans valid yarn.lock v1', function () use ($yarnV1LockPath, $yarnLockPath, 
     );
 
     expect($tailwind->version())->toEqual('3.4.16')
-        ->and($alpine->version())->toEqual('3.4.4');
+        ->and($alpine->version())->toEqual('3.14.8');
+
+    // Cleanup: delete the swapped yarn.lock so afterEach can restore originals
+    unlink($yarnLockPath);
+});
+
+it('scans valid yarn.lock', function () use ($packageLockPath, $pnpmLockPath, $yarnV1LockPath, $tempPackagePath, $tempPnpmPath, $tempYarnV1Path) {
+    // Remove package-lock.json, pnpm-lock.yaml, and yarn-v1.lock temporarily to test yarn v4 priority
+    if (file_exists($packageLockPath)) {
+        rename($packageLockPath, $tempPackagePath);
+    }
+    if (file_exists($pnpmLockPath)) {
+        rename($pnpmLockPath, $tempPnpmPath);
+    }
+    if (file_exists($yarnV1LockPath)) {
+        rename($yarnV1LockPath, $tempYarnV1Path);
+    }
+
+    $path = __DIR__.'/../../fixtures/fog/';
+    $packageLock = new PackageLock($path);
+    $items = $packageLock->scan();
+
+    /** @var Package $tailwind */
+    $tailwind = $items->first(
+        fn ($item) => $item instanceof Package && $item->package() === Packages::TAILWINDCSS
+    );
+
+    /** @var Package $inertia */
+    $inertia = $items->first(
+        fn ($item) => $item instanceof Package && $item->package() === Packages::INERTIA_VUE
+    );
+
+    expect($tailwind->version())->toEqual('4.1.16')
+        ->and($inertia->version())->toEqual('2.2.15');
 
     // Cleanup: delete the swapped yarn.lock so afterEach can restore originals
     unlink($yarnLockPath);
@@ -187,7 +240,7 @@ it('scans valid bun.lock', function () use ($packageLockPath, $pnpmLockPath, $ya
     );
 
     expect($tailwind->version())->toEqual('3.4.3')
-        ->and($alpine->version())->toEqual('3.4.2')
+        ->and($alpine->version())->toEqual('3.14.8')
         ->and($alpine->isDev())->toBeTrue()
         ->and($tailwind->isDev())->toBeFalse();
 
