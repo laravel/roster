@@ -151,6 +151,39 @@ it('scans valid yarn.lock', function () use ($packageLockPath, $pnpmLockPath, $y
     expect($tailwind->version())->toEqual('4.1.16')
         ->and($inertia->version())->toEqual('2.2.15');
 
+    // Cleanup: delete the swapped yarn.lock so afterEach can restore originals
+    unlink($yarnLockPath);
+});
+
+it('scans valid yarn.lock', function () use ($packageLockPath, $pnpmLockPath, $yarnV1LockPath, $tempPackagePath, $tempPnpmPath, $tempYarnV1Path) {
+    // Remove package-lock.json, pnpm-lock.yaml, and yarn-v1.lock temporarily to test yarn v4 priority
+    if (file_exists($packageLockPath)) {
+        rename($packageLockPath, $tempPackagePath);
+    }
+    if (file_exists($pnpmLockPath)) {
+        rename($pnpmLockPath, $tempPnpmPath);
+    }
+    if (file_exists($yarnV1LockPath)) {
+        rename($yarnV1LockPath, $tempYarnV1Path);
+    }
+
+    $path = __DIR__.'/../../fixtures/fog/';
+    $packageLock = new PackageLock($path);
+    $items = $packageLock->scan();
+
+    /** @var Package $tailwind */
+    $tailwind = $items->first(
+        fn ($item) => $item instanceof Package && $item->package() === Packages::TAILWINDCSS
+    );
+
+    /** @var Package $inertia */
+    $inertia = $items->first(
+        fn ($item) => $item instanceof Package && $item->package() === Packages::INERTIA_VUE
+    );
+
+    expect($tailwind->version())->toEqual('4.1.16')
+        ->and($inertia->version())->toEqual('2.2.15');
+
     // Restore files
     if (file_exists($tempPackagePath)) {
         rename($tempPackagePath, $packageLockPath);
