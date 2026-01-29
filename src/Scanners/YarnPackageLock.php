@@ -26,7 +26,7 @@ class YarnPackageLock extends BasePackageScanner
      */
     public function scan(): Collection
     {
-        $mappedItems = collect([]);
+        $mappedItems = collect();
         $lockFilePath = $this->lockFilePath();
 
         $contents = $this->validateFile($lockFilePath, 'Yarn lock');
@@ -66,6 +66,7 @@ class YarnPackageLock extends BasePackageScanner
 
         return $mappedItems;
     }
+
     private function parsePackageHeader(string $line): ?string
     {
         if (preg_match(self::YARN_V1_HEADER, $line, $matches)) {
