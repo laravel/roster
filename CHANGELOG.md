@@ -1,6 +1,24 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.3.1...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.4.0...main)
+
+## [v0.4.0](https://github.com/laravel/roster/compare/v0.3.1...v0.4.0) - 2026-02-11
+
+### What's Changed
+
+* Drop Php 8.1 Support by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/37
+* Feature detect app-modules directory as a Modular approach by [@webard](https://github.com/webard) in https://github.com/laravel/roster/pull/36
+* Add support for Yarn v4 (Berry) lock file format by [@mathieutu](https://github.com/mathieutu) in https://github.com/laravel/roster/pull/27
+* refactor: extract dup logic into abstract class by [@jackbayliss](https://github.com/jackbayliss) in https://github.com/laravel/roster/pull/26
+* Supports Laravel 13 by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/40
+
+### New Contributors
+
+* [@webard](https://github.com/webard) made their first contribution in https://github.com/laravel/roster/pull/36
+* [@mathieutu](https://github.com/mathieutu) made their first contribution in https://github.com/laravel/roster/pull/27
+* [@jackbayliss](https://github.com/jackbayliss) made their first contribution in https://github.com/laravel/roster/pull/26
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.3.1...v0.4.0
 
 ## [v0.3.1](https://github.com/laravel/roster/compare/v0.3.0...v0.3.1) - 2026-01-27
 
