@@ -26,9 +26,12 @@ abstract class BasePackageScanner
         '@laravel/vite-plugin-wayfinder' => [Packages::WAYFINDER, Packages::WAYFINDER_VITE],
         'prettier' => Packages::PRETTIER,
         'react' => Packages::REACT,
-        'tailwindcss' => [Packages::TAILWINDCSS],
+        'tailwindcss' => Packages::TAILWINDCSS,
         'vue' => Packages::VUE,
     ];
+
+    /** @var array<string, array{constraint: string, isDev: bool}>|null */
+    protected ?array $directPackages = null;
 
     public function __construct(protected string $path) {}
 
@@ -67,6 +70,8 @@ abstract class BasePackageScanner
      */
     protected function processDependencies(array $dependencies, Collection $mappedItems, bool $isDev, ?callable $versionCb = null): void
     {
+        $directPackages = $this->direct();
+
         foreach ($dependencies as $packageName => $version) {
             $mappedPackage = $this->map[$packageName] ?? null;
             if (is_null($mappedPackage)) {
@@ -81,15 +86,70 @@ abstract class BasePackageScanner
                 $version = $versionCb($packageName, $version);
             }
 
+            $direct = false;
+            $constraint = $version;
+            $packageIsDev = $isDev;
+
+            if (array_key_exists($packageName, $directPackages)) {
+                $direct = true;
+                $constraint = $directPackages[$packageName]['constraint'];
+                $packageIsDev = $directPackages[$packageName]['isDev'];
+            }
+
             foreach ($mappedPackage as $mapped) {
                 $niceVersion = preg_replace('/[^0-9.]/', '', $version) ?? '';
                 $mappedItems->push(match (get_class($mapped)) {
-                    Packages::class => new Package($mapped, $packageName, $niceVersion, $isDev),
+                    Packages::class => (new Package($mapped, $packageName, $niceVersion, $packageIsDev))->setDirect($direct)->setConstraint($constraint),
                     Approaches::class => new Approach($mapped),
                     default => throw new \InvalidArgumentException('Unsupported mapping')
                 });
             }
         }
+    }
+
+    /**
+     * Returns direct dependencies as defined in package.json
+     *
+     * @return array<string, array{constraint: string, isDev: bool}>
+     */
+    protected function direct(): array
+    {
+        if ($this->directPackages !== null) {
+            return $this->directPackages;
+        }
+
+        $this->directPackages = [];
+        $filename = $this->path.'package.json';
+
+        if (! file_exists($filename) || ! is_readable($filename)) {
+            return $this->directPackages;
+        }
+
+        $contents = file_get_contents($filename);
+        if ($contents === false) {
+            return $this->directPackages;
+        }
+
+        $json = json_decode($contents, true);
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
+            return $this->directPackages;
+        }
+
+        foreach ((array) ($json['dependencies'] ?? []) as $name => $constraint) {
+            $this->directPackages[$name] = [
+                'constraint' => $constraint,
+                'isDev' => false,
+            ];
+        }
+
+        foreach ((array) ($json['devDependencies'] ?? []) as $name => $constraint) {
+            $this->directPackages[$name] = [
+                'constraint' => $constraint,
+                'isDev' => true,
+            ];
+        }
+
+        return $this->directPackages;
     }
 
     /**
