@@ -26,5 +26,5 @@ it('adds found composer packages to roster class', function () {
 
     // From packagelock
     expect($roster->usesVersion(Packages::TAILWINDCSS, '3.4.16'))->toBeTrue();
-    expect($roster->usesVersion(Packages::ALPINEJS, '3.14.7'))->toBeTrue();
+    expect($roster->usesVersion(Packages::ALPINEJS, '3.14.8'))->toBeTrue();
 });
