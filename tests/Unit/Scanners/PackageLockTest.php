@@ -1,6 +1,7 @@
 <?php
 
 use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\Scanners\PackageLock;
 
@@ -38,6 +39,8 @@ it('scans valid package-lock.json', function () {
     $inertiaReact = $items->first(fn (Package $package) => $package->package() === Packages::INERTIA_REACT);
 
     expect($tailwind->version())->toEqual('3.4.16'); // Installed version, not dependency constraint
+    expect($tailwind->source())->toBe(PackageSource::NPM);
+    expect($tailwind->path())->toEndWith('node_modules'.DIRECTORY_SEPARATOR.'tailwindcss');
     expect($inertiaReact)->toBeNull();
 });
 
@@ -143,6 +146,18 @@ it('handles missing lock files gracefully', function () {
     $items = $packageLock->scan();
 
     expect($items)->toBeEmpty();
+});
+
+it('produces absolute npm package paths from relative input', function () {
+    $path = __DIR__.'/../../fixtures/fog/';
+    $packageLock = new PackageLock($path);
+    $items = $packageLock->scan();
+
+    $tailwind = $items->first(fn (Package $package) => $package->package() === Packages::TAILWINDCSS);
+
+    expect($tailwind->path())->toStartWith(DIRECTORY_SEPARATOR);
+    expect($tailwind->path())->not()->toContain('..');
+    expect($tailwind->path())->toEndWith('node_modules'.DIRECTORY_SEPARATOR.'tailwindcss');
 });
 
 it('scans valid bun.lock', function () use ($packageLockPath, $pnpmLockPath, $yarnLockPath, $yarnV1LockPath, $tempPackagePath, $tempPnpmPath, $tempYarnPath, $tempYarnV1Path) {

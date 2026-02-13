@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 
 abstract class BasePackageScanner
@@ -14,16 +15,16 @@ abstract class BasePackageScanner
     /**
      * Map of package names to enums
      *
-     * @var array<string, Packages|Approaches|array<int, Packages|Approaches>>
+     * @var array<string, Packages|Approaches>
      */
     protected array $map = [
         'alpinejs' => Packages::ALPINEJS,
         'eslint' => Packages::ESLINT,
-        '@inertiajs/react' => [Packages::INERTIA, Packages::INERTIA_REACT],
-        '@inertiajs/svelte' => [Packages::INERTIA, Packages::INERTIA_SVELTE],
-        '@inertiajs/vue3' => [Packages::INERTIA, Packages::INERTIA_VUE],
+        '@inertiajs/react' => Packages::INERTIA_REACT,
+        '@inertiajs/svelte' => Packages::INERTIA_SVELTE,
+        '@inertiajs/vue3' => Packages::INERTIA_VUE,
         'laravel-echo' => Packages::ECHO,
-        '@laravel/vite-plugin-wayfinder' => [Packages::WAYFINDER, Packages::WAYFINDER_VITE],
+        '@laravel/vite-plugin-wayfinder' => Packages::WAYFINDER_VITE,
         'prettier' => Packages::PRETTIER,
         'react' => Packages::REACT,
         'tailwindcss' => Packages::TAILWINDCSS,
@@ -78,10 +79,6 @@ abstract class BasePackageScanner
                 continue;
             }
 
-            if (! is_array($mappedPackage)) {
-                $mappedPackage = [$mappedPackage];
-            }
-
             if (! is_null($versionCb)) {
                 $version = $versionCb($packageName, $version);
             }
@@ -96,14 +93,12 @@ abstract class BasePackageScanner
                 $packageIsDev = $directPackages[$packageName]['isDev'];
             }
 
-            foreach ($mappedPackage as $mapped) {
-                $niceVersion = preg_replace('/[^0-9.]/', '', $version) ?? '';
-                $mappedItems->push(match (get_class($mapped)) {
-                    Packages::class => (new Package($mapped, $packageName, $niceVersion, $packageIsDev))->setDirect($direct)->setConstraint($constraint),
-                    Approaches::class => new Approach($mapped),
-                    default => throw new \InvalidArgumentException('Unsupported mapping')
-                });
-            }
+            $niceVersion = preg_replace('/[^0-9.]/', '', $version) ?? '';
+            $mappedItems->push(match (get_class($mappedPackage)) {
+                Packages::class => (new Package($mappedPackage, $packageName, $niceVersion, $packageIsDev))->setDirect($direct)->setConstraint($constraint)->setSource(PackageSource::NPM)->setPath($this->computePath($packageName)),
+                Approaches::class => new Approach($mappedPackage),
+                default => throw new \InvalidArgumentException('Unsupported mapping')
+            });
         }
     }
 
@@ -150,6 +145,14 @@ abstract class BasePackageScanner
         }
 
         return $this->directPackages;
+    }
+
+    protected function computePath(string $packageName): string
+    {
+        $basePath = realpath($this->path) ?: $this->path;
+
+        return $basePath.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR
+            .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
     }
 
     /**
