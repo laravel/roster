@@ -13,8 +13,13 @@ class Package
 
     protected ?PackageSource $source = null;
 
-    public function __construct(protected Packages $package, protected string $packageName, protected string $version, protected bool $dev = false, protected ?string $path = null)
-    {
+    public function __construct(
+        protected Packages $package,
+        protected string $packageName,
+        protected string $version,
+        protected bool $dev = false,
+        protected ?string $path = null
+    ) {
         //
     }
 
