@@ -124,6 +124,72 @@ it('defaults to vendor when vendor-dir is not configured', function () {
     rmdir($tempDir);
 });
 
+it('handles absolute vendor-dir paths without prepending project directory', function () {
+    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_vendor_dir_test_'.uniqid();
+    mkdir($tempDir, 0755, true);
+
+    $composerJson = $tempDir.DIRECTORY_SEPARATOR.'composer.json';
+    $composerLock = $tempDir.DIRECTORY_SEPARATOR.'composer.lock';
+
+    file_put_contents($composerJson, json_encode([
+        'require' => ['laravel/framework' => '^11.0'],
+        'config' => ['vendor-dir' => '/opt/vendor'],
+    ]));
+
+    file_put_contents($composerLock, json_encode([
+        'packages' => [['name' => 'laravel/framework', 'version' => 'v11.0.0']],
+        'packages-dev' => [],
+    ]));
+
+    $uses = (new Composer($composerLock))->scan();
+
+    $laravel = $uses->first(fn ($item) => $item->package() === Packages::LARAVEL);
+    expect($laravel->path())->toBe('/opt/vendor'.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework');
+    expect($laravel->path())->not()->toContain($tempDir);
+
+    unlink($composerJson);
+    unlink($composerLock);
+    rmdir($tempDir);
+})->skip(DIRECTORY_SEPARATOR === '\\', 'Absolute Unix paths not applicable on Windows');
+
+it('resets vendor-dir to default when config is removed between scans', function () {
+    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_vendor_dir_test_'.uniqid();
+    mkdir($tempDir, 0755, true);
+
+    $composerJson = $tempDir.DIRECTORY_SEPARATOR.'composer.json';
+    $composerLock = $tempDir.DIRECTORY_SEPARATOR.'composer.lock';
+
+    file_put_contents($composerJson, json_encode([
+        'require' => ['laravel/framework' => '^11.0'],
+        'config' => ['vendor-dir' => 'custom/libs'],
+    ]));
+
+    file_put_contents($composerLock, json_encode([
+        'packages' => [['name' => 'laravel/framework', 'version' => 'v11.0.0']],
+        'packages-dev' => [],
+    ]));
+
+    $scanner = new Composer($composerLock);
+    $uses = $scanner->scan();
+
+    $laravel = $uses->first(fn ($item) => $item->package() === Packages::LARAVEL);
+    expect($laravel->path())->toContain('custom'.DIRECTORY_SEPARATOR.'libs');
+
+    file_put_contents($composerJson, json_encode([
+        'require' => ['laravel/framework' => '^11.0'],
+    ]));
+
+    $uses = $scanner->scan();
+
+    $laravel = $uses->first(fn ($item) => $item->package() === Packages::LARAVEL);
+    expect($laravel->path())->toEndWith('vendor'.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework');
+    expect($laravel->path())->not()->toContain('custom'.DIRECTORY_SEPARATOR.'libs');
+
+    unlink($composerJson);
+    unlink($composerLock);
+    rmdir($tempDir);
+});
+
 it('marks transitive dependencies as indirect', function () {
     $path = __DIR__.'/../../fixtures/fog/composer.lock';
     $uses = (new Composer($path))->scan();

@@ -142,9 +142,9 @@ class Composer
         }
 
         $config = $json['config'] ?? [];
-        if (is_array($config) && isset($config['vendor-dir']) && is_string($config['vendor-dir'])) {
-            $this->vendorDir = $config['vendor-dir'];
-        }
+        $this->vendorDir = is_array($config) && isset($config['vendor-dir']) && is_string($config['vendor-dir'])
+            ? $config['vendor-dir']
+            : 'vendor';
 
         foreach ((array) ($json['require'] ?? []) as $name => $constraint) {
             $packages[$name] = [
@@ -201,8 +201,16 @@ class Composer
 
     private function computePath(string $packageName): string
     {
+        $vendorPath = str_replace('/', DIRECTORY_SEPARATOR, $this->vendorDir);
+
+        if (DIRECTORY_SEPARATOR === '/' && str_starts_with($vendorPath, DIRECTORY_SEPARATOR)
+            || DIRECTORY_SEPARATOR === '\\' && preg_match('/^[A-Za-z]:[\\\\\\/]/', $vendorPath)) {
+            return $vendorPath.DIRECTORY_SEPARATOR
+                .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
+        }
+
         return realpath(dirname($this->path)).DIRECTORY_SEPARATOR
-            .str_replace('/', DIRECTORY_SEPARATOR, $this->vendorDir).DIRECTORY_SEPARATOR
+            .$vendorPath.DIRECTORY_SEPARATOR
             .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
     }
 }
