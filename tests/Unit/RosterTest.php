@@ -4,6 +4,7 @@ use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\Roster;
 
@@ -23,7 +24,7 @@ it('knows if a package is in use', function () {
     $roster = (new Roster)->add($package);
 
     expect($roster->uses(Packages::PEST))->toBeTrue();
-    expect($roster->uses(Packages::INERTIA))->toBeFalse();
+    expect($roster->uses(Packages::NOVA))->toBeFalse();
 });
 
 it('knows if a specific version of a package is in use', function () {
@@ -31,7 +32,7 @@ it('knows if a specific version of a package is in use', function () {
     $roster = (new Roster)->add($usedPackage);
 
     expect($roster->uses(Packages::PEST))->toBeTrue();
-    expect($roster->usesVersion(Packages::INERTIA, '1.0.1'))->toBeFalse();
+    expect($roster->usesVersion(Packages::NOVA, '1.0.1'))->toBeFalse();
     expect($roster->usesVersion(Packages::PEST, '1.0.1'))->toBeTrue();
 
     expect($roster->usesVersion(Packages::PEST, '1.0.1', '='))->toBeTrue();
@@ -65,10 +66,10 @@ it('knows if an approach is in use', function () {
 
 it('can return dev packages', function () {
     $devPackage = new Package(Packages::PEST, 'pestphp/pest', '1.0.1', true);
-    $package = new Package(Packages::INERTIA, 'inertiajs/inertia-laravel', '2.0.0');
+    $package = new Package(Packages::LARAVEL, 'laravel/framework', '2.0.0');
     $roster = (new Roster)->add($devPackage)->add($package);
 
-    expect($roster->uses(Packages::INERTIA))->toBeTrue();
+    expect($roster->uses(Packages::LARAVEL))->toBeTrue();
     expect($roster->uses(Packages::PEST))->toBeTrue();
 
     expect($roster->packages()->dev()->toArray())->toBe([$devPackage]);
@@ -79,7 +80,7 @@ it('can return a specific package', function () {
     $roster = (new Roster)->add($package);
 
     expect($roster->package(Packages::PEST))->toBe($package);
-    expect($roster->package(Packages::INERTIA))->toBeNull();
+    expect($roster->package(Packages::NOVA))->toBeNull();
 });
 
 it('can return raw package name', function () {
@@ -87,6 +88,21 @@ it('can return raw package name', function () {
 
     expect($package->rawName())->toBe('pestphp/pest');
     expect($package->name())->toBe('PEST');
+});
+
+it('has null source and path by default', function () {
+    $package = new Package(Packages::PEST, 'pestphp/pest', '1.0.1');
+
+    expect($package->source())->toBeNull();
+    expect($package->path())->toBeNull();
+});
+
+it('can set and get source and path', function () {
+    $package = new Package(Packages::PEST, 'pestphp/pest', '1.0.1');
+    $package->setSource(PackageSource::COMPOSER)->setPath('/some/path/vendor/pestphp/pest');
+
+    expect($package->source())->toBe(PackageSource::COMPOSER);
+    expect($package->path())->toBe('/some/path/vendor/pestphp/pest');
 });
 
 describe('node package manager detection', function () {

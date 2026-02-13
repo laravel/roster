@@ -1,6 +1,7 @@
 <?php
 
 use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Scanners\Composer;
 
 it('can parse installed packages', function () {
@@ -12,6 +13,8 @@ it('can parse installed packages', function () {
     expect($laravel->isDev())->toBeFalse();
     expect($laravel->direct())->toBeTrue();
     expect($laravel->constraint())->toEqual('^11.0');
+    expect($laravel->source())->toBe(PackageSource::COMPOSER);
+    expect($laravel->path())->toEndWith('vendor'.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework');
 
     $pest = $uses->first(fn ($item) => $item->package() === Packages::PEST);
     expect($pest->version())->toEqual('3.8.1');
@@ -25,11 +28,11 @@ it('can parse installed packages', function () {
     expect($pint->direct())->toBeTrue();
     expect($pint->constraint())->toEqual('^1.20');
 
-    $inertia = $uses->first(fn ($item) => $item->package() === Packages::INERTIA);
+    $inertia = $uses->first(fn ($item) => $item->package() === Packages::INERTIA_LARAVEL);
     expect($inertia)->toBeNull();
 });
 
-it('adds 2 entries for inertia', function () {
+it('adds 1 entry for inertia', function () {
     $composerLockContent = '{
         "packages": [
             {
@@ -50,13 +53,6 @@ it('adds 2 entries for inertia', function () {
     $laravel = $uses->first(fn ($item) => $item->package() === Packages::LARAVEL);
     expect($laravel)->toBeNull();
 
-    // INERTIA is the general package - is it using inertia at all?
-    $inertia = $uses->first(fn ($item) => $item->package() === Packages::INERTIA);
-    expect($inertia->version())->toEqual('123.456.789');
-    expect($inertia->isDev())->toBeFalse();
-    expect($inertia->direct())->toBeFalse();
-
-    // The specific package of Inertia
     $inertia = $uses->first(fn ($item) => $item->package() === Packages::INERTIA_LARAVEL);
     expect($inertia->version())->toEqual('123.456.789');
     expect($inertia->isDev())->toBeFalse();

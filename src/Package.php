@@ -3,6 +3,7 @@
 namespace Laravel\Roster;
 
 use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Enums\PackageSource;
 
 class Package
 {
@@ -10,7 +11,12 @@ class Package
 
     protected string $constraint = '';
 
-    public function __construct(protected Packages $package, protected string $packageName, protected string $version, protected bool $dev = false) {}
+    protected ?PackageSource $source = null;
+
+    public function __construct(protected Packages $package, protected string $packageName, protected string $version, protected bool $dev = false,  protected ?string $path = null) 
+    {
+        //
+    }
 
     public function setDev(bool $dev = true): self
     {
@@ -29,6 +35,20 @@ class Package
     public function setConstraint(string $constraint = ''): self
     {
         $this->constraint = $constraint;
+
+        return $this;
+    }
+
+    public function setSource(PackageSource $source): self
+    {
+        $this->source = $source;
+
+        return $this;
+    }
+
+    public function setPath(string $path): self
+    {
+        $this->path = $path;
 
         return $this;
     }
@@ -71,6 +91,16 @@ class Package
     public function isDev(): bool
     {
         return $this->dev;
+    }
+
+    public function source(): ?PackageSource
+    {
+        return $this->source;
+    }
+
+    public function path(): ?string
+    {
+        return $this->path;
     }
 
     public function rawName(): string

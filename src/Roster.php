@@ -133,6 +133,8 @@ class Roster
             'packages' => $this->packages->map(fn (Package $package) => [
                 'name' => $package->name(),
                 'version' => $package->version(),
+                'source' => $package->source()?->value,
+                'path' => $package->path(),
             ])->toArray(),
             'nodePackageManager' => $this->nodePackageManager?->value,
         ], JSON_PRETTY_PRINT) ?: '{}';
