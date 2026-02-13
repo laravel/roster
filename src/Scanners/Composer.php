@@ -49,7 +49,7 @@ class Composer
         'laravel/scout' => Packages::SCOUT,
         'laravel/socialite' => Packages::SOCIALITE,
         'laravel/telescope' => Packages::TELESCOPE,
-        'laravel/wayfinder' => Packages::WAYFINDER_LARAVEL,
+        'laravel/wayfinder' => Packages::WAYFINDER,
         'livewire/flux' => Packages::FLUXUI_FREE,
         'livewire/flux-pro' => Packages::FLUXUI_PRO,
         'livewire/livewire' => Packages::LIVEWIRE,

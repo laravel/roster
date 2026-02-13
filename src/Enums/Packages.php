@@ -42,7 +42,7 @@ enum Packages: string
     case STATAMIC = 'statamic';
     case TELESCOPE = 'telescope';
     case VOLT = 'volt';
-    case WAYFINDER_LARAVEL = 'wayfinder_laravel';
+    case WAYFINDER = 'wayfinder';
     case ZIGGY = 'ziggy';
 
     // NPM
