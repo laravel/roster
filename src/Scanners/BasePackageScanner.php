@@ -149,7 +149,9 @@ abstract class BasePackageScanner
 
     protected function computePath(string $packageName): string
     {
-        return $this->path.'node_modules'.DIRECTORY_SEPARATOR
+        $basePath = realpath($this->path) ?: $this->path;
+
+        return $basePath.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR
             .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
     }
 

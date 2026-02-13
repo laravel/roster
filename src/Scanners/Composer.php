@@ -12,6 +12,8 @@ use Laravel\Roster\Package;
 
 class Composer
 {
+    protected string $vendorDir = 'vendor';
+
     /**
      * Map of composer package names to enums
      *
@@ -139,6 +141,11 @@ class Composer
             return $packages;
         }
 
+        $config = $json['config'] ?? [];
+        if (is_array($config) && isset($config['vendor-dir']) && is_string($config['vendor-dir'])) {
+            $this->vendorDir = $config['vendor-dir'];
+        }
+
         foreach ((array) ($json['require'] ?? []) as $name => $constraint) {
             $packages[$name] = [
                 'constraint' => $constraint,
@@ -194,7 +201,8 @@ class Composer
 
     private function computePath(string $packageName): string
     {
-        return realpath(dirname($this->path)).DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR
+        return realpath(dirname($this->path)).DIRECTORY_SEPARATOR
+            .str_replace('/', DIRECTORY_SEPARATOR, $this->vendorDir).DIRECTORY_SEPARATOR
             .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
     }
 }
