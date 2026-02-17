@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.4.0...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.5.0...main)
+
+## [v0.5.0](https://github.com/laravel/roster/compare/v0.4.0...v0.5.0) - 2026-02-17
+
+### What's Changed
+
+* Add direct and constraint support to NPM package scanners by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/41
+* Add path detection functionality by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/42
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.4.0...v0.5.0
 
 ## [v0.4.0](https://github.com/laravel/roster/compare/v0.3.1...v0.4.0) - 2026-02-11
 
