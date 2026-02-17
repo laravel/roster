@@ -19,7 +19,7 @@ it('adds found composer packages to roster class', function () {
     expect($roster->uses(Packages::PINT))->toBeTrue();
     expect($roster->uses(Packages::LARAVEL))->toBeTrue();
     expect($roster->uses(Packages::BOOST))->toBeTrue();
-    expect($roster->uses(Packages::INERTIA))->toBeFalse();
+    expect($roster->uses(Packages::NOVA))->toBeFalse();
 
     expect($roster->usesVersion(Packages::PEST, '3.8.1'))->toBeTrue();
     expect($roster->usesVersion(Packages::PINT, '1.21.2'))->toBeTrue();

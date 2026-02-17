@@ -7,19 +7,23 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\Packages;
+use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 
 class Composer
 {
+    protected string $vendorDir = 'vendor';
+
     /**
      * Map of composer package names to enums
      *
-     * @var array<string, Packages|Approaches|array<int, Packages|Approaches>|null>
+     * @var array<string, Packages|Approaches>
      */
     protected array $map = [
         'filament/filament' => Packages::FILAMENT,
-        'inertiajs/inertia-laravel' => [Packages::INERTIA, Packages::INERTIA_LARAVEL],
+        'inertiajs/inertia-laravel' => Packages::INERTIA_LARAVEL,
         'larastan/larastan' => Packages::LARASTAN,
+        'laravel/ai' => Packages::AI,
         'laravel/boost' => Packages::BOOST,
         'laravel/breeze' => Packages::BREEZE,
         'laravel/cashier' => Packages::CASHIER,
@@ -45,7 +49,7 @@ class Composer
         'laravel/scout' => Packages::SCOUT,
         'laravel/socialite' => Packages::SOCIALITE,
         'laravel/telescope' => Packages::TELESCOPE,
-        'laravel/wayfinder' => [Packages::WAYFINDER, Packages::WAYFINDER_LARAVEL],
+        'laravel/wayfinder' => Packages::WAYFINDER,
         'livewire/flux' => Packages::FLUXUI_FREE,
         'livewire/flux-pro' => Packages::FLUXUI_PRO,
         'livewire/livewire' => Packages::LIVEWIRE,
@@ -137,6 +141,11 @@ class Composer
             return $packages;
         }
 
+        $config = $json['config'] ?? [];
+        $this->vendorDir = is_array($config) && isset($config['vendor-dir']) && is_string($config['vendor-dir'])
+            ? $config['vendor-dir']
+            : 'vendor';
+
         foreach ((array) ($json['require'] ?? []) as $name => $constraint) {
             $packages[$name] = [
                 'constraint' => $constraint,
@@ -174,25 +183,34 @@ class Composer
                 continue;
             }
 
-            if (! is_array($mappedPackage)) {
-                $mappedPackage = [$mappedPackage];
-            }
-
             if (array_key_exists($packageName, $this->directPackages) === true) {
                 $direct = true;
                 $constraint = $this->directPackages[$packageName]['constraint'];
             }
 
-            foreach ($mappedPackage as $mapped) {
-                $niceVersion = preg_replace('/[^0-9.]/', '', $version) ?? '';
-                $mappedItems->push(match (get_class($mapped)) {
-                    Packages::class => (new Package($mapped, $packageName, $niceVersion, $isDev))->setDirect($direct)->setConstraint($constraint),
-                    Approaches::class => new Approach($mapped),
-                    default => throw new \InvalidArgumentException('Unsupported mapping')
-                });
-            }
+            $niceVersion = preg_replace('/[^0-9.]/', '', $version) ?? '';
+            $mappedItems->push(match (get_class($mappedPackage)) {
+                Packages::class => (new Package($mappedPackage, $packageName, $niceVersion, $isDev))->setDirect($direct)->setConstraint($constraint)->setSource(PackageSource::COMPOSER)->setPath($this->computePath($packageName)),
+                Approaches::class => new Approach($mappedPackage),
+                default => throw new \InvalidArgumentException('Unsupported mapping')
+            });
         }
 
         return $mappedItems;
+    }
+
+    private function computePath(string $packageName): string
+    {
+        $vendorPath = str_replace('/', DIRECTORY_SEPARATOR, $this->vendorDir);
+
+        if (DIRECTORY_SEPARATOR === '/' && str_starts_with($vendorPath, DIRECTORY_SEPARATOR)
+            || DIRECTORY_SEPARATOR === '\\' && preg_match('/^[A-Za-z]:[\\\\\\/]/', $vendorPath)) {
+            return $vendorPath.DIRECTORY_SEPARATOR
+                .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
+        }
+
+        return realpath(dirname($this->path)).DIRECTORY_SEPARATOR
+            .$vendorPath.DIRECTORY_SEPARATOR
+            .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
     }
 }
