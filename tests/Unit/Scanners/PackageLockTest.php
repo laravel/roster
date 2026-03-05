@@ -37,11 +37,21 @@ it('scans valid package-lock.json', function () {
 
     $tailwind = $items->first(fn (Package $package) => $package->package() === Packages::TAILWINDCSS);
     $inertiaReact = $items->first(fn (Package $package) => $package->package() === Packages::INERTIA_REACT);
+    $echoReact = $items->first(fn (Package $package) => $package->package() === Packages::ECHO_REACT);
+    $echoVue = $items->first(fn (Package $package) => $package->package() === Packages::ECHO_VUE);
 
     expect($tailwind->version())->toEqual('3.4.16'); // Installed version, not dependency constraint
     expect($tailwind->source())->toBe(PackageSource::NPM);
     expect($tailwind->path())->toEndWith('node_modules'.DIRECTORY_SEPARATOR.'tailwindcss');
     expect($inertiaReact)->toBeNull();
+    expect($echoReact)->not->toBeNull();
+    expect($echoReact->version())->toEqual('0.1.0');
+    expect($echoReact->source())->toBe(PackageSource::NPM);
+    expect($echoReact->path())->toEndWith('node_modules'.DIRECTORY_SEPARATOR.'@laravel'.DIRECTORY_SEPARATOR.'echo-react');
+    expect($echoVue)->not->toBeNull();
+    expect($echoVue->version())->toEqual('0.1.0');
+    expect($echoVue->source())->toBe(PackageSource::NPM);
+    expect($echoVue->path())->toEndWith('node_modules'.DIRECTORY_SEPARATOR.'@laravel'.DIRECTORY_SEPARATOR.'echo-vue');
 });
 
 it('detects direct and indirect dependencies with constraints from package.json', function () {
