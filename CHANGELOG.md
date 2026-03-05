@@ -1,6 +1,14 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.5.0...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v0.5.1...main)
+
+## [v0.5.1](https://github.com/laravel/roster/compare/v0.5.0...v0.5.1) - 2026-03-05
+
+### What's Changed
+
+* Add [@laravel](https://github.com/laravel)/echo-react and [@laravel](https://github.com/laravel)/echo-vue package detection by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/44
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.5.0...v0.5.1
 
 ## [v0.5.0](https://github.com/laravel/roster/compare/v0.4.0...v0.5.0) - 2026-02-17
 
