@@ -12,6 +12,12 @@ importers:
         specifier: 3.4.3
         version: 3.4.3
     devDependencies:
+      '@laravel/echo-react':
+        specifier: ^0.1.0
+        version: 0.1.0
+      '@laravel/echo-vue':
+        specifier: ^0.1.0
+        version: 0.1.0
       alpinejs:
         specifier: ^3.14.8
         version: 3.14.8
@@ -21,6 +27,12 @@ packages:
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
+
+  '@laravel/echo-react@0.1.0':
+    resolution: {integrity: sha512-abc123==}
+
+  '@laravel/echo-vue@0.1.0':
+    resolution: {integrity: sha512-def456==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -446,6 +458,10 @@ packages:
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
+
+  '@laravel/echo-react@0.1.0': {}
+
+  '@laravel/echo-vue@0.1.0': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:

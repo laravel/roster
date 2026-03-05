@@ -7,11 +7,17 @@
         "tailwindcss": "^3.4.3",
       },
       "devDependencies": {
+        "@laravel/echo-react": "^0.1.0",
+        "@laravel/echo-vue": "^0.1.0",
         "alpinejs": "3.14.8",
       },
     },
   },
   "packages": {
+    "@laravel/echo-react": ["@laravel/echo-react@0.1.0", "", {}, "sha512-abc123=="],
+
+    "@laravel/echo-vue": ["@laravel/echo-vue@0.1.0", "", {}, "sha512-def456=="],
+
     "@vue/reactivity": ["@vue/reactivity@3.1.5", "", { "dependencies": { "@vue/shared": "3.1.5" } }, "sha512-1tdfLmNjWG6t/CsPldh+foumYFo3cpyCHgBYQ34ylaMsJ+SNHQ1kApMIa8jN+i593zQuaw3AdWH0nJTARzCFhg=="],
 
     "@vue/shared": ["@vue/shared@3.1.5", "", {}, "sha512-oJ4F3TnvpXaQwZJNF3ZK+kLPHKarDmJjJ6jyzVNDKH9md1dptjC7lWR//jrGuLdek/U6iltWxqAnYOu8gCiOvA=="],

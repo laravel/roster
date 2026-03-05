@@ -24,6 +24,8 @@ abstract class BasePackageScanner
         '@inertiajs/svelte' => Packages::INERTIA_SVELTE,
         '@inertiajs/vue3' => Packages::INERTIA_VUE,
         'laravel-echo' => Packages::ECHO,
+        '@laravel/echo-react' => Packages::ECHO_REACT,
+        '@laravel/echo-vue' => Packages::ECHO_VUE,
         '@laravel/vite-plugin-wayfinder' => Packages::WAYFINDER_VITE,
         'prettier' => Packages::PRETTIER,
         'react' => Packages::REACT,

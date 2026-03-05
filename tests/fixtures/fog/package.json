@@ -9,6 +9,8 @@
         "tailwindcss": "^3.4.3"
     },
     "devDependencies": {
+        "@laravel/echo-react": "^0.1.0",
+        "@laravel/echo-vue": "^0.1.0",
         "@tailwindcss/forms": "^0.5.7",
         "@tailwindcss/typography": "^0.5.12",
         "alpinejs": "^3.14.8",
