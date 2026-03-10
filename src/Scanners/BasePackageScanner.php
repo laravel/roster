@@ -44,7 +44,7 @@ abstract class BasePackageScanner
     abstract protected function lockFile(): string;
 
     /**
-     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
+     * @return Collection<int, Package|Approach>
      */
     abstract public function scan(): Collection;
 

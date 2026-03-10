@@ -5,13 +5,14 @@ namespace Laravel\Roster\Scanners;
 use Illuminate\Support\Collection;
 use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
+use Laravel\Roster\Package;
 
 class DirectoryStructure
 {
     public function __construct(protected string $path) {}
 
     /**
-     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
+     * @return Collection<int, Package|Approach>
      */
     public function scan(): Collection
     {
