@@ -4,6 +4,8 @@ namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Laravel\Roster\Approach;
+use Laravel\Roster\Package;
 use Symfony\Component\Yaml\Yaml;
 
 class PnpmPackageLock extends BasePackageScanner
@@ -14,7 +16,7 @@ class PnpmPackageLock extends BasePackageScanner
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
+     * @return Collection<int, Package|Approach>
      */
     public function scan(): Collection
     {

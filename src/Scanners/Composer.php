@@ -70,7 +70,7 @@ class Composer
     public function __construct(protected string $path) {}
 
     /**
-     * @return \Illuminate\Support\Collection<int, \Laravel\Roster\Package|\Laravel\Roster\Approach>
+     * @return Collection<int, Package|Approach>
      */
     public function scan(): Collection
     {

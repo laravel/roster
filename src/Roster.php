@@ -19,7 +19,7 @@ use Laravel\Roster\Scanners\PackageLock;
 class Roster
 {
     /**
-     * @var Collection<int, \Laravel\Roster\Approach>
+     * @var Collection<int, Approach>
      */
     protected Collection $approaches;
 
@@ -69,7 +69,7 @@ class Roster
             return false;
         }
 
-        /** @var \Laravel\Roster\Package $package */
+        /** @var Package $package */
         return version_compare($package->version(), $version, $operator);
     }
 
@@ -97,7 +97,7 @@ class Roster
     }
 
     /**
-     * @return Collection<int, \Laravel\Roster\Approach>
+     * @return Collection<int, Approach>
      */
     public function approaches(): Collection
     {
