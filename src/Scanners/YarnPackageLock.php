@@ -24,7 +24,7 @@ class YarnPackageLock extends BasePackageScanner
         $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
-        $contents = $this->validateFile($lockFilePath, 'Yarn lock');
+        $contents = $this->readContents($lockFilePath, 'Yarn lock');
         if ($contents === null) {
             return $packages;
         }
@@ -35,8 +35,10 @@ class YarnPackageLock extends BasePackageScanner
 
         foreach ($lines as $line) {
             $line = trim($line);
-
-            if ($line === '' || str_starts_with($line, '#')) {
+            if ($line === '') {
+                continue;
+            }
+            if (str_starts_with($line, '#')) {
                 continue;
             }
 

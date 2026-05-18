@@ -4,11 +4,11 @@ use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Registry;
 use Laravel\Roster\Scanners\Composer;
 
-it('parses installed packages with raw names and auto-aliases', function () {
+it('parses installed packages with raw names and auto-aliases', function (): void {
     $path = __DIR__.'/../../fixtures/fog/composer.lock';
     $packages = (new Composer($path, new Registry))->scan();
 
-    $laravel = $packages->first(fn ($p) => $p->name() === 'laravel/framework');
+    $laravel = $packages->first(fn ($p): bool => $p->name() === 'laravel/framework');
     expect($laravel)->not->toBeNull();
     expect($laravel->alias())->toBe('framework');
     expect($laravel->version())->toEqual('11.44.2');
@@ -18,14 +18,14 @@ it('parses installed packages with raw names and auto-aliases', function () {
     expect($laravel->source())->toBe(PackageSource::COMPOSER);
     expect($laravel->path())->toEndWith('vendor'.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework');
 
-    $pest = $packages->first(fn ($p) => $p->name() === 'pestphp/pest');
+    $pest = $packages->first(fn ($p): bool => $p->name() === 'pestphp/pest');
     expect($pest)->not->toBeNull();
     expect($pest->alias())->toBe('pest');
     expect($pest->version())->toEqual('3.8.1');
     expect($pest->isDev())->toBeTrue();
 });
 
-it('strips composer version prefixes', function () {
+it('strips composer version prefixes', function (): void {
     $composerLockContent = '{
         "packages": [
             {"name": "inertiajs/inertia-laravel", "version": "v2.0.5"}
@@ -39,13 +39,13 @@ it('strips composer version prefixes', function () {
     $packages = (new Composer($tempFile, new Registry))->scan();
     unlink($tempFile);
 
-    $inertia = $packages->first(fn ($p) => $p->name() === 'inertiajs/inertia-laravel');
+    $inertia = $packages->first(fn ($p): bool => $p->name() === 'inertiajs/inertia-laravel');
     expect($inertia)->not->toBeNull();
     expect($inertia->alias())->toBe('inertia-laravel');
     expect($inertia->version())->toEqual('2.0.5');
 });
 
-it('respects composer vendor-dir config', function () {
+it('respects composer vendor-dir config', function (): void {
     $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_vendor_dir_test_'.uniqid();
     mkdir($tempDir, 0755, true);
 
@@ -59,7 +59,7 @@ it('respects composer vendor-dir config', function () {
     ]));
 
     $packages = (new Composer($tempDir.DIRECTORY_SEPARATOR.'composer.lock', new Registry))->scan();
-    $laravel = $packages->first(fn ($p) => $p->name() === 'laravel/framework');
+    $laravel = $packages->first(fn ($p): bool => $p->name() === 'laravel/framework');
 
     expect($laravel->path())->toEndWith('lib'.DIRECTORY_SEPARATOR.'packages'.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework');
 
@@ -68,19 +68,19 @@ it('respects composer vendor-dir config', function () {
     rmdir($tempDir);
 });
 
-it('marks transitive dependencies as indirect', function () {
+it('marks transitive dependencies as indirect', function (): void {
     $path = __DIR__.'/../../fixtures/fog/composer.lock';
     $packages = (new Composer($path, new Registry))->scan();
 
-    $livewire = $packages->first(fn ($p) => $p->name() === 'livewire/livewire');
+    $livewire = $packages->first(fn ($p): bool => $p->name() === 'livewire/livewire');
     expect($livewire->isDirect())->toBeTrue();
 
-    $prompts = $packages->first(fn ($p) => $p->name() === 'laravel/prompts');
+    $prompts = $packages->first(fn ($p): bool => $p->name() === 'laravel/prompts');
     expect($prompts)->not->toBeNull();
     expect($prompts->isDirect())->toBeFalse();
 });
 
-it('applies explicit registry aliases', function () {
+it('applies explicit registry aliases', function (): void {
     $composerLockContent = '{
         "packages": [
             {"name": "spatie/laravel-permission", "version": "v6.10.0"}
@@ -95,6 +95,6 @@ it('applies explicit registry aliases', function () {
     $packages = (new Composer($tempFile, $registry))->scan();
     unlink($tempFile);
 
-    $permission = $packages->first(fn ($p) => $p->name() === 'spatie/laravel-permission');
+    $permission = $packages->first(fn ($p): bool => $p->name() === 'spatie/laravel-permission');
     expect($permission->alias())->toBe('permission');
 });

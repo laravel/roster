@@ -11,7 +11,7 @@ $yarnLock = $fogDir.'yarn.lock';
 $yarnV1 = $fogDir.'yarn-v1.lock';
 $bunLock = $fogDir.'bun.lock';
 
-afterEach(function () use ($packageLock, $pnpmLock, $yarnLock, $yarnV1, $bunLock) {
+afterEach(function () use ($packageLock, $pnpmLock, $yarnLock, $yarnV1, $bunLock): void {
     foreach ([$packageLock, $pnpmLock, $yarnLock, $yarnV1, $bunLock] as $file) {
         if (file_exists($file.'.bac')) {
             rename($file.'.bac', $file);
@@ -19,31 +19,31 @@ afterEach(function () use ($packageLock, $pnpmLock, $yarnLock, $yarnV1, $bunLock
     }
 });
 
-it('scans package-lock.json when present', function () use ($fogDir) {
+it('scans package-lock.json when present', function () use ($fogDir): void {
     $packages = (new JsLockfile($fogDir, new Registry))->scan();
 
-    $tailwind = $packages->first(fn ($p) => $p->name() === 'tailwindcss');
+    $tailwind = $packages->first(fn ($p): bool => $p->name() === 'tailwindcss');
     expect($tailwind->version())->toEqual('3.4.16');
     expect($tailwind->path())->toEndWith('node_modules'.DIRECTORY_SEPARATOR.'tailwindcss');
 
-    $echoReact = $packages->first(fn ($p) => $p->name() === '@laravel/echo-react');
+    $echoReact = $packages->first(fn ($p): bool => $p->name() === '@laravel/echo-react');
     expect($echoReact)->not->toBeNull();
 });
 
-it('falls back to pnpm-lock when package-lock missing', function () use ($fogDir, $packageLock) {
+it('falls back to pnpm-lock when package-lock missing', function () use ($fogDir, $packageLock): void {
     rename($packageLock, $packageLock.'.bac');
 
     $packages = (new JsLockfile($fogDir, new Registry))->scan();
-    $tailwind = $packages->first(fn ($p) => $p->name() === 'tailwindcss');
+    $tailwind = $packages->first(fn ($p): bool => $p->name() === 'tailwindcss');
     expect($tailwind->version())->toEqual('3.4.3');
 });
 
-it('reports the committed manager from lockfile presence', function () use ($fogDir) {
+it('reports the committed manager from lockfile presence', function () use ($fogDir): void {
     $manager = (new JsLockfile($fogDir, new Registry))->committedManager();
     expect($manager)->toBe(JsPackageManager::NPM);
 });
 
-it('falls back to package.json when no lockfile is committed', function () {
+it('falls back to package.json when no lockfile is committed', function (): void {
     $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_pkgjson_'.uniqid();
     mkdir($tempDir);
 
@@ -54,12 +54,12 @@ it('falls back to package.json when no lockfile is committed', function () {
 
     $packages = (new JsLockfile($tempDir.DIRECTORY_SEPARATOR, new Registry))->scan();
 
-    $vue = $packages->first(fn ($p) => $p->name() === 'vue');
+    $vue = $packages->first(fn ($p): bool => $p->name() === 'vue');
     expect($vue)->not->toBeNull();
     expect($vue->version())->toEqual('3.4.0');
     expect($vue->isDirect())->toBeTrue();
 
-    $inertia = $packages->first(fn ($p) => $p->name() === '@inertiajs/react');
+    $inertia = $packages->first(fn ($p): bool => $p->name() === '@inertiajs/react');
     expect($inertia)->not->toBeNull();
     expect($inertia->alias())->toBe('inertia-react');
     expect($inertia->isDev())->toBeTrue();
@@ -68,7 +68,7 @@ it('falls back to package.json when no lockfile is committed', function () {
     rmdir($tempDir);
 });
 
-it('returns null committedManager when no lockfile present', function () {
+it('returns null committedManager when no lockfile present', function (): void {
     $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_pkgjson_only_'.uniqid();
     mkdir($tempDir);
 

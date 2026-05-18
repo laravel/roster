@@ -121,7 +121,7 @@ use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\TestFramework;
 
 $roster->stack()->is(Stack::INERTIA_REACT);
-$roster->stack()->is([Stack::INERTIA_REACT, Stack::INERTIA_VUE]);
+$roster->stack()->uses([Stack::INERTIA_REACT, Stack::INERTIA_VUE]);
 $roster->stack()->all();                               // Stack[]
 
 $roster->testFramework()?->is(TestFramework::PEST);
@@ -130,10 +130,8 @@ $roster->browserTestFrameworks()->uses(BrowserTestFramework::PLAYWRIGHT);
 $roster->frontend()->is(Frontend::REACT);
 ```
 
-`is()` reads naturally for the singular detectors (`stack`, `frontend`,
-`starterKit`) and `uses()` for the multi-value ones (`browserTestFrameworks`,
-`approach`). Both methods are aliases — either form works on any
-`EnumSet`.
+Use `is()` to check for a single value and `uses()` to check for one or
+more (it accepts either a single case or an array of cases).
 
 ### Starter kit
 

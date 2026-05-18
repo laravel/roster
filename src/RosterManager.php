@@ -2,6 +2,8 @@
 
 namespace Laravel\Roster;
 
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Laravel\Roster\Detectors\AgentsDetection;
 use Laravel\Roster\Ecosystems\JsEcosystem;
 use Laravel\Roster\Ecosystems\PhpEcosystem;
@@ -12,16 +14,30 @@ use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\StarterKit;
 use Laravel\Roster\Enums\TestFramework;
 use Laravel\Roster\Support\EnumSet;
+use Throwable;
 
 class RosterManager
 {
+    protected const LOCKFILES = [
+        'composer.lock',
+        'composer.json',
+        'package-lock.json',
+        'pnpm-lock.yaml',
+        'yarn.lock',
+        'bun.lockb',
+        'bun.lock',
+        'package.json',
+    ];
+
     protected ?Roster $cached = null;
+
+    protected int $ttl = 3600;
+
+    protected bool $useCache = true;
 
     public function __construct(protected Registry $registry) {}
 
     /**
-     * Register custom aliases against the shared Registry.
-     *
      * @param  callable(Registry): void  $callback
      */
     public function extend(callable $callback): self
@@ -37,9 +53,24 @@ class RosterManager
         return $this->registry;
     }
 
+    public function ttl(int $seconds): self
+    {
+        $this->ttl = $seconds;
+
+        return $this;
+    }
+
+    public function withoutCache(): self
+    {
+        $this->useCache = false;
+        $this->cached = null;
+
+        return $this;
+    }
+
     public function scan(?string $basePath = null, bool $detectSystem = true): Roster
     {
-        return $this->cached = Roster::scan($basePath, $detectSystem, $this->registry);
+        return $this->cached = $this->resolveScan($basePath, $detectSystem);
     }
 
     public function fresh(): self
@@ -51,7 +82,90 @@ class RosterManager
 
     public function instance(): Roster
     {
-        return $this->cached ??= $this->scan();
+        return $this->cached ??= $this->resolveScan(null, true);
+    }
+
+    private function resolveScan(?string $basePath, bool $detectSystem): Roster
+    {
+        if (! $this->useCache) {
+            return Roster::scan($basePath, $detectSystem, $this->registry);
+        }
+
+        $repo = $this->cacheRepository();
+        if (!$repo instanceof \Illuminate\Contracts\Cache\Repository) {
+            return Roster::scan($basePath, $detectSystem, $this->registry);
+        }
+
+        $resolvedBase = $this->resolveBasePath($basePath);
+        $key = $this->cacheKey($resolvedBase, $detectSystem);
+
+        try {
+            /** @var mixed $value */
+            $value = $repo->remember(
+                $key,
+                $this->ttl,
+                fn (): \Laravel\Roster\Roster => Roster::scan($resolvedBase, $detectSystem, $this->registry),
+            );
+
+            if ($value instanceof Roster) {
+                return $value;
+            }
+        } catch (Throwable) {
+            // Cache driver failure or poisoned entry — fall through to a direct scan.
+        }
+
+        return Roster::scan($resolvedBase, $detectSystem, $this->registry);
+    }
+
+    private function cacheRepository(): ?CacheRepository
+    {
+        try {
+            $container = Container::getInstance();
+            if (! $container->bound('cache')) {
+                return null;
+            }
+
+            $manager = $container->make('cache');
+            if (! is_object($manager) || ! method_exists($manager, 'store')) {
+                return null;
+            }
+
+            $store = $manager->store();
+
+            return $store instanceof CacheRepository ? $store : null;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private function resolveBasePath(?string $basePath): string
+    {
+        return Roster::normalizeBasePath($basePath);
+    }
+
+    private function cacheKey(string $basePath, bool $detectSystem): string
+    {
+        $parts = [
+            'base' => $basePath,
+            'system' => $detectSystem,
+            'registry' => $this->registry->signature(),
+            'locks' => $this->lockfileHash($basePath),
+        ];
+
+        return 'roster:'.md5(serialize($parts));
+    }
+
+    private function lockfileHash(string $basePath): string
+    {
+        $hash = hash_init('md5');
+
+        foreach (self::LOCKFILES as $file) {
+            $path = $basePath.$file;
+            $fileHash = is_file($path) ? @md5_file($path) : null;
+            hash_update($hash, $file.':'.($fileHash ?: '0').'|');
+        }
+
+        return hash_final($hash);
     }
 
     public function php(): PhpEcosystem

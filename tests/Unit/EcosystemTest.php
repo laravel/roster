@@ -3,7 +3,7 @@
 use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\PackageCollection;
 
-it('finds a package by alias or raw name', function () {
+it('finds a package by alias or raw name', function (): void {
     $php = phpEcosystem([
         ['name' => 'pestphp/pest', 'alias' => 'pest', 'dev' => true],
     ]);
@@ -13,7 +13,7 @@ it('finds a package by alias or raw name', function () {
     expect($php->uses('phpunit'))->toBeFalse();
 });
 
-it('compares versions through uses', function () {
+it('compares versions through uses', function (): void {
     $php = phpEcosystem([
         ['name' => 'laravel/framework', 'version' => '11.44.2', 'alias' => 'framework'],
     ]);
@@ -24,14 +24,14 @@ it('compares versions through uses', function () {
     expect($php->uses('unknown', '1.0.0'))->toBeFalse();
 });
 
-it('throws on invalid version or operator', function () {
+it('throws on invalid version or operator', function (): void {
     $php = new PhpEcosystem(new PackageCollection);
 
-    expect(fn () => $php->uses('foo', '1.x'))->toThrow(InvalidArgumentException::class);
-    expect(fn () => $php->uses('foo', '1.0.0', '##bad##'))->toThrow(InvalidArgumentException::class);
+    expect(fn (): bool => $php->uses('foo', '1.x'))->toThrow(InvalidArgumentException::class);
+    expect(fn (): bool => $php->uses('foo', '1.0.0', '##bad##'))->toThrow(InvalidArgumentException::class);
 });
 
-it('exposes dev / production filters', function () {
+it('exposes dev / production filters', function (): void {
     $php = phpEcosystem([
         ['name' => 'laravel/framework', 'alias' => 'framework'],
         ['name' => 'pestphp/pest', 'alias' => 'pest', 'dev' => true],

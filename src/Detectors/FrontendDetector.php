@@ -19,9 +19,11 @@ class FrontendDetector
         if ($js->uses('vue')) {
             $found[] = Frontend::VUE;
         }
+
         if ($js->uses('react')) {
             $found[] = Frontend::REACT;
         }
+
         if ($js->uses('svelte')) {
             $found[] = Frontend::SVELTE;
         }

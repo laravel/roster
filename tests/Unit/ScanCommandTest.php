@@ -5,7 +5,7 @@ use Tests\TestCase;
 
 uses(TestCase::class);
 
-it('outputs JSON for directory with packages', function () {
+it('outputs JSON for directory with packages', function (): void {
     $path = __DIR__.'/../fixtures/fog';
 
     Artisan::call('roster:scan', ['directory' => $path, '--no-system' => true]);
@@ -19,7 +19,7 @@ it('outputs JSON for directory with packages', function () {
     expect(count($decoded['php']))->toBeGreaterThan(0);
 });
 
-it('outputs empty JSON for empty directory', function () {
+it('outputs empty JSON for empty directory', function (): void {
     $emptyDir = sys_get_temp_dir().'/roster_test_empty_'.uniqid();
     mkdir($emptyDir);
 
@@ -35,7 +35,7 @@ it('outputs empty JSON for empty directory', function () {
     rmdir($emptyDir);
 });
 
-it('returns failure for non-existent directory', function () {
+it('returns failure for non-existent directory', function (): void {
     $exitCode = Artisan::call('roster:scan', ['directory' => '/non/existent/directory']);
     expect($exitCode)->toBe(1);
 });

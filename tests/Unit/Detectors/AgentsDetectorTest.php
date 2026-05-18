@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Enums\Agent;
 
-it('detects configured agents from filesystem markers', function () {
+it('detects configured agents from filesystem markers', function (): void {
     $base = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_agents_'.uniqid().DIRECTORY_SEPARATOR;
     mkdir($base);
     mkdir($base.'.claude');
@@ -19,7 +21,7 @@ it('detects configured agents from filesystem markers', function () {
     rmdir($base);
 });
 
-it('skips installed probes when detectSystem is false', function () {
+it('skips installed probes when detectSystem is false', function (): void {
     $base = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_agents_nosys_'.uniqid().DIRECTORY_SEPARATOR;
     mkdir($base);
 
@@ -29,7 +31,7 @@ it('skips installed probes when detectSystem is false', function () {
     rmdir($base);
 });
 
-it('exposes agent kind helpers', function () {
+it('exposes agent kind helpers', function (): void {
     expect(Agent::PHPSTORM->isEditor())->toBeTrue();
     expect(Agent::PHPSTORM->isAi())->toBeFalse();
     expect(Agent::CLAUDE_CODE->isAi())->toBeTrue();

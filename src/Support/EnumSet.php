@@ -1,13 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Support;
 
 use BackedEnum;
 use Laravel\Roster\Contracts\ScopedCollection;
 
 /**
- * Simple ScopedCollection over a typed list of enum cases.
- *
  * @template T of BackedEnum
  */
 class EnumSet implements ScopedCollection
@@ -34,11 +34,11 @@ class EnumSet implements ScopedCollection
     }
 
     /**
-     * @param  T|array<int, T>  $value
+     * @param  T  $value
      */
-    public function is(mixed $value): bool
+    public function is(BackedEnum $value): bool
     {
-        return $this->uses($value);
+        return in_array($value, $this->cases, true);
     }
 
     /**
@@ -47,5 +47,13 @@ class EnumSet implements ScopedCollection
     public function all(): array
     {
         return $this->cases;
+    }
+
+    /**
+     * @return array<int, string|int>
+     */
+    public function values(): array
+    {
+        return array_map(fn (BackedEnum $c): int|string => $c->value, $this->cases);
     }
 }

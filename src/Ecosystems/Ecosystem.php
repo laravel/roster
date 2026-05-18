@@ -2,6 +2,7 @@
 
 namespace Laravel\Roster\Ecosystems;
 
+use InvalidArgumentException;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 
@@ -10,23 +11,23 @@ abstract class Ecosystem
     public function __construct(protected PackageCollection $packages) {}
 
     /**
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function uses(string $name, ?string $version = null, string $operator = '>='): bool
     {
         if ($version !== null) {
-            if (! preg_match('/^[0-9]+\.[0-9]+\.[0-9]+/', $version)) {
-                throw new \InvalidArgumentException('SEMVER required');
+            if (! preg_match('/^\d+\.\d+\.\d+/', $version)) {
+                throw new InvalidArgumentException('SEMVER required');
             }
 
             $validOperators = ['<', '<=', '>', '>=', '==', '=', '!=', '<>'];
             if (! in_array($operator, $validOperators, true)) {
-                throw new \InvalidArgumentException('Invalid operator');
+                throw new InvalidArgumentException('Invalid operator');
             }
         }
 
         $package = $this->package($name);
-        if ($package === null) {
+        if (!$package instanceof \Laravel\Roster\Package) {
             return false;
         }
 
@@ -39,7 +40,7 @@ abstract class Ecosystem
 
     public function package(string $name): ?Package
     {
-        return $this->packages->first(fn (Package $package) => $package->matches($name));
+        return $this->packages->first(fn (Package $package): bool => $package->matches($name));
     }
 
     public function packages(): PackageCollection

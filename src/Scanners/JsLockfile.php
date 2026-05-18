@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
 use Laravel\Roster\Enums\JsPackageManager;
@@ -8,6 +10,10 @@ use Laravel\Roster\Registry;
 
 class JsLockfile
 {
+    private bool $resolved = false;
+
+    private ?JsPackageManager $resolvedManager = null;
+
     public function __construct(
         protected string $path,
         protected Registry $registry,
@@ -15,41 +21,39 @@ class JsLockfile
 
     public function scan(): PackageCollection
     {
-        $scanner = $this->resolveScanner();
+        $manager = $this->committedManager();
 
-        if ($scanner !== null) {
-            return $scanner->scan();
+        if (!$manager instanceof \Laravel\Roster\Enums\JsPackageManager) {
+            return (new PackageJson($this->path, $this->registry))->scan();
         }
 
-        return (new PackageJson($this->path, $this->registry))->scan();
+        return $this->scannerFor($manager)->scan();
     }
 
     public function committedManager(): ?JsPackageManager
     {
+        if ($this->resolved) {
+            return $this->resolvedManager;
+        }
+
+        $this->resolved = true;
+
         foreach (JsPackageManager::cases() as $case) {
             if (file_exists($this->path.$case->lockFile())) {
-                return $case;
+                return $this->resolvedManager = $case;
             }
         }
 
         return null;
     }
 
-    private function resolveScanner(): ?BasePackageScanner
+    private function scannerFor(JsPackageManager $manager): BasePackageScanner
     {
-        foreach (JsPackageManager::cases() as $case) {
-            $scanner = match ($case) {
-                JsPackageManager::NPM => new NpmPackageLock($this->path, $this->registry),
-                JsPackageManager::PNPM => new PnpmPackageLock($this->path, $this->registry),
-                JsPackageManager::YARN => new YarnPackageLock($this->path, $this->registry),
-                JsPackageManager::BUN => new BunPackageLock($this->path, $this->registry),
-            };
-
-            if ($scanner->canScan()) {
-                return $scanner;
-            }
-        }
-
-        return null;
+        return match ($manager) {
+            JsPackageManager::NPM => new NpmPackageLock($this->path, $this->registry),
+            JsPackageManager::PNPM => new PnpmPackageLock($this->path, $this->registry),
+            JsPackageManager::YARN => new YarnPackageLock($this->path, $this->registry),
+            JsPackageManager::BUN => new BunPackageLock($this->path, $this->registry),
+        };
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Console;
 
 use Illuminate\Console\Command;
@@ -14,14 +16,15 @@ class ScanCommand extends Command
     public function handle(): int
     {
         $directory = $this->argument('directory');
+
         if (! is_string($directory)) {
-            $this->error('Pass a directory');
+            $this->error('Pass a directory.');
 
             return self::FAILURE;
         }
 
         if (! is_dir($directory) || ! is_readable($directory)) {
-            $this->error("Directory '{$directory}' isn't a directory");
+            $this->error("Directory '{$directory}' is not a readable directory.");
 
             return self::FAILURE;
         }

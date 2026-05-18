@@ -2,6 +2,8 @@
 
 namespace Laravel\Roster\Scanners;
 
+use Laravel\Roster\Enums\PackageSource;
+use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 
 /**
@@ -19,14 +21,20 @@ class PackageJson extends BasePackageScanner
     {
         $packages = new PackageCollection;
 
-        // direct() reads package.json; every entry is direct by definition.
-        $deps = [];
-        foreach ($this->direct() as $name => $meta) {
-            $deps[$name] = $meta['constraint'];
-        }
+        foreach ($this->directDependencies() as $name => $meta) {
+            $constraint = $meta['constraint'];
 
-        // processDependencies re-reads direct() for dev/constraint metadata.
-        $this->processDependencies($deps, $packages, false);
+            $packages->push(new Package(
+                name: $name,
+                version: self::normalizeVersion($constraint),
+                source: PackageSource::NPM,
+                alias: $this->registry->aliasFor(PackageSource::NPM, $name),
+                dev: $meta['isDev'],
+                direct: true,
+                constraint: $constraint,
+                path: $this->computePath($name),
+            ));
+        }
 
         return $packages;
     }

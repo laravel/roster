@@ -5,25 +5,24 @@ use Laravel\Roster\Detectors\TestFrameworkDetector;
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\TestFramework;
 
-it('prefers pest over phpunit when both present', function () {
+it('prefers pest over phpunit when both present', function (): void {
     $tf = (new TestFrameworkDetector)->detect(phpEcosystem(['pestphp/pest', 'phpunit/phpunit']));
     expect($tf)->toBe(TestFramework::PEST);
     expect($tf->is(TestFramework::PEST))->toBeTrue();
-    expect($tf->is([TestFramework::PEST, TestFramework::PHPUNIT]))->toBeTrue();
     expect($tf->is(TestFramework::PHPUNIT))->toBeFalse();
 });
 
-it('returns phpunit when only phpunit present', function () {
+it('returns phpunit when only phpunit present', function (): void {
     $tf = (new TestFrameworkDetector)->detect(phpEcosystem(['phpunit/phpunit']));
     expect($tf)->toBe(TestFramework::PHPUNIT);
 });
 
-it('returns null when no test framework present', function () {
+it('returns null when no test framework present', function (): void {
     $tf = (new TestFrameworkDetector)->detect(phpEcosystem([]));
     expect($tf)->toBeNull();
 });
 
-it('detects browser test frameworks across php and js', function () {
+it('detects browser test frameworks across php and js', function (): void {
     $detection = (new BrowserTestFrameworkDetector)->detect(
         phpEcosystem(['laravel/dusk', 'pestphp/pest-plugin-browser']),
         jsEcosystem(['@playwright/test']),

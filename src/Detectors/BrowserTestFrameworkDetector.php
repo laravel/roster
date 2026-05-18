@@ -20,12 +20,15 @@ class BrowserTestFrameworkDetector
         if ($php->uses('laravel/dusk')) {
             $found[] = BrowserTestFramework::DUSK;
         }
+
         if ($php->uses('pestphp/pest-plugin-browser')) {
             $found[] = BrowserTestFramework::PEST_BROWSER;
         }
+
         if ($js->uses('@playwright/test')) {
             $found[] = BrowserTestFramework::PLAYWRIGHT;
         }
+
         if ($js->uses('cypress')) {
             $found[] = BrowserTestFramework::CYPRESS;
         }

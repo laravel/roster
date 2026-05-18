@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\TestFramework;
 use Laravel\Roster\Roster;
 
-it('scans the fog fixture end to end', function () {
+it('scans the fog fixture end to end', function (): void {
     $path = __DIR__.'/../fixtures/fog';
 
     $roster = Roster::scan($path, detectSystem: false);
@@ -27,7 +29,7 @@ it('scans the fog fixture end to end', function () {
     expect($roster->js()->packageManagers()->configured()->uses(JsPackageManager::NPM))->toBeTrue();
 });
 
-it('renders json without error', function () {
+it('renders json without error', function (): void {
     $path = __DIR__.'/../fixtures/fog';
     $roster = Roster::scan($path, detectSystem: false);
     $payload = json_decode($roster->json(), true);

@@ -6,6 +6,9 @@ use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\StarterKit;
 use Laravel\Roster\Support\EnumSet;
 use Laravel\Roster\Support\SystemProbe;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use SplFileInfo;
 
 class StarterKitDetector
 {
@@ -86,14 +89,15 @@ class StarterKitDetector
             return false;
         }
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS)
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS)
         );
 
         foreach ($iterator as $file) {
-            if (! $file instanceof \SplFileInfo) {
+            if (! $file instanceof SplFileInfo) {
                 continue;
             }
+
             if ($file->isFile() && str_ends_with(strtolower($file->getFilename()), '.svelte')) {
                 return true;
             }

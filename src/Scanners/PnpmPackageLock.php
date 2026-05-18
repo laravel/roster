@@ -2,6 +2,7 @@
 
 namespace Laravel\Roster\Scanners;
 
+use Exception;
 use Illuminate\Support\Facades\Log;
 use Laravel\Roster\PackageCollection;
 use Symfony\Component\Yaml\Yaml;
@@ -18,7 +19,7 @@ class PnpmPackageLock extends BasePackageScanner
         $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
-        $contents = $this->validateFile($lockFilePath, 'PNPM lock');
+        $contents = $this->readContents($lockFilePath, 'PNPM lock');
         if ($contents === null) {
             return $packages;
         }
@@ -26,40 +27,43 @@ class PnpmPackageLock extends BasePackageScanner
         try {
             /** @var array<string, mixed> $parsed */
             $parsed = Yaml::parse($contents);
-        } catch (\Exception $e) {
-            Log::error('Failed to parse YAML: '.$e->getMessage());
+        } catch (Exception $exception) {
+            Log::error('Failed to parse YAML: '.$exception->getMessage());
 
             return $packages;
         }
 
-        /** @var array<string, string> $dependencies */
-        $dependencies = [];
-        /** @var array<string, string> $devDependencies */
-        $devDependencies = [];
-
         /** @var array<string, array<string, mixed>> $importers */
         $importers = $parsed['importers'] ?? [];
         $root = $importers['.'] ?? [];
-        /** @var array<string, array<string, mixed>> $rootDependencies */
-        $rootDependencies = $root['dependencies'] ?? [];
-        /** @var array<string, array<string, mixed>> $rootDevDependencies */
-        $rootDevDependencies = $root['devDependencies'] ?? [];
 
-        foreach ($rootDependencies as $name => $data) {
-            if (isset($data['version']) && is_scalar($data['version'])) {
-                $dependencies[$name] = (string) $data['version'];
-            }
-        }
+        /** @var array<string, array<string, mixed>> $rootDeps */
+        $rootDeps = $root['dependencies'] ?? [];
+        /** @var array<string, array<string, mixed>> $rootDevDeps */
+        $rootDevDeps = $root['devDependencies'] ?? [];
 
-        foreach ($rootDevDependencies as $name => $data) {
-            if (isset($data['version']) && is_scalar($data['version'])) {
-                $devDependencies[$name] = (string) $data['version'];
-            }
-        }
-
-        $this->processDependencies($dependencies, $packages, false);
-        $this->processDependencies($devDependencies, $packages, true);
+        $this->processDependencies($this->extractVersions($rootDeps), $packages, false);
+        $this->processDependencies($this->extractVersions($rootDevDeps), $packages, true);
 
         return $packages;
+    }
+
+    /**
+     * Pnpm stores each entry as `{ specifier, version }`. We only care about the resolved version.
+     *
+     * @param  array<string, array<string, mixed>>  $entries
+     * @return array<string, string>
+     */
+    private function extractVersions(array $entries): array
+    {
+        $versions = [];
+
+        foreach ($entries as $name => $data) {
+            if (isset($data['version']) && is_scalar($data['version'])) {
+                $versions[$name] = (string) $data['version'];
+            }
+        }
+
+        return $versions;
     }
 }

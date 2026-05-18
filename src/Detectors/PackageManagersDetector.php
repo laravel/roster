@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Detectors;
 
 use Laravel\Roster\Enums\JsPackageManager;
@@ -14,7 +16,7 @@ class PackageManagersDetector
 
     public function detect(?JsPackageManager $committed): PackageManagersDetection
     {
-        $configured = $committed !== null ? [$committed] : [];
+        $configured = $committed instanceof \Laravel\Roster\Enums\JsPackageManager ? [$committed] : [];
         $installed = [];
 
         if ($this->detectSystem) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Detectors;
 
 use Laravel\Roster\Contracts\ScopedDetection;

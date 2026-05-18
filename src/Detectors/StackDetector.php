@@ -20,9 +20,11 @@ class StackDetector
         if ($js->uses('@inertiajs/react') || $js->uses('inertia-react')) {
             $stacks[] = Stack::INERTIA_REACT;
         }
-        if ($js->uses('@inertiajs/vue3') || $js->uses('@inertiajs/vue')) {
+
+        if ($js->uses('@inertiajs/vue3') || $js->uses('@inertiajs/vue') || $js->uses('inertia-vue')) {
             $stacks[] = Stack::INERTIA_VUE;
         }
+
         if ($js->uses('@inertiajs/svelte') || $js->uses('inertia-svelte')) {
             $stacks[] = Stack::INERTIA_SVELTE;
         }

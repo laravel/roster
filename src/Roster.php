@@ -99,9 +99,7 @@ class Roster
     public static function scan(?string $basePath = null, bool $detectSystem = true, ?Registry $registry = null): self
     {
         $registry ??= self::resolveRegistry();
-
-        $resolved = $basePath ?? (function_exists('base_path') ? base_path() : (getcwd() ?: '.'));
-        $basePath = rtrim($resolved, DIRECTORY_SEPARATOR.'/').DIRECTORY_SEPARATOR;
+        $basePath = self::normalizeBasePath($basePath);
 
         $phpPackages = (new Composer($basePath.'composer.lock', $registry))->scan();
 
@@ -127,17 +125,8 @@ class Roster
         );
     }
 
-    /**
-     * Resolve the Registry from the container when available; otherwise return
-     * a fresh one. A binding failure is the expected "not booted" path; any
-     * other exception is the user's misconfiguration and should surface.
-     */
     private static function resolveRegistry(): Registry
     {
-        if (! Container::getInstance()->bound(Registry::class)) {
-            return new Registry;
-        }
-
         try {
             /** @var Registry */
             return Container::getInstance()->make(Registry::class);
@@ -146,36 +135,38 @@ class Roster
         }
     }
 
+    /**
+     * Resolve a candidate base path to a trailing-separator absolute(ish) directory.
+     * Falls back to the Laravel base_path() helper or the current working directory.
+     */
+    public static function normalizeBasePath(?string $basePath): string
+    {
+        $resolved = $basePath ?? (function_exists('base_path') ? base_path() : (getcwd() ?: '.'));
+
+        return rtrim($resolved, DIRECTORY_SEPARATOR.'/').DIRECTORY_SEPARATOR;
+    }
+
     public function json(): string
     {
         $payload = [
-            'php' => $this->php->packages()->map(fn (Package $p) => $p->toArray())->all(),
-            'js' => $this->js->packages()->map(fn (Package $p) => $p->toArray())->all(),
-            'stack' => self::enumValues($this->stack->all()),
+            'php' => array_map(fn (Package $p): array => $p->toArray(), $this->php->packages()->all()),
+            'js' => array_map(fn (Package $p): array => $p->toArray(), $this->js->packages()->all()),
+            'stack' => $this->stack->values(),
             'testFramework' => $this->testFramework?->value,
-            'browserTestFrameworks' => self::enumValues($this->browserTestFrameworks->all()),
-            'frontend' => self::enumValues($this->frontend->all()),
-            'starterKit' => self::enumValues($this->starterKit->all()),
-            'approach' => self::enumValues($this->approach->all()),
+            'browserTestFrameworks' => $this->browserTestFrameworks->values(),
+            'frontend' => $this->frontend->values(),
+            'starterKit' => $this->starterKit->values(),
+            'approach' => $this->approach->values(),
             'agents' => [
-                'configured' => self::enumValues($this->agents->configured()->all()),
-                'installed' => self::enumValues($this->agents->installed()->all()),
+                'configured' => $this->agents->configured()->values(),
+                'installed' => $this->agents->installed()->values(),
             ],
             'jsPackageManagers' => [
-                'configured' => self::enumValues($this->js->packageManagers()->configured()->all()),
-                'installed' => self::enumValues($this->js->packageManagers()->installed()->all()),
+                'configured' => $this->js->packageManagers()->configured()->values(),
+                'installed' => $this->js->packageManagers()->installed()->values(),
             ],
         ];
 
         return json_encode($payload, JSON_PRETTY_PRINT) ?: '{}';
-    }
-
-    /**
-     * @param  array<int, \BackedEnum>  $cases
-     * @return array<int, string|int>
-     */
-    private static function enumValues(array $cases): array
-    {
-        return array_map(fn (\BackedEnum $c) => $c->value, $cases);
     }
 }

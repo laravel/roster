@@ -17,14 +17,11 @@ class NpmPackageLock extends BasePackageScanner
         $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
-        $contents = $this->validateFile($lockFilePath);
-        if ($contents === null) {
-            return $packages;
-        }
-
-        $json = json_decode($contents, true);
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json) || ! array_key_exists('packages', $json)) {
-            Log::warning('Failed to decode package-lock: '.$lockFilePath);
+        $json = self::readJsonFile($lockFilePath);
+        if ($json === null || ! array_key_exists('packages', $json)) {
+            if (file_exists($lockFilePath)) {
+                Log::warning('Failed to decode package-lock: '.$lockFilePath);
+            }
 
             return $packages;
         }
@@ -36,12 +33,11 @@ class NpmPackageLock extends BasePackageScanner
         $dependencies = $root['dependencies'] ?? [];
         /** @var array<string, string> $devDependencies */
         $devDependencies = $root['devDependencies'] ?? [];
-        $allPackages = array_filter($jsonPackages, fn ($key) => $key !== '', ARRAY_FILTER_USE_KEY);
 
-        $versionCb = function (string $packageName, string $version) use ($allPackages): string {
-            $key = "node_modules/{$packageName}";
-            if (array_key_exists($key, $allPackages) && isset($allPackages[$key]['version']) && is_scalar($allPackages[$key]['version'])) {
-                return (string) $allPackages[$key]['version'];
+        $versionCb = function (string $packageName, string $version) use ($jsonPackages): string {
+            $entry = $jsonPackages["node_modules/{$packageName}"] ?? null;
+            if (is_array($entry) && isset($entry['version']) && is_scalar($entry['version'])) {
+                return (string) $entry['version'];
             }
 
             return $version;

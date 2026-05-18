@@ -26,6 +26,14 @@ class Registry
         return $this;
     }
 
+    public function signature(): string
+    {
+        ksort($this->phpAliases);
+        ksort($this->jsAliases);
+
+        return md5(serialize([$this->phpAliases, $this->jsAliases]));
+    }
+
     public function aliasFor(PackageSource $source, string $rawName): ?string
     {
         $explicit = $source === PackageSource::COMPOSER

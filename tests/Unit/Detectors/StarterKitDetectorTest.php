@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 use Laravel\Roster\Detectors\StarterKitDetector;
 use Laravel\Roster\Enums\StarterKit;
 
-it('returns empty when no base marker exists', function () {
+it('returns empty when no base marker exists', function (): void {
     $base = tempBase();
 
     $detection = (new StarterKitDetector($base))->detect(phpEcosystem([]));
@@ -12,7 +14,7 @@ it('returns empty when no base marker exists', function () {
     cleanup($base);
 });
 
-it('detects react starter kit via app.tsx + pages', function () {
+it('detects react starter kit via app.tsx + pages', function (): void {
     $base = tempBase();
     touchFile($base.'routes/settings.php');
     touchFile($base.'resources/js/app.tsx');
@@ -24,7 +26,7 @@ it('detects react starter kit via app.tsx + pages', function () {
     cleanup($base);
 });
 
-it('detects vue starter kit via app.ts + composables', function () {
+it('detects vue starter kit via app.ts + composables', function (): void {
     $base = tempBase();
     touchFile($base.'routes/settings.php');
     touchFile($base.'resources/js/app.ts');
@@ -36,7 +38,7 @@ it('detects vue starter kit via app.ts + composables', function () {
     cleanup($base);
 });
 
-it('detects livewire starter kit via flux views + livewire actions', function () {
+it('detects livewire starter kit via flux views + livewire actions', function (): void {
     $base = tempBase();
     touchFile($base.'routes/settings.php');
     mkdir($base.'resources/views/flux', 0777, true);
@@ -48,7 +50,7 @@ it('detects livewire starter kit via flux views + livewire actions', function ()
     cleanup($base);
 });
 
-it('promotes to _WORKOS when workos package + services config present', function () {
+it('promotes to _WORKOS when workos package + services config present', function (): void {
     $base = tempBase();
     touchFile($base.'routes/settings.php');
     touchFile($base.'resources/js/app.tsx');

@@ -44,7 +44,7 @@ class SystemProbe
 
     public static function pathExists(string $path): bool
     {
-        return $path !== '' && (file_exists($path) || is_dir($path));
+        return $path !== '' && file_exists($path);
     }
 
     public static function resetCache(): void

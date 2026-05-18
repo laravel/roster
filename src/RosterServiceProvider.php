@@ -9,9 +9,9 @@ class RosterServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(Registry::class, fn () => new Registry);
+        $this->app->singleton(Registry::class, fn (): \Laravel\Roster\Registry => new Registry);
 
-        $this->app->singleton(RosterManager::class, fn (Application $app) => new RosterManager(
+        $this->app->singleton(RosterManager::class, fn (Application $app): \Laravel\Roster\RosterManager => new RosterManager(
             $app->make(Registry::class),
         ));
     }

@@ -13,6 +13,8 @@ abstract class BasePackageScanner
     /** @var array<string, array{constraint: string, isDev: bool}>|null */
     protected ?array $directPackages = null;
 
+    protected ?string $resolvedBase = null;
+
     public function __construct(
         protected string $path,
         protected Registry $registry,
@@ -32,35 +34,34 @@ abstract class BasePackageScanner
         return $this->path.$this->lockFile();
     }
 
+    protected function resolvedBase(): string
+    {
+        return $this->resolvedBase ??= (realpath($this->path) ?: $this->path);
+    }
+
     /**
      * @param  array<string, string>  $dependencies
      */
     protected function processDependencies(array $dependencies, PackageCollection $packages, bool $isDev, ?callable $versionCb = null): void
     {
-        $direct = $this->direct();
+        $direct = $this->directDependencies();
 
         foreach ($dependencies as $packageName => $version) {
             if ($packageName === '') {
                 continue;
             }
 
-            if (! is_null($versionCb)) {
+            if ($versionCb !== null) {
                 $version = $versionCb($packageName, $version);
             }
 
-            $isDirect = false;
-            $constraint = (string) $version;
-            $packageIsDev = $isDev;
-
-            if (array_key_exists($packageName, $direct)) {
-                $isDirect = true;
-                $constraint = $direct[$packageName]['constraint'];
-                $packageIsDev = $direct[$packageName]['isDev'];
-            }
+            $isDirect = array_key_exists($packageName, $direct);
+            $constraint = $isDirect ? $direct[$packageName]['constraint'] : (string) $version;
+            $packageIsDev = $isDirect ? $direct[$packageName]['isDev'] : $isDev;
 
             $packages->push(new Package(
                 name: $packageName,
-                version: $this->normalizeVersion((string) $version),
+                version: self::normalizeVersion((string) $version),
                 source: PackageSource::NPM,
                 alias: $this->registry->aliasFor(PackageSource::NPM, $packageName),
                 dev: $packageIsDev,
@@ -74,58 +75,93 @@ abstract class BasePackageScanner
     /**
      * @return array<string, array{constraint: string, isDev: bool}>
      */
-    protected function direct(): array
+    protected function directDependencies(): array
     {
         if ($this->directPackages !== null) {
             return $this->directPackages;
         }
 
-        $this->directPackages = [];
-        $filename = $this->path.'package.json';
-
-        if (! file_exists($filename) || ! is_readable($filename)) {
-            return $this->directPackages;
+        $json = self::readJsonFile($this->path.'package.json');
+        if ($json === null) {
+            return $this->directPackages = [];
         }
 
-        $contents = file_get_contents($filename);
+        return $this->directPackages = self::collectManifestDeps($json, 'dependencies', 'devDependencies');
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected static function readJsonFile(string $path): ?array
+    {
+        if (! file_exists($path) || ! is_readable($path)) {
+            return null;
+        }
+
+        $contents = file_get_contents($path);
         if ($contents === false) {
-            return $this->directPackages;
+            return null;
         }
 
         $json = json_decode($contents, true);
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            return $this->directPackages;
+            return null;
         }
 
-        foreach ((array) ($json['dependencies'] ?? []) as $name => $constraint) {
-            $this->directPackages[$name] = ['constraint' => (string) $constraint, 'isDev' => false];
-        }
-
-        foreach ((array) ($json['devDependencies'] ?? []) as $name => $constraint) {
-            $this->directPackages[$name] = ['constraint' => (string) $constraint, 'isDev' => true];
-        }
-
-        return $this->directPackages;
+        /** @var array<string, mixed> $json */
+        return $json;
     }
 
-    protected function normalizeVersion(string $version): string
+    /**
+     * @param  array<string, mixed>  $manifest
+     * @return array<string, array{constraint: string, isDev: bool}>
+     */
+    protected static function collectManifestDeps(array $manifest, string $prodKey, string $devKey): array
+    {
+        return [
+            ...self::collectDeps($manifest[$prodKey] ?? null, false),
+            ...self::collectDeps($manifest[$devKey] ?? null, true),
+        ];
+    }
+
+    /**
+     * @return array<string, array{constraint: string, isDev: bool}>
+     */
+    private static function collectDeps(mixed $deps, bool $isDev): array
+    {
+        if (! is_array($deps)) {
+            return [];
+        }
+
+        $collected = [];
+        foreach ($deps as $name => $constraint) {
+            if (! is_string($name)) {
+                continue;
+            }
+            if (! is_scalar($constraint)) {
+                continue;
+            }
+            $collected[$name] = ['constraint' => (string) $constraint, 'isDev' => $isDev];
+        }
+
+        return $collected;
+    }
+
+    protected static function normalizeVersion(string $version): string
     {
         return preg_replace('/[^0-9.]/', '', $version) ?? '';
     }
 
     protected function computePath(string $packageName): string
     {
-        $real = realpath($this->path);
-        $base = $real !== false ? $real : $this->path;
-
-        return $base.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR
+        return $this->resolvedBase().DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR
             .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
     }
 
-    protected function validateFile(string $path, string $type = 'Package'): ?string
+    protected function readContents(string $path, string $label = 'Package'): ?string
     {
         if (! file_exists($path) || ! is_readable($path)) {
-            Log::warning("Failed to scan $type: $path");
+            Log::warning("Failed to scan {$label}: {$path}");
 
             return null;
         }

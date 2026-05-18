@@ -7,8 +7,12 @@ use Laravel\Roster\Support\SystemProbe;
 
 class AgentsDetector
 {
-    /** @var array<string, list<string>> Any path's presence counts as configured. */
-    protected array $projectMarkers = [
+    /**
+     * Project-level markers. The presence of any marker for an agent counts as configured.
+     *
+     * @var array<string, list<string>>
+     */
+    private const PROJECT_MARKERS = [
         Agent::CLAUDE_CODE->value => ['.claude', 'CLAUDE.md', '.claude.json'],
         Agent::CURSOR->value => ['.cursor', '.cursorrules'],
         Agent::CODEX->value => ['.codex', 'AGENTS.md'],
@@ -28,20 +32,24 @@ class AgentsDetector
         Agent::VSCODE->value => ['.vscode'],
     ];
 
-    /** @var array<string, array{binaries?: list<string>, paths?: list<string>}> */
-    protected array $systemMarkers = [
-        Agent::CLAUDE_CODE->value => ['binaries' => ['claude']],
-        Agent::CURSOR->value => ['binaries' => ['cursor']],
-        Agent::CODEX->value => ['binaries' => ['codex']],
-        Agent::COPILOT->value => ['binaries' => ['gh-copilot']],
-        Agent::GEMINI->value => ['binaries' => ['gemini']],
-        Agent::JUNIE->value => ['binaries' => ['junie']],
-        Agent::KIRO->value => ['binaries' => ['kiro']],
-        Agent::OPENCODE->value => ['binaries' => ['opencode']],
-        Agent::AMP->value => ['binaries' => ['amp']],
-        Agent::WINDSURF->value => ['binaries' => ['windsurf']],
-        Agent::PHPSTORM->value => ['binaries' => ['phpstorm']],
-        Agent::VSCODE->value => ['binaries' => ['code']],
+    /**
+     * System binaries that indicate an agent is installed.
+     *
+     * @var array<string, list<string>>
+     */
+    private const SYSTEM_BINARIES = [
+        Agent::CLAUDE_CODE->value => ['claude'],
+        Agent::CURSOR->value => ['cursor'],
+        Agent::CODEX->value => ['codex'],
+        Agent::COPILOT->value => ['gh-copilot'],
+        Agent::GEMINI->value => ['gemini'],
+        Agent::JUNIE->value => ['junie'],
+        Agent::KIRO->value => ['kiro'],
+        Agent::OPENCODE->value => ['opencode'],
+        Agent::AMP->value => ['amp'],
+        Agent::WINDSURF->value => ['windsurf'],
+        Agent::PHPSTORM->value => ['phpstorm'],
+        Agent::VSCODE->value => ['code'],
     ];
 
     public function __construct(
@@ -51,45 +59,49 @@ class AgentsDetector
 
     public function detect(): AgentsDetection
     {
+        return new AgentsDetection(
+            $this->detectFromProjectMarkers(),
+            $this->detectSystem ? $this->detectFromSystemBinaries() : [],
+        );
+    }
+
+    /**
+     * @return list<Agent>
+     */
+    private function detectFromProjectMarkers(): array
+    {
         $configured = [];
-        foreach ($this->projectMarkers as $value => $markers) {
+
+        foreach (self::PROJECT_MARKERS as $agentValue => $markers) {
             foreach ($markers as $marker) {
                 if (SystemProbe::pathExists($this->basePath.str_replace('/', DIRECTORY_SEPARATOR, $marker))) {
-                    $configured[] = Agent::from($value);
+                    $configured[] = Agent::from($agentValue);
+
                     break;
                 }
             }
         }
 
+        return $configured;
+    }
+
+    /**
+     * @return list<Agent>
+     */
+    private function detectFromSystemBinaries(): array
+    {
         $installed = [];
-        if ($this->detectSystem) {
-            foreach ($this->systemMarkers as $value => $probes) {
-                if ($this->probeMatches($probes)) {
-                    $installed[] = Agent::from($value);
+
+        foreach (self::SYSTEM_BINARIES as $agentValue => $binaries) {
+            foreach ($binaries as $binary) {
+                if (SystemProbe::commandExists($binary)) {
+                    $installed[] = Agent::from($agentValue);
+
+                    break;
                 }
             }
         }
 
-        return new AgentsDetection($configured, $installed);
-    }
-
-    /**
-     * @param  array{binaries?: list<string>, paths?: list<string>}  $probes
-     */
-    private function probeMatches(array $probes): bool
-    {
-        foreach ($probes['binaries'] ?? [] as $binary) {
-            if (SystemProbe::commandExists($binary)) {
-                return true;
-            }
-        }
-
-        foreach ($probes['paths'] ?? [] as $path) {
-            if (SystemProbe::pathExists($path)) {
-                return true;
-            }
-        }
-
-        return false;
+        return $installed;
     }
 }

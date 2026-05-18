@@ -6,57 +6,58 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Registry;
 
-class Composer
+class Composer extends BasePackageScanner
 {
     protected string $vendorDir = 'vendor';
 
-    /** @var array<string, array{constraint: string, isDev: bool}> */
-    protected array $directPackages = [];
+    protected function lockFile(): string
+    {
+        return 'composer.lock';
+    }
 
-    public function __construct(
-        protected string $path,
-        protected Registry $registry,
-    ) {}
+    protected function resolvedBase(): string
+    {
+        if ($this->resolvedBase !== null) {
+            return $this->resolvedBase;
+        }
+
+        $dir = dirname($this->path);
+
+        return $this->resolvedBase = realpath($dir) ?: $dir;
+    }
 
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection;
 
-        if (! file_exists($this->path) || ! is_readable($this->path)) {
-            return $packages;
-        }
-
-        $contents = file_get_contents($this->path);
-        if ($contents === false) {
-            return $packages;
-        }
-
-        $json = json_decode($contents, true);
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json) || ! array_key_exists('packages', $json)) {
-            Log::warning('Failed to decode composer.lock: '.$this->path);
+        $json = self::readJsonFile($this->path);
+        if ($json === null || ! array_key_exists('packages', $json)) {
+            if (file_exists($this->path)) {
+                Log::warning('Failed to decode composer.lock: '.$this->path);
+            }
 
             return $packages;
         }
 
-        $this->directPackages = $this->readDirect();
+        $direct = $this->directDependencies();
 
         /** @var array<int, array<string, string>> $prod */
         $prod = $json['packages'] ?? [];
         /** @var array<int, array<string, string>> $dev */
         $dev = $json['packages-dev'] ?? [];
 
-        $this->process($prod, $packages, false);
-        $this->process($dev, $packages, true);
+        $this->pushPackages($prod, $packages, false, $direct);
+        $this->pushPackages($dev, $packages, true, $direct);
 
         return $packages;
     }
 
     /**
      * @param  array<int, array<string, string>>  $rawPackages
+     * @param  array<string, array{constraint: string, isDev: bool}>  $direct
      */
-    private function process(array $rawPackages, PackageCollection $packages, bool $isDev): void
+    private function pushPackages(array $rawPackages, PackageCollection $packages, bool $isDev, array $direct): void
     {
         foreach ($rawPackages as $raw) {
             $name = $raw['name'] ?? '';
@@ -66,17 +67,17 @@ class Composer
                 continue;
             }
 
-            $direct = array_key_exists($name, $this->directPackages);
-            $constraint = $direct ? $this->directPackages[$name]['constraint'] : $version;
-            $packageIsDev = $direct ? $this->directPackages[$name]['isDev'] : $isDev;
+            $isDirect = array_key_exists($name, $direct);
+            $constraint = $isDirect ? $direct[$name]['constraint'] : $version;
+            $packageIsDev = $isDirect ? $direct[$name]['isDev'] : $isDev;
 
             $packages->push(new Package(
                 name: $name,
-                version: $this->normalizeVersion($version),
+                version: self::normalizeVersion($version),
                 source: PackageSource::COMPOSER,
                 alias: $this->registry->aliasFor(PackageSource::COMPOSER, $name),
                 dev: $packageIsDev,
-                direct: $direct,
+                direct: $isDirect,
                 constraint: $constraint,
                 path: $this->computePath($name),
             ));
@@ -86,65 +87,43 @@ class Composer
     /**
      * @return array<string, array{constraint: string, isDev: bool}>
      */
-    private function readDirect(): array
+    protected function directDependencies(): array
     {
-        $packages = [];
-        $dir = dirname($this->path);
-        $real = realpath($dir);
-        $filename = ($real !== false ? $real : $dir).DIRECTORY_SEPARATOR.'composer.json';
-
-        if (! file_exists($filename) || ! is_readable($filename)) {
-            return $packages;
+        if ($this->directPackages !== null) {
+            return $this->directPackages;
         }
 
-        $contents = file_get_contents($filename);
-        if ($contents === false) {
-            return $packages;
+        $json = self::readJsonFile($this->resolvedBase().DIRECTORY_SEPARATOR.'composer.json');
+        if ($json === null) {
+            return $this->directPackages = [];
         }
 
-        $json = json_decode($contents, true);
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            return $packages;
+        $config = $json['config'] ?? null;
+        if (is_array($config) && isset($config['vendor-dir']) && is_string($config['vendor-dir'])) {
+            $this->vendorDir = $config['vendor-dir'];
         }
 
-        $config = $json['config'] ?? [];
-        $this->vendorDir = is_array($config) && isset($config['vendor-dir']) && is_string($config['vendor-dir'])
-            ? $config['vendor-dir']
-            : 'vendor';
-
-        foreach ((array) ($json['require'] ?? []) as $name => $constraint) {
-            $packages[$name] = ['constraint' => $constraint, 'isDev' => false];
-        }
-
-        foreach ((array) ($json['require-dev'] ?? []) as $name => $constraint) {
-            $packages[$name] = ['constraint' => $constraint, 'isDev' => true];
-        }
-
-        return $packages;
+        return $this->directPackages = self::collectManifestDeps($json, 'require', 'require-dev');
     }
 
-    private function normalizeVersion(string $version): string
-    {
-        return preg_replace('/[^0-9.]/', '', $version) ?? '';
-    }
-
-    private function computePath(string $packageName): string
+    protected function computePath(string $packageName): string
     {
         $vendorPath = str_replace('/', DIRECTORY_SEPARATOR, $this->vendorDir);
+        $packageSegment = str_replace('/', DIRECTORY_SEPARATOR, $packageName);
 
-        $isAbsolute = (DIRECTORY_SEPARATOR === '/' && str_starts_with($vendorPath, DIRECTORY_SEPARATOR))
-            || (DIRECTORY_SEPARATOR === '\\' && preg_match('/^[A-Za-z]:[\\\\\\/]/', $vendorPath));
-
-        if ($isAbsolute) {
-            return $vendorPath.DIRECTORY_SEPARATOR
-                .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
+        if ($this->isAbsolutePath($vendorPath)) {
+            return $vendorPath.DIRECTORY_SEPARATOR.$packageSegment;
         }
 
-        $real = realpath(dirname($this->path));
-        $base = $real !== false ? $real : dirname($this->path);
+        return $this->resolvedBase().DIRECTORY_SEPARATOR.$vendorPath.DIRECTORY_SEPARATOR.$packageSegment;
+    }
 
-        return $base.DIRECTORY_SEPARATOR
-            .$vendorPath.DIRECTORY_SEPARATOR
-            .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
+    private function isAbsolutePath(string $path): bool
+    {
+        if (DIRECTORY_SEPARATOR === '/') {
+            return str_starts_with($path, '/');
+        }
+
+        return (bool) preg_match('/^[A-Za-z]:[\\\\\\/]/', $path);
     }
 }
