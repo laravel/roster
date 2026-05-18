@@ -4,6 +4,7 @@ namespace Laravel\Roster;
 
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Support\Str;
 use Laravel\Roster\Detectors\AgentsDetection;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\ApproachDetector;
@@ -135,15 +136,11 @@ class Roster
         }
     }
 
-    /**
-     * Resolve a candidate base path to a trailing-separator absolute(ish) directory.
-     * Falls back to the Laravel base_path() helper or the current working directory.
-     */
     public static function normalizeBasePath(?string $basePath): string
     {
         $resolved = $basePath ?? (function_exists('base_path') ? base_path() : (getcwd() ?: '.'));
 
-        return rtrim($resolved, DIRECTORY_SEPARATOR.'/').DIRECTORY_SEPARATOR;
+        return Str::finish($resolved, DIRECTORY_SEPARATOR);
     }
 
     public function json(): string

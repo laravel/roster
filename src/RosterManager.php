@@ -15,7 +15,6 @@ use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\StarterKit;
 use Laravel\Roster\Enums\TestFramework;
 use Laravel\Roster\Support\EnumSet;
-use Throwable;
 
 class RosterManager
 {
@@ -100,27 +99,24 @@ class RosterManager
         $resolvedBase = $this->resolveBasePath($basePath);
         $key = $this->cacheKey($resolvedBase, $detectSystem);
 
-        try {
-            /** @var mixed $value */
-            $value = $repo->remember(
+        $value = rescue(
+            fn () => $repo->remember(
                 $key,
                 $this->ttl,
                 fn (): Roster => Roster::scan($resolvedBase, $detectSystem, $this->registry),
-            );
+            ),
+            null,
+            report: false,
+        );
 
-            if ($value instanceof Roster) {
-                return $value;
-            }
-        } catch (Throwable) {
-            // Cache driver failure or poisoned entry — fall through to a direct scan.
-        }
-
-        return Roster::scan($resolvedBase, $detectSystem, $this->registry);
+        return $value instanceof Roster
+            ? $value
+            : Roster::scan($resolvedBase, $detectSystem, $this->registry);
     }
 
     private function cacheRepository(): ?CacheRepository
     {
-        try {
+        return rescue(function (): ?CacheRepository {
             $container = Container::getInstance();
             if (! $container->bound('cache')) {
                 return null;
@@ -134,9 +130,7 @@ class RosterManager
             $store = $manager->store();
 
             return $store instanceof CacheRepository ? $store : null;
-        } catch (Throwable) {
-            return null;
-        }
+        }, null, report: false);
     }
 
     private function resolveBasePath(?string $basePath): string

@@ -12,9 +12,9 @@ it('detects configured agents from filesystem markers', function (): void {
     mkdir($base.'.cursor');
 
     $detection = (new AgentsDetector($base, detectSystem: false))->detect();
-    expect($detection->isConfigured(Agent::CLAUDE_CODE))->toBeTrue();
-    expect($detection->isConfigured(Agent::CURSOR))->toBeTrue();
-    expect($detection->isConfigured(Agent::PHPSTORM))->toBeFalse();
+    expect($detection->configured()->is(Agent::CLAUDE_CODE))->toBeTrue();
+    expect($detection->configured()->is(Agent::CURSOR))->toBeTrue();
+    expect($detection->configured()->is(Agent::PHPSTORM))->toBeFalse();
 
     rmdir($base.'.claude');
     rmdir($base.'.cursor');
@@ -29,11 +29,4 @@ it('skips installed probes when detectSystem is false', function (): void {
     expect($detection->installed()->all())->toBe([]);
 
     rmdir($base);
-});
-
-it('exposes agent kind helpers', function (): void {
-    expect(Agent::PHPSTORM->isEditor())->toBeTrue();
-    expect(Agent::PHPSTORM->isAi())->toBeFalse();
-    expect(Agent::CLAUDE_CODE->isAi())->toBeTrue();
-    expect(Agent::CLAUDE_CODE->isEditor())->toBeFalse();
 });

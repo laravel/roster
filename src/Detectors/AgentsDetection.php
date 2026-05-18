@@ -41,14 +41,4 @@ class AgentsDetection implements ScopedDetection
     {
         return $this->installed;
     }
-
-    public function isConfigured(Agent $agent): bool
-    {
-        return $this->configured->uses($agent);
-    }
-
-    public function isInstalled(Agent $agent): bool
-    {
-        return $this->installed->uses($agent);
-    }
 }

@@ -6,7 +6,6 @@ namespace Laravel\Roster\Enums;
 
 enum Agent: string
 {
-    // AI agents / coding CLIs
     case CLAUDE_CODE = 'claude-code';
     case CURSOR = 'cursor';
     case CODEX = 'codex';
@@ -22,21 +21,6 @@ enum Agent: string
     case AUGMENT = 'augment';
     case ANTIGRAVITY = 'antigravity';
     case WINDSURF = 'windsurf';
-
-    // Editors / IDEs
     case PHPSTORM = 'phpstorm';
     case VSCODE = 'vscode';
-
-    public function isEditor(): bool
-    {
-        return match ($this) {
-            self::PHPSTORM, self::VSCODE => true,
-            default => false,
-        };
-    }
-
-    public function isAi(): bool
-    {
-        return ! $this->isEditor();
-    }
 }

@@ -121,11 +121,14 @@ use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\TestFramework;
 
 $roster->stack()->is(Stack::INERTIA_REACT);
-$roster->stack()->uses([Stack::INERTIA_REACT, Stack::INERTIA_VUE]);
 $roster->stack()->all();                               // Stack[]
 
 $roster->testFramework()?->is(TestFramework::PEST);
 $roster->browserTestFrameworks()->uses(BrowserTestFramework::PLAYWRIGHT);
+$roster->browserTestFrameworks()->uses([
+    BrowserTestFramework::PLAYWRIGHT,
+    BrowserTestFramework::CYPRESS,
+]);
 
 $roster->frontend()->is(Frontend::REACT);
 ```
@@ -142,18 +145,15 @@ $roster->starterKit()->is(StarterKit::REACT);
 $roster->starterKit()->all();                          // [] when none match
 ```
 
-### Agents — AI agents + editors in one enum
+### Agents — Agents in one enum
 
 ```php
 use Laravel\Roster\Enums\Agent;
 
 $roster->agents()->configured()->all();                // filesystem signals
 $roster->agents()->installed()->all();                 // binaries on PATH
-$roster->agents()->isConfigured(Agent::CLAUDE_CODE);
-$roster->agents()->isInstalled(Agent::CURSOR);
-
-Agent::PHPSTORM->isEditor();
-Agent::CLAUDE_CODE->isAi();
+$roster->agents()->configured()->is(Agent::CLAUDE_CODE);
+$roster->agents()->installed()->is(Agent::CURSOR);
 ```
 
 ### JS package managers — project + system
@@ -162,7 +162,7 @@ Agent::CLAUDE_CODE->isAi();
 use Laravel\Roster\Enums\JsPackageManager;
 
 $roster->js()->packageManagers()->configured()->is(JsPackageManager::PNPM);
-$roster->js()->packageManagers()->installed()->all();
+$roster->js()->packageManagers()->installed()->all(); 
 ```
 
 ## Upgrading

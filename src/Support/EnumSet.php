@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Roster\Support;
 
 use BackedEnum;
+use Illuminate\Support\Arr;
 use Laravel\Roster\Contracts\ScopedCollection;
 
 /**
@@ -22,9 +23,7 @@ class EnumSet implements ScopedCollection
      */
     public function uses(mixed $value): bool
     {
-        $needles = is_array($value) ? $value : [$value];
-
-        foreach ($needles as $needle) {
+        foreach (Arr::wrap($value) as $needle) {
             if (in_array($needle, $this->cases, true)) {
                 return true;
             }
