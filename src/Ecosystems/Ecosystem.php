@@ -27,7 +27,7 @@ abstract class Ecosystem
         }
 
         $package = $this->package($name);
-        if (!$package instanceof \Laravel\Roster\Package) {
+        if (! $package instanceof Package) {
             return false;
         }
 

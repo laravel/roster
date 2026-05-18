@@ -16,7 +16,7 @@ class PackageManagersDetector
 
     public function detect(?JsPackageManager $committed): PackageManagersDetection
     {
-        $configured = $committed instanceof \Laravel\Roster\Enums\JsPackageManager ? [$committed] : [];
+        $configured = $committed instanceof JsPackageManager ? [$committed] : [];
         $installed = [];
 
         if ($this->detectSystem) {

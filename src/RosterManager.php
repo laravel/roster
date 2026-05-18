@@ -3,6 +3,7 @@
 namespace Laravel\Roster;
 
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Laravel\Roster\Detectors\AgentsDetection;
 use Laravel\Roster\Ecosystems\JsEcosystem;
@@ -92,7 +93,7 @@ class RosterManager
         }
 
         $repo = $this->cacheRepository();
-        if (!$repo instanceof \Illuminate\Contracts\Cache\Repository) {
+        if (! $repo instanceof Repository) {
             return Roster::scan($basePath, $detectSystem, $this->registry);
         }
 
@@ -104,7 +105,7 @@ class RosterManager
             $value = $repo->remember(
                 $key,
                 $this->ttl,
-                fn (): \Laravel\Roster\Roster => Roster::scan($resolvedBase, $detectSystem, $this->registry),
+                fn (): Roster => Roster::scan($resolvedBase, $detectSystem, $this->registry),
             );
 
             if ($value instanceof Roster) {

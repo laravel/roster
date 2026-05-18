@@ -7,7 +7,7 @@ use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 
-expect()->extend('toBeOne', fn() => $this->toBe(1));
+expect()->extend('toBeOne', fn () => $this->toBe(1));
 
 /**
  * @param  array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool, alias?: string|null}>  $specs

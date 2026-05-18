@@ -23,7 +23,7 @@ class JsLockfile
     {
         $manager = $this->committedManager();
 
-        if (!$manager instanceof \Laravel\Roster\Enums\JsPackageManager) {
+        if (! $manager instanceof JsPackageManager) {
             return (new PackageJson($this->path, $this->registry))->scan();
         }
 
