@@ -2,82 +2,45 @@
 
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Enums\Approaches;
-use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\Registry;
 
 abstract class BasePackageScanner
 {
-    /**
-     * Map of package names to enums
-     *
-     * @var array<string, Packages|Approaches>
-     */
-    protected array $map = [
-        'alpinejs' => Packages::ALPINEJS,
-        'eslint' => Packages::ESLINT,
-        '@inertiajs/react' => Packages::INERTIA_REACT,
-        '@inertiajs/svelte' => Packages::INERTIA_SVELTE,
-        '@inertiajs/vue3' => Packages::INERTIA_VUE,
-        'laravel-echo' => Packages::ECHO,
-        '@laravel/echo-react' => Packages::ECHO_REACT,
-        '@laravel/echo-vue' => Packages::ECHO_VUE,
-        '@laravel/vite-plugin-wayfinder' => Packages::WAYFINDER_VITE,
-        'prettier' => Packages::PRETTIER,
-        'react' => Packages::REACT,
-        'tailwindcss' => Packages::TAILWINDCSS,
-        'vue' => Packages::VUE,
-    ];
-
     /** @var array<string, array{constraint: string, isDev: bool}>|null */
     protected ?array $directPackages = null;
 
-    public function __construct(protected string $path) {}
+    public function __construct(
+        protected string $path,
+        protected Registry $registry,
+    ) {}
 
-    /**
-     * Returns the expected lock file name
-     */
     abstract protected function lockFile(): string;
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    abstract public function scan(): Collection;
+    abstract public function scan(): PackageCollection;
 
-    /**
-     * Check if the scanner can handle the given path
-     */
     public function canScan(): bool
     {
         return file_exists($this->lockFilePath());
     }
 
-    /**
-     * Get the file path of the lock file
-     */
     protected function lockFilePath(): string
     {
         return $this->path.$this->lockFile();
     }
 
     /**
-     * Process dependencies and add them to the mapped items collection
-     *
      * @param  array<string, string>  $dependencies
-     * @param  Collection<int, Package|Approach>  $mappedItems
-     * @param  ?callable  $versionCb  - callback to override version
      */
-    protected function processDependencies(array $dependencies, Collection $mappedItems, bool $isDev, ?callable $versionCb = null): void
+    protected function processDependencies(array $dependencies, PackageCollection $packages, bool $isDev, ?callable $versionCb = null): void
     {
-        $directPackages = $this->direct();
+        $direct = $this->direct();
 
         foreach ($dependencies as $packageName => $version) {
-            $mappedPackage = $this->map[$packageName] ?? null;
-            if (is_null($mappedPackage)) {
+            if ($packageName === '') {
                 continue;
             }
 
@@ -85,28 +48,30 @@ abstract class BasePackageScanner
                 $version = $versionCb($packageName, $version);
             }
 
-            $direct = false;
-            $constraint = $version;
+            $isDirect = false;
+            $constraint = (string) $version;
             $packageIsDev = $isDev;
 
-            if (array_key_exists($packageName, $directPackages)) {
-                $direct = true;
-                $constraint = $directPackages[$packageName]['constraint'];
-                $packageIsDev = $directPackages[$packageName]['isDev'];
+            if (array_key_exists($packageName, $direct)) {
+                $isDirect = true;
+                $constraint = $direct[$packageName]['constraint'];
+                $packageIsDev = $direct[$packageName]['isDev'];
             }
 
-            $niceVersion = preg_replace('/[^0-9.]/', '', $version) ?? '';
-            $mappedItems->push(match (get_class($mappedPackage)) {
-                Packages::class => (new Package($mappedPackage, $packageName, $niceVersion, $packageIsDev))->setDirect($direct)->setConstraint($constraint)->setSource(PackageSource::NPM)->setPath($this->computePath($packageName)),
-                Approaches::class => new Approach($mappedPackage),
-                default => throw new \InvalidArgumentException('Unsupported mapping')
-            });
+            $packages->push(new Package(
+                name: $packageName,
+                version: $this->normalizeVersion((string) $version),
+                source: PackageSource::NPM,
+                alias: $this->registry->aliasFor(PackageSource::NPM, $packageName),
+                dev: $packageIsDev,
+                direct: $isDirect,
+                constraint: $constraint,
+                path: $this->computePath($packageName),
+            ));
         }
     }
 
     /**
-     * Returns direct dependencies as defined in package.json
-     *
      * @return array<string, array{constraint: string, isDev: bool}>
      */
     protected function direct(): array
@@ -133,54 +98,40 @@ abstract class BasePackageScanner
         }
 
         foreach ((array) ($json['dependencies'] ?? []) as $name => $constraint) {
-            $this->directPackages[$name] = [
-                'constraint' => $constraint,
-                'isDev' => false,
-            ];
+            $this->directPackages[$name] = ['constraint' => (string) $constraint, 'isDev' => false];
         }
 
         foreach ((array) ($json['devDependencies'] ?? []) as $name => $constraint) {
-            $this->directPackages[$name] = [
-                'constraint' => $constraint,
-                'isDev' => true,
-            ];
+            $this->directPackages[$name] = ['constraint' => (string) $constraint, 'isDev' => true];
         }
 
         return $this->directPackages;
     }
 
+    protected function normalizeVersion(string $version): string
+    {
+        return preg_replace('/[^0-9.]/', '', $version) ?? '';
+    }
+
     protected function computePath(string $packageName): string
     {
-        $basePath = realpath($this->path) ?: $this->path;
+        $real = realpath($this->path);
+        $base = $real !== false ? $real : $this->path;
 
-        return $basePath.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR
+        return $base.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR
             .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
     }
 
-    /**
-     * Common file validation logic
-     */
     protected function validateFile(string $path, string $type = 'Package'): ?string
     {
-        if (! file_exists($path)) {
+        if (! file_exists($path) || ! is_readable($path)) {
             Log::warning("Failed to scan $type: $path");
 
             return null;
         }
 
-        if (! is_readable($path)) {
-            Log::warning("File not readable: $path");
-
-            return null;
-        }
-
         $contents = file_get_contents($path);
-        if ($contents === false) {
-            Log::warning("Failed to read $type: $path");
 
-            return null;
-        }
-
-        return $contents;
+        return $contents === false ? null : $contents;
     }
 }

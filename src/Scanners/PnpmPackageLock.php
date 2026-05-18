@@ -2,10 +2,8 @@
 
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 use Symfony\Component\Yaml\Yaml;
 
 class PnpmPackageLock extends BasePackageScanner
@@ -15,17 +13,14 @@ class PnpmPackageLock extends BasePackageScanner
         return 'pnpm-lock.yaml';
     }
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    public function scan(): Collection
+    public function scan(): PackageCollection
     {
-        $mappedItems = collect();
+        $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
         $contents = $this->validateFile($lockFilePath, 'PNPM lock');
         if ($contents === null) {
-            return $mappedItems;
+            return $packages;
         }
 
         try {
@@ -34,7 +29,7 @@ class PnpmPackageLock extends BasePackageScanner
         } catch (\Exception $e) {
             Log::error('Failed to parse YAML: '.$e->getMessage());
 
-            return $mappedItems;
+            return $packages;
         }
 
         /** @var array<string, string> $dependencies */
@@ -51,22 +46,20 @@ class PnpmPackageLock extends BasePackageScanner
         $rootDevDependencies = $root['devDependencies'] ?? [];
 
         foreach ($rootDependencies as $name => $data) {
-            if (isset($data['version'])) {
-                $dependencies[$name] = $data['version'];
+            if (isset($data['version']) && is_scalar($data['version'])) {
+                $dependencies[$name] = (string) $data['version'];
             }
         }
 
         foreach ($rootDevDependencies as $name => $data) {
-            if (isset($data['version'])) {
-                $devDependencies[$name] = $data['version'];
+            if (isset($data['version']) && is_scalar($data['version'])) {
+                $devDependencies[$name] = (string) $data['version'];
             }
         }
 
-        /** @var array<string, string> $dependencies */
-        /** @var array<string, string> $devDependencies */
-        $this->processDependencies($dependencies, $mappedItems, false);
-        $this->processDependencies($devDependencies, $mappedItems, true);
+        $this->processDependencies($dependencies, $packages, false);
+        $this->processDependencies($devDependencies, $packages, true);
 
-        return $mappedItems;
+        return $packages;
     }
 }

@@ -2,141 +2,107 @@
 
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Enums\Approaches;
-use Laravel\Roster\Enums\Packages;
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
+use Laravel\Roster\Registry;
 
 class Composer
 {
     protected string $vendorDir = 'vendor';
 
-    /**
-     * Map of composer package names to enums
-     *
-     * @var array<string, Packages|Approaches>
-     */
-    protected array $map = [
-        'filament/filament' => Packages::FILAMENT,
-        'inertiajs/inertia-laravel' => Packages::INERTIA_LARAVEL,
-        'larastan/larastan' => Packages::LARASTAN,
-        'laravel/ai' => Packages::AI,
-        'laravel/boost' => Packages::BOOST,
-        'laravel/breeze' => Packages::BREEZE,
-        'laravel/cashier' => Packages::CASHIER,
-        'laravel/dusk' => Packages::DUSK,
-        'laravel/envoy' => Packages::ENVOY,
-        'laravel/folio' => Packages::FOLIO,
-        'laravel/fortify' => Packages::FORTIFY,
-        'laravel/framework' => Packages::LARAVEL,
-        'laravel/horizon' => Packages::HORIZON,
-        'laravel/mcp' => Packages::MCP,
-        'laravel/nightwatch' => Packages::NIGHTWATCH,
-        'laravel/nova' => Packages::NOVA,
-        'laravel/octane' => Packages::OCTANE,
-        'laravel/pail' => Packages::PAIL,
-        'laravel/passport' => Packages::PASSPORT,
-        'laravel/pennant' => Packages::PENNANT,
-        'laravel/pint' => Packages::PINT,
-        'laravel/prompts' => Packages::PROMPTS,
-        'laravel/pulse' => Packages::PULSE,
-        'laravel/reverb' => Packages::REVERB,
-        'laravel/sail' => Packages::SAIL,
-        'laravel/sanctum' => Packages::SANCTUM,
-        'laravel/scout' => Packages::SCOUT,
-        'laravel/socialite' => Packages::SOCIALITE,
-        'laravel/telescope' => Packages::TELESCOPE,
-        'laravel/wayfinder' => Packages::WAYFINDER,
-        'livewire/flux' => Packages::FLUXUI_FREE,
-        'livewire/flux-pro' => Packages::FLUXUI_PRO,
-        'livewire/livewire' => Packages::LIVEWIRE,
-        'livewire/volt' => Packages::VOLT,
-        'pestphp/pest' => Packages::PEST,
-        'phpunit/phpunit' => Packages::PHPUNIT,
-        'rector/rector' => Packages::RECTOR,
-        'statamic/cms' => Packages::STATAMIC,
-        'tightenco/ziggy' => Packages::ZIGGY,
-    ];
-
     /** @var array<string, array{constraint: string, isDev: bool}> */
     protected array $directPackages = [];
 
-    /**
-     * @param  string  $path  - composer.lock
-     */
-    public function __construct(protected string $path) {}
+    public function __construct(
+        protected string $path,
+        protected Registry $registry,
+    ) {}
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    public function scan(): Collection
+    public function scan(): PackageCollection
     {
-        $mappedItems = collect([]);
+        $packages = new PackageCollection;
 
-        if (! file_exists($this->path)) {
-            Log::warning('Failed to scan Composer: '.$this->path);
-
-            return $mappedItems;
-        }
-
-        if (! is_readable($this->path)) {
-            Log::warning('File not readable: '.$this->path);
-
-            return $mappedItems;
+        if (! file_exists($this->path) || ! is_readable($this->path)) {
+            return $packages;
         }
 
         $contents = file_get_contents($this->path);
         if ($contents === false) {
-            Log::warning('Failed to read Composer: '.$this->path);
-
-            return $mappedItems;
+            return $packages;
         }
 
         $json = json_decode($contents, true);
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            Log::warning('Failed to decode Composer: '.$this->path.'. '.json_last_error_msg());
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json) || ! array_key_exists('packages', $json)) {
+            Log::warning('Failed to decode composer.lock: '.$this->path);
 
-            return $mappedItems;
+            return $packages;
         }
 
-        if (! array_key_exists('packages', $json)) {
-            Log::warning('Malformed composer.lock');
+        $this->directPackages = $this->readDirect();
 
-            return $mappedItems;
-        }
+        /** @var array<int, array<string, string>> $prod */
+        $prod = $json['packages'] ?? [];
+        /** @var array<int, array<string, string>> $dev */
+        $dev = $json['packages-dev'] ?? [];
 
-        $this->directPackages = $this->direct();
-        $packages = $json['packages'] ?? [];
-        $devPackages = $json['packages-dev'] ?? [];
+        $this->process($prod, $packages, false);
+        $this->process($dev, $packages, true);
 
-        $this->processPackages($packages, $mappedItems, false);
-        $this->processPackages($devPackages, $mappedItems, true);
-
-        return $mappedItems;
+        return $packages;
     }
 
     /**
-     * Returns direct dependencies as defined in composer.json
-     *
+     * @param  array<int, array<string, string>>  $rawPackages
+     */
+    private function process(array $rawPackages, PackageCollection $packages, bool $isDev): void
+    {
+        foreach ($rawPackages as $raw) {
+            $name = $raw['name'] ?? '';
+            $version = $raw['version'] ?? '';
+
+            if ($name === '') {
+                continue;
+            }
+
+            $direct = array_key_exists($name, $this->directPackages);
+            $constraint = $direct ? $this->directPackages[$name]['constraint'] : $version;
+            $packageIsDev = $direct ? $this->directPackages[$name]['isDev'] : $isDev;
+
+            $packages->push(new Package(
+                name: $name,
+                version: $this->normalizeVersion($version),
+                source: PackageSource::COMPOSER,
+                alias: $this->registry->aliasFor(PackageSource::COMPOSER, $name),
+                dev: $packageIsDev,
+                direct: $direct,
+                constraint: $constraint,
+                path: $this->computePath($name),
+            ));
+        }
+    }
+
+    /**
      * @return array<string, array{constraint: string, isDev: bool}>
-     * */
-    protected function direct(): array
+     */
+    private function readDirect(): array
     {
         $packages = [];
-        $filename = realpath(dirname($this->path)).DIRECTORY_SEPARATOR.'composer.json';
-        if (file_exists($filename) === false || is_readable($filename) === false) {
+        $dir = dirname($this->path);
+        $real = realpath($dir);
+        $filename = ($real !== false ? $real : $dir).DIRECTORY_SEPARATOR.'composer.json';
+
+        if (! file_exists($filename) || ! is_readable($filename)) {
             return $packages;
         }
 
-        $json = file_get_contents($filename);
-        if ($json === false) {
+        $contents = file_get_contents($filename);
+        if ($contents === false) {
             return $packages;
         }
 
-        $json = json_decode($json, true);
+        $json = json_decode($contents, true);
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
             return $packages;
         }
@@ -147,69 +113,37 @@ class Composer
             : 'vendor';
 
         foreach ((array) ($json['require'] ?? []) as $name => $constraint) {
-            $packages[$name] = [
-                'constraint' => $constraint,
-                'isDev' => false,
-            ];
+            $packages[$name] = ['constraint' => $constraint, 'isDev' => false];
         }
 
         foreach ((array) ($json['require-dev'] ?? []) as $name => $constraint) {
-            $packages[$name] = [
-                'constraint' => $constraint,
-                'isDev' => true,
-            ];
+            $packages[$name] = ['constraint' => $constraint, 'isDev' => true];
         }
 
         return $packages;
     }
 
-    /**
-     * Process packages and add them to the mapped items collection
-     *
-     * @param  array<int, array<string, string>>  $packages
-     * @param  Collection<int, Package|Approach>  $mappedItems
-     * @return Collection<int, Package|Approach>
-     */
-    private function processPackages(array $packages, Collection $mappedItems, bool $isDev): Collection
+    private function normalizeVersion(string $version): string
     {
-        foreach ($packages as $package) {
-            $packageName = $package['name'] ?? '';
-            $version = $package['version'] ?? '';
-            $mappedPackage = $this->map[$packageName] ?? null;
-            $direct = false;
-            $constraint = $version;
-
-            if (is_null($mappedPackage)) {
-                continue;
-            }
-
-            if (array_key_exists($packageName, $this->directPackages) === true) {
-                $direct = true;
-                $constraint = $this->directPackages[$packageName]['constraint'];
-            }
-
-            $niceVersion = preg_replace('/[^0-9.]/', '', $version) ?? '';
-            $mappedItems->push(match (get_class($mappedPackage)) {
-                Packages::class => (new Package($mappedPackage, $packageName, $niceVersion, $isDev))->setDirect($direct)->setConstraint($constraint)->setSource(PackageSource::COMPOSER)->setPath($this->computePath($packageName)),
-                Approaches::class => new Approach($mappedPackage),
-                default => throw new \InvalidArgumentException('Unsupported mapping')
-            });
-        }
-
-        return $mappedItems;
+        return preg_replace('/[^0-9.]/', '', $version) ?? '';
     }
 
     private function computePath(string $packageName): string
     {
         $vendorPath = str_replace('/', DIRECTORY_SEPARATOR, $this->vendorDir);
 
-        if (DIRECTORY_SEPARATOR === '/' && str_starts_with($vendorPath, DIRECTORY_SEPARATOR)
-            || DIRECTORY_SEPARATOR === '\\' && preg_match('/^[A-Za-z]:[\\\\\\/]/', $vendorPath)) {
+        $isAbsolute = (DIRECTORY_SEPARATOR === '/' && str_starts_with($vendorPath, DIRECTORY_SEPARATOR))
+            || (DIRECTORY_SEPARATOR === '\\' && preg_match('/^[A-Za-z]:[\\\\\\/]/', $vendorPath));
+
+        if ($isAbsolute) {
             return $vendorPath.DIRECTORY_SEPARATOR
                 .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
         }
 
-        return realpath(dirname($this->path)).DIRECTORY_SEPARATOR
+        $real = realpath(dirname($this->path));
+        $base = $real !== false ? $real : dirname($this->path);
+
+        return $base.DIRECTORY_SEPARATOR
             .$vendorPath.DIRECTORY_SEPARATOR
             .str_replace('/', DIRECTORY_SEPARATOR, $packageName);
     }

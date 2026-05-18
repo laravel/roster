@@ -2,10 +2,8 @@
 
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 
 class NpmPackageLock extends BasePackageScanner
 {
@@ -14,48 +12,44 @@ class NpmPackageLock extends BasePackageScanner
         return 'package-lock.json';
     }
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    public function scan(): Collection
+    public function scan(): PackageCollection
     {
-        $mappedItems = collect();
+        $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
         $contents = $this->validateFile($lockFilePath);
         if ($contents === null) {
-            return $mappedItems;
+            return $packages;
         }
 
         $json = json_decode($contents, true);
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            Log::warning('Failed to decode Package: '.$lockFilePath.'. '.json_last_error_msg());
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json) || ! array_key_exists('packages', $json)) {
+            Log::warning('Failed to decode package-lock: '.$lockFilePath);
 
-            return $mappedItems;
+            return $packages;
         }
 
-        if (! array_key_exists('packages', $json)) {
-            Log::warning('Malformed package-lock');
+        /** @var array<string, array<string, mixed>> $jsonPackages */
+        $jsonPackages = $json['packages'];
+        $root = $jsonPackages[''] ?? [];
+        /** @var array<string, string> $dependencies */
+        $dependencies = $root['dependencies'] ?? [];
+        /** @var array<string, string> $devDependencies */
+        $devDependencies = $root['devDependencies'] ?? [];
+        $allPackages = array_filter($jsonPackages, fn ($key) => $key !== '', ARRAY_FILTER_USE_KEY);
 
-            return $mappedItems;
-        }
-
-        $dependencies = $json['packages']['']['dependencies'] ?? [];
-        $devDependencies = $json['packages']['']['devDependencies'] ?? [];
-        $packages = array_filter($json['packages'], fn ($key) => $key !== '', ARRAY_FILTER_USE_KEY);
-
-        $versionCb = function (string $packageName, string $version) use ($packages): string {
+        $versionCb = function (string $packageName, string $version) use ($allPackages): string {
             $key = "node_modules/{$packageName}";
-            if (array_key_exists($key, $packages)) {
-                return $packages[$key]['version'];
+            if (array_key_exists($key, $allPackages) && isset($allPackages[$key]['version']) && is_scalar($allPackages[$key]['version'])) {
+                return (string) $allPackages[$key]['version'];
             }
 
             return $version;
         };
 
-        $this->processDependencies($dependencies, $mappedItems, false, $versionCb);
-        $this->processDependencies($devDependencies, $mappedItems, true, $versionCb);
+        $this->processDependencies($dependencies, $packages, false, $versionCb);
+        $this->processDependencies($devDependencies, $packages, true, $versionCb);
 
-        return $mappedItems;
+        return $packages;
     }
 }

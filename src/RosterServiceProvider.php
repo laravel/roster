@@ -2,22 +2,21 @@
 
 namespace Laravel\Roster;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
 class RosterServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap any package services.
-     */
-    public function boot(): void
+    public function register(): void
     {
-        $this->registerCommands();
+        $this->app->singleton(Registry::class, fn () => new Registry);
+
+        $this->app->singleton(RosterManager::class, fn (Application $app) => new RosterManager(
+            $app->make(Registry::class),
+        ));
     }
 
-    /**
-     * Register the package's commands.
-     */
-    protected function registerCommands(): void
+    public function boot(): void
     {
         if ($this->app->runningInConsole()) {
             $this->commands([

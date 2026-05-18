@@ -7,14 +7,9 @@ use Laravel\Roster\Roster;
 
 class ScanCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'roster:scan {directory}';
+    protected $signature = 'roster:scan {directory} {--no-system : Skip system probes}';
 
-    protected $description = 'Detect packages & approaches in use and output as JSON';
+    protected $description = 'Detect packages, stacks, frameworks, and agents in use and output as JSON';
 
     public function handle(): int
     {
@@ -31,7 +26,7 @@ class ScanCommand extends Command
             return self::FAILURE;
         }
 
-        $roster = Roster::scan($directory);
+        $roster = Roster::scan($directory, detectSystem: ! $this->option('no-system'));
         $this->line($roster->json());
 
         return self::SUCCESS;
