@@ -14,4 +14,9 @@ enum StarterKit: string
     case SVELTE_WORKOS = 'svelte-workos';
     case LIVEWIRE = 'livewire';
     case LIVEWIRE_WORKOS = 'livewire-workos';
+
+    public function is(self $value): bool
+    {
+        return $this === $value;
+    }
 }

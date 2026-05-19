@@ -32,14 +32,6 @@ class EnumSet
     }
 
     /**
-     * @param  T  $value
-     */
-    public function is(BackedEnum $value): bool
-    {
-        return in_array($value, $this->cases, true);
-    }
-
-    /**
      * @return array<int, T>
      */
     public function all(): array

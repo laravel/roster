@@ -26,7 +26,7 @@ it('scans the fog fixture end to end', function (): void {
     expect($project->stack()->uses(Stack::LIVEWIRE))->toBeTrue();
     expect($project->frontend()->uses(Frontend::VUE))->toBeFalse();
 
-    expect($project->js()->packageManagers()->is(JsPackageManager::NPM))->toBeTrue();
+    expect($project->js()->packageManager()?->is(JsPackageManager::NPM))->toBeTrue();
 });
 
 it('renders json without error', function (): void {
