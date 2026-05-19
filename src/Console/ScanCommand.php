@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Laravel\Roster\Console;
 
 use Illuminate\Console\Command;
-use Laravel\Roster\Roster;
+use Laravel\Roster\Project;
+use Laravel\Roster\System;
 
 class ScanCommand extends Command
 {
@@ -29,8 +30,13 @@ class ScanCommand extends Command
             return self::FAILURE;
         }
 
-        $roster = Roster::scan($directory, detectSystem: ! $this->option('no-system'));
-        $this->line($roster->json());
+        $payload = Project::scan($directory)->toArray();
+
+        if (! $this->option('no-system')) {
+            $payload['system'] = System::scan()->toArray();
+        }
+
+        $this->line(json_encode($payload, JSON_PRETTY_PRINT) ?: '{}');
 
         return self::SUCCESS;
     }

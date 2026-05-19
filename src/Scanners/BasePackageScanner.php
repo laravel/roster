@@ -138,9 +138,11 @@ abstract class BasePackageScanner
             if (! is_string($name)) {
                 continue;
             }
+
             if (! is_scalar($constraint)) {
                 continue;
             }
+
             $collected[$name] = ['constraint' => (string) $constraint, 'isDev' => $isDev];
         }
 

@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Laravel\Roster\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Laravel\Roster\RosterManager;
+use Laravel\Roster\ProjectManager;
 
 /**
- * @method static \Laravel\Roster\RosterManager extend(callable $callback)
+ * @method static \Laravel\Roster\ProjectManager extend(callable $callback)
  * @method static \Laravel\Roster\Registry registry()
- * @method static \Laravel\Roster\Roster scan(?string $basePath = null, bool $detectSystem = true)
- * @method static \Laravel\Roster\RosterManager fresh()
- * @method static \Laravel\Roster\Roster instance()
+ * @method static \Laravel\Roster\ProjectManager ttl(int $seconds)
+ * @method static \Laravel\Roster\ProjectManager withoutCache()
+ * @method static \Laravel\Roster\Project scan(?string $basePath = null)
+ * @method static \Laravel\Roster\ProjectManager fresh()
+ * @method static \Laravel\Roster\Project instance()
  * @method static \Laravel\Roster\Ecosystems\PhpEcosystem php()
  * @method static \Laravel\Roster\Ecosystems\JsEcosystem js()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Stack> stack()
@@ -20,16 +22,16 @@ use Laravel\Roster\RosterManager;
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\BrowserTestFramework> browserTestFrameworks()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Frontend> frontend()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\StarterKit> starterKit()
- * @method static \Laravel\Roster\Detectors\AgentsDetection agents()
+ * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Agent> agents()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Approach> approach()
  * @method static string json()
  *
- * @see RosterManager
+ * @see ProjectManager
  */
-class Roster extends Facade
+class Project extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return RosterManager::class;
+        return ProjectManager::class;
     }
 }

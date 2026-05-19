@@ -38,6 +38,7 @@ class YarnPackageLock extends BasePackageScanner
             if ($line === '') {
                 continue;
             }
+
             if (str_starts_with($line, '#')) {
                 continue;
             }

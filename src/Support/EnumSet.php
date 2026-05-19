@@ -6,12 +6,11 @@ namespace Laravel\Roster\Support;
 
 use BackedEnum;
 use Illuminate\Support\Arr;
-use Laravel\Roster\Contracts\ScopedCollection;
 
 /**
  * @template T of BackedEnum
  */
-class EnumSet implements ScopedCollection
+class EnumSet
 {
     /**
      * @param  array<int, T>  $cases
