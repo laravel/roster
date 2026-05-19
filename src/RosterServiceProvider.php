@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster;
 
 use Illuminate\Contracts\Foundation\Application;
@@ -11,9 +13,11 @@ class RosterServiceProvider extends ServiceProvider
     {
         $this->app->singleton(Registry::class, fn (): Registry => new Registry);
 
-        $this->app->singleton(RosterManager::class, fn (Application $app): RosterManager => new RosterManager(
+        $this->app->singleton(ProjectManager::class, fn (Application $app): ProjectManager => new ProjectManager(
             $app->make(Registry::class),
         ));
+
+        $this->app->singleton(SystemManager::class, fn (): SystemManager => new SystemManager);
     }
 
     public function boot(): void

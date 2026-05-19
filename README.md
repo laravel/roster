@@ -9,10 +9,19 @@
 
 ## Introduction
 
-Laravel Roster is the detection package for the Laravel ecosystem. It reads
-your project's lockfiles, configuration markers, and (optionally) machine-level
-signals to answer questions about what is in use — packages, stacks, frontends,
-test frameworks, starter kits, and AI agents / editors.
+Laravel Roster is the detection package for the Laravel ecosystem. It exposes
+two surfaces:
+
+- **`Project`** — reads your project's lockfiles and configuration markers to
+  answer questions about what's in use: packages, stacks, frontends, test
+  frameworks, starter kits, configured agents, and committed JS package
+  managers.
+- **`System`** — probes the host machine for installed AI/editor agents and JS
+  package manager binaries on `PATH`.
+
+The two are split because they have different lifecycles and different cost:
+project scans are cheap and key on lockfile hashes; system probes shell out to
+the OS and don't depend on your project state.
 
 ## Installation
 
@@ -22,29 +31,35 @@ composer require laravel/roster --dev
 
 ## Usage
 
-In a Laravel app you can use the `Roster` facade directly — the first call
-triggers a scan and the result is cached for subsequent calls:
+In a Laravel app you can call either facade directly — the first call triggers
+a scan and the result is cached for subsequent calls:
 
 ```php
-use Laravel\Roster\Facades\Roster;
+use Laravel\Roster\Facades\Project;
+use Laravel\Roster\Facades\System;
+use Laravel\Roster\Enums\Stack;
+use Laravel\Roster\Enums\Agent;
 
-Roster::php()->uses('pest');
-Roster::stack()->is(Stack::INERTIA_REACT);
+Project::php()->uses('pest');
+Project::stack()->is(Stack::INERTIA_REACT);
+System::agents()->is(Agent::CURSOR);
 ```
 
-Outside a Laravel container, or when you want an explicit handle, call
-`Roster::scan()`:
+Outside a Laravel container, or when you want an explicit handle, use the
+static `scan()` entry points:
 
 ```php
-use Laravel\Roster\Roster;
+use Laravel\Roster\Project;
+use Laravel\Roster\System;
 
-$roster = Roster::scan();                              // project + system (default)
-$roster = Roster::scan($basePath);
-$roster = Roster::scan(detectSystem: false);           // project only
+$project = Project::scan();          // uses base_path() / getcwd()
+$project = Project::scan($basePath);
+
+$system = System::scan();
 ```
 
-The examples below use `$roster` for clarity, but every call works on the
-facade too.
+The examples below use `$project` / `$system` for clarity, but every call
+works on the facade too.
 
 ### Packages — split by ecosystem
 
@@ -61,17 +76,17 @@ SemVer comparison — when omitted, it's a pure presence check. The
 operator defaults to `>=`, which is what you almost always want.
 
 ```php
-$roster->php()->uses('pest');                          // alias
-$roster->php()->uses('pestphp/pest');                  // raw
-$roster->php()->uses('framework', '12.0.0');           // present and >= 12.0.0
-$roster->php()->uses('framework', '12.0.0', '<');      // present and < 12.0.0
-$roster->php()->package('pest')?->version();
-$roster->php()->packages()->dev();
+$project->php()->uses('pest');                          // alias
+$project->php()->uses('pestphp/pest');                  // raw
+$project->php()->uses('framework', '12.0.0');           // present and >= 12.0.0
+$project->php()->uses('framework', '12.0.0', '<');      // present and < 12.0.0
+$project->php()->package('pest')?->version();
+$project->php()->packages()->dev();
 
-$roster->js()->uses('vue');
-$roster->js()->uses('@inertiajs/react');
-$roster->js()->uses('vue', '3.0.0');
-$roster->js()->package('vue')?->major();
+$project->js()->uses('vue');
+$project->js()->uses('@inertiajs/react');
+$project->js()->uses('vue', '3.0.0');
+$project->js()->package('vue')?->major();
 ```
 
 ### Aliases
@@ -79,7 +94,7 @@ $roster->js()->package('vue')?->major();
 Every package can always be queried by its raw name (`laravel/pint`,
 `@inertiajs/react`). On top of that, packages from the Laravel-ecosystem
 namespaces get a short alias automatically so you can write
-`$roster->php()->uses('pint')` instead of the full vendor-qualified string.
+`$project->php()->uses('pint')` instead of the full vendor-qualified string.
 
 The rules:
 
@@ -95,21 +110,21 @@ by raw name. Other npm scopes (`@vue/`, `@sveltejs/`, `@tanstack/`, etc.) are
 deliberately not auto-aliased because their stripped names (`compiler-sfc`,
 `kit`, `react-query`) are tool-internal and not useful as concept aliases.
 
-To register your own alias for a package, use `Roster::extend()`. Explicit
+To register your own alias for a package, use `Project::extend()`. Explicit
 aliases always win over the auto-alias rules:
 
 ```php
-use Laravel\Roster\Facades\Roster;
+use Laravel\Roster\Facades\Project;
 use Laravel\Roster\Registry;
 
-Roster::extend(function (Registry $r) {
+Project::extend(function (Registry $r) {
     $r->php('spatie/laravel-permission', alias: 'permission');
     $r->js('@tanstack/react-query', alias: 'react-query');
 });
 
 // Then either form works:
-$roster->php()->uses('permission');
-$roster->php()->uses('spatie/laravel-permission');
+$project->php()->uses('permission');
+$project->php()->uses('spatie/laravel-permission');
 ```
 
 ### Stack, test framework, frontend
@@ -120,17 +135,17 @@ use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\TestFramework;
 
-$roster->stack()->is(Stack::INERTIA_REACT);
-$roster->stack()->all();                               // Stack[]
+$project->stack()->is(Stack::INERTIA_REACT);
+$project->stack()->all();                              // Stack[]
 
-$roster->testFramework()?->is(TestFramework::PEST);
-$roster->browserTestFrameworks()->uses(BrowserTestFramework::PLAYWRIGHT);
-$roster->browserTestFrameworks()->uses([
+$project->testFramework()?->is(TestFramework::PEST);
+$project->browserTestFrameworks()->uses(BrowserTestFramework::PLAYWRIGHT);
+$project->browserTestFrameworks()->uses([
     BrowserTestFramework::PLAYWRIGHT,
     BrowserTestFramework::CYPRESS,
 ]);
 
-$roster->frontend()->is(Frontend::REACT);
+$project->frontend()->is(Frontend::REACT);
 ```
 
 Use `is()` to check for a single value and `uses()` to check for one or
@@ -141,28 +156,38 @@ more (it accepts either a single case or an array of cases).
 ```php
 use Laravel\Roster\Enums\StarterKit;
 
-$roster->starterKit()->is(StarterKit::REACT);
-$roster->starterKit()->all();                          // [] when none match
+$project->starterKit()->is(StarterKit::REACT);
+$project->starterKit()->all();                         // [] when none match
 ```
 
-### Agents — Agents in one enum
+### Agents
+
+`Project::agents()` reports agents *configured* in the repo (filesystem
+markers like `.claude`, `.cursor`, `AGENTS.md`). `System::agents()` reports
+agents *installed* on the host (binaries on `PATH`).
 
 ```php
 use Laravel\Roster\Enums\Agent;
 
-$roster->agents()->configured()->all();                // filesystem signals
-$roster->agents()->installed()->all();                 // binaries on PATH
-$roster->agents()->configured()->is(Agent::CLAUDE_CODE);
-$roster->agents()->installed()->is(Agent::CURSOR);
+$project->agents()->is(Agent::CLAUDE_CODE);            // marker file present
+$project->agents()->all();                             // Agent[]
+
+$system->agents()->isInstalled(Agent::CURSOR);         // `cursor` on PATH
+$system->agents()->all();
 ```
 
-### JS package managers — project + system
+### JS package managers
+
+`$project->js()->packageManagers()` reports the package manager *committed*
+to the project (presence of `package-lock.json` / `pnpm-lock.yaml` / etc.).
+`System::packageManagers()` reports the managers *installed* on the host.
 
 ```php
 use Laravel\Roster\Enums\JsPackageManager;
 
-$roster->js()->packageManagers()->configured()->is(JsPackageManager::PNPM);
-$roster->js()->packageManagers()->installed()->all(); 
+$project->js()->packageManagers()->is(JsPackageManager::PNPM);
+$system->packageManagers()->isInstalled(JsPackageManager::BUN);
+$system->packageManagers()->all();
 ```
 
 ## Upgrading

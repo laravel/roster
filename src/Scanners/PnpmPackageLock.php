@@ -49,8 +49,6 @@ class PnpmPackageLock extends BasePackageScanner
     }
 
     /**
-     * Pnpm stores each entry as `{ specifier, version }`. We only care about the resolved version.
-     *
      * @param  array<string, array<string, mixed>>  $entries
      * @return array<string, string>
      */

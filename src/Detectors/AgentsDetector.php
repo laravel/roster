@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Detectors;
 
 use Laravel\Roster\Enums\Agent;
@@ -7,11 +9,7 @@ use Laravel\Roster\Support\SystemProbe;
 
 class AgentsDetector
 {
-    /**
-     * Project-level markers. The presence of any marker for an agent counts as configured.
-     *
-     * @var array<string, list<string>>
-     */
+    /** @var array<string, list<string>> */
     private const PROJECT_MARKERS = [
         Agent::CLAUDE_CODE->value => ['.claude', 'CLAUDE.md', '.claude.json'],
         Agent::CURSOR->value => ['.cursor', '.cursorrules'],
@@ -32,11 +30,7 @@ class AgentsDetector
         Agent::VSCODE->value => ['.vscode'],
     ];
 
-    /**
-     * System binaries that indicate an agent is installed.
-     *
-     * @var array<string, list<string>>
-     */
+    /** @var array<string, list<string>> */
     private const SYSTEM_BINARIES = [
         Agent::CLAUDE_CODE->value => ['claude'],
         Agent::CURSOR->value => ['cursor'],
@@ -52,29 +46,16 @@ class AgentsDetector
         Agent::VSCODE->value => ['code'],
     ];
 
-    public function __construct(
-        protected string $basePath,
-        protected bool $detectSystem = true,
-    ) {}
-
-    public function detect(): AgentsDetection
-    {
-        return new AgentsDetection(
-            $this->detectFromProjectMarkers(),
-            $this->detectSystem ? $this->detectFromSystemBinaries() : [],
-        );
-    }
-
     /**
      * @return list<Agent>
      */
-    private function detectFromProjectMarkers(): array
+    public static function configured(string $basePath): array
     {
         $configured = [];
 
         foreach (self::PROJECT_MARKERS as $agentValue => $markers) {
             foreach ($markers as $marker) {
-                if (SystemProbe::pathExists($this->basePath.str_replace('/', DIRECTORY_SEPARATOR, $marker))) {
+                if (SystemProbe::pathExists($basePath.str_replace('/', DIRECTORY_SEPARATOR, $marker))) {
                     $configured[] = Agent::from($agentValue);
 
                     break;
@@ -88,7 +69,7 @@ class AgentsDetector
     /**
      * @return list<Agent>
      */
-    private function detectFromSystemBinaries(): array
+    public static function installed(): array
     {
         $installed = [];
 

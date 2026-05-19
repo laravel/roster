@@ -6,10 +6,6 @@ use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 
-/**
- * Fallback scanner when no JS lockfile is committed. Reads package.json
- * directly — versions reflect declared constraints, not resolved installs.
- */
 class PackageJson extends BasePackageScanner
 {
     protected function lockFile(): string

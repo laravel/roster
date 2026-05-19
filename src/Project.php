@@ -1,24 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster;
 
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Str;
-use Laravel\Roster\Detectors\AgentsDetection;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\ApproachDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\FrontendDetector;
-use Laravel\Roster\Detectors\PackageManagersDetector;
 use Laravel\Roster\Detectors\StackDetector;
 use Laravel\Roster\Detectors\StarterKitDetector;
 use Laravel\Roster\Detectors\TestFrameworkDetector;
 use Laravel\Roster\Ecosystems\JsEcosystem;
 use Laravel\Roster\Ecosystems\PhpEcosystem;
+use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Frontend;
+use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\StarterKit;
 use Laravel\Roster\Enums\TestFramework;
@@ -26,13 +28,14 @@ use Laravel\Roster\Scanners\Composer;
 use Laravel\Roster\Scanners\JsLockfile;
 use Laravel\Roster\Support\EnumSet;
 
-class Roster
+class Project
 {
     /**
      * @param  EnumSet<Stack>  $stack
      * @param  EnumSet<BrowserTestFramework>  $browserTestFrameworks
      * @param  EnumSet<Frontend>  $frontend
      * @param  EnumSet<StarterKit>  $starterKit
+     * @param  EnumSet<Agent>  $agents
      * @param  EnumSet<Approach>  $approach
      */
     public function __construct(
@@ -43,7 +46,7 @@ class Roster
         protected EnumSet $browserTestFrameworks,
         protected EnumSet $frontend,
         protected EnumSet $starterKit,
-        protected AgentsDetection $agents,
+        protected EnumSet $agents,
         protected EnumSet $approach,
     ) {}
 
@@ -86,7 +89,8 @@ class Roster
         return $this->starterKit;
     }
 
-    public function agents(): AgentsDetection
+    /** @return EnumSet<Agent> */
+    public function agents(): EnumSet
     {
         return $this->agents;
     }
@@ -97,7 +101,7 @@ class Roster
         return $this->approach;
     }
 
-    public static function scan(?string $basePath = null, bool $detectSystem = true, ?Registry $registry = null): self
+    public static function scan(?string $basePath = null, ?Registry $registry = null): self
     {
         $registry ??= self::resolveRegistry();
         $basePath = self::normalizeBasePath($basePath);
@@ -106,12 +110,13 @@ class Roster
 
         $jsLockfile = new JsLockfile($basePath, $registry);
         $jsPackages = $jsLockfile->scan();
+        $committed = $jsLockfile->committedManager();
 
-        $packageManagers = (new PackageManagersDetector($basePath, $detectSystem))
-            ->detect($jsLockfile->committedManager());
+        /** @var array<int, JsPackageManager> $committedManagers */
+        $committedManagers = $committed instanceof JsPackageManager ? [$committed] : [];
 
         $php = new PhpEcosystem($phpPackages);
-        $js = new JsEcosystem($jsPackages, $packageManagers);
+        $js = new JsEcosystem($jsPackages, new EnumSet($committedManagers));
 
         return new self(
             $php,
@@ -121,9 +126,40 @@ class Roster
             (new BrowserTestFrameworkDetector)->detect($php, $js),
             (new FrontendDetector)->detect($js),
             (new StarterKitDetector($basePath))->detect($php),
-            (new AgentsDetector($basePath, $detectSystem))->detect(),
+            new EnumSet(AgentsDetector::configured($basePath)),
             (new ApproachDetector($basePath))->detect(),
         );
+    }
+
+    public static function normalizeBasePath(?string $basePath): string
+    {
+        $resolved = $basePath ?? (function_exists('base_path') ? base_path() : (getcwd() ?: '.'));
+
+        return Str::finish($resolved, DIRECTORY_SEPARATOR);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'php' => array_map(fn (Package $p): array => $p->toArray(), $this->php->packages()->all()),
+            'js' => array_map(fn (Package $p): array => $p->toArray(), $this->js->packages()->all()),
+            'stack' => $this->stack->values(),
+            'testFramework' => $this->testFramework?->value,
+            'browserTestFrameworks' => $this->browserTestFrameworks->values(),
+            'frontend' => $this->frontend->values(),
+            'starterKit' => $this->starterKit->values(),
+            'approach' => $this->approach->values(),
+            'agents' => $this->agents->values(),
+            'jsPackageManagers' => $this->js->packageManagers()->values(),
+        ];
+    }
+
+    public function json(): string
+    {
+        return json_encode($this->toArray(), JSON_PRETTY_PRINT) ?: '{}';
     }
 
     private static function resolveRegistry(): Registry
@@ -134,36 +170,5 @@ class Roster
         } catch (BindingResolutionException) {
             return new Registry;
         }
-    }
-
-    public static function normalizeBasePath(?string $basePath): string
-    {
-        $resolved = $basePath ?? (function_exists('base_path') ? base_path() : (getcwd() ?: '.'));
-
-        return Str::finish($resolved, DIRECTORY_SEPARATOR);
-    }
-
-    public function json(): string
-    {
-        $payload = [
-            'php' => array_map(fn (Package $p): array => $p->toArray(), $this->php->packages()->all()),
-            'js' => array_map(fn (Package $p): array => $p->toArray(), $this->js->packages()->all()),
-            'stack' => $this->stack->values(),
-            'testFramework' => $this->testFramework?->value,
-            'browserTestFrameworks' => $this->browserTestFrameworks->values(),
-            'frontend' => $this->frontend->values(),
-            'starterKit' => $this->starterKit->values(),
-            'approach' => $this->approach->values(),
-            'agents' => [
-                'configured' => $this->agents->configured()->values(),
-                'installed' => $this->agents->installed()->values(),
-            ],
-            'jsPackageManagers' => [
-                'configured' => $this->js->packageManagers()->configured()->values(),
-                'installed' => $this->js->packageManagers()->installed()->values(),
-            ],
-        ];
-
-        return json_encode($payload, JSON_PRETTY_PRINT) ?: '{}';
     }
 }
