@@ -21,7 +21,7 @@ use Laravel\Roster\ProjectManager;
  * @method static \Laravel\Roster\Enums\TestFramework|null testFramework()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\BrowserTestFramework> browserTestFrameworks()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Frontend> frontend()
- * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\StarterKit> starterKit()
+ * @method static \Laravel\Roster\Enums\StarterKit|null starterKit()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Agent> agents()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Approach> approach()
  * @method static string json()

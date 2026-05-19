@@ -6,25 +6,18 @@ namespace Laravel\Roster\Ecosystems;
 
 use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Support\EnumSet;
 
 class JsEcosystem extends Ecosystem
 {
-    /**
-     * @param  EnumSet<JsPackageManager>  $packageManagers
-     */
     public function __construct(
         PackageCollection $packages,
-        protected EnumSet $packageManagers,
+        protected ?JsPackageManager $packageManager,
     ) {
         parent::__construct($packages);
     }
 
-    /**
-     * @return EnumSet<JsPackageManager>
-     */
-    public function packageManagers(): EnumSet
+    public function packageManager(): ?JsPackageManager
     {
-        return $this->packageManagers;
+        return $this->packageManager;
     }
 }

@@ -4,7 +4,6 @@ namespace Laravel\Roster\Detectors;
 
 use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\StarterKit;
-use Laravel\Roster\Support\EnumSet;
 use Laravel\Roster\Support\SystemProbe;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -14,23 +13,18 @@ class StarterKitDetector
 {
     public function __construct(protected string $basePath) {}
 
-    /**
-     * @return EnumSet<StarterKit>
-     */
-    public function detect(PhpEcosystem $php): EnumSet
+    public function detect(PhpEcosystem $php): ?StarterKit
     {
         if (! $this->pathExists('routes/settings.php')) {
-            return new EnumSet([]);
+            return null;
         }
 
         $variant = $this->detectVariant();
         if ($variant === null) {
-            return new EnumSet([]);
+            return null;
         }
 
-        $kit = $this->hasWorkOs($php) ? $variant['workos'] : $variant['base'];
-
-        return new EnumSet([$kit]);
+        return $this->hasWorkOs($php) ? $variant['workos'] : $variant['base'];
     }
 
     /**

@@ -41,8 +41,8 @@ use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\Agent;
 
 Project::php()->uses('pest');
-Project::stack()->is(Stack::INERTIA_REACT);
-System::agents()->is(Agent::CURSOR);
+Project::stack()->uses(Stack::INERTIA_REACT);
+System::agents()->isInstalled(Agent::CURSOR);
 ```
 
 Outside a Laravel container, or when you want an explicit handle, use the
@@ -135,7 +135,7 @@ use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\TestFramework;
 
-$project->stack()->is(Stack::INERTIA_REACT);
+$project->stack()->uses(Stack::INERTIA_REACT);
 $project->stack()->all();                              // Stack[]
 
 $project->testFramework()?->is(TestFramework::PEST);
@@ -145,19 +145,19 @@ $project->browserTestFrameworks()->uses([
     BrowserTestFramework::CYPRESS,
 ]);
 
-$project->frontend()->is(Frontend::REACT);
+$project->frontend()->uses(Frontend::REACT);
 ```
 
-Use `is()` to check for a single value and `uses()` to check for one or
-more (it accepts either a single case or an array of cases).
+`uses()` accepts either a single case or an array of cases. On `System`
+surfaces, use `isInstalled()` instead.
 
 ### Starter kit
 
 ```php
 use Laravel\Roster\Enums\StarterKit;
 
-$project->starterKit()->is(StarterKit::REACT);
-$project->starterKit()->all();                         // [] when none match
+$project->starterKit()?->is(StarterKit::REACT);
+$project->starterKit();                                // ?StarterKit (null when none match)
 ```
 
 ### Agents
@@ -169,7 +169,8 @@ agents *installed* on the host (binaries on `PATH`).
 ```php
 use Laravel\Roster\Enums\Agent;
 
-$project->agents()->is(Agent::CLAUDE_CODE);            // marker file present
+$project->agents()->uses(Agent::CLAUDE_CODE);          // marker file present
+$project->agents()->uses([Agent::CLAUDE_CODE, Agent::CURSOR]);
 $project->agents()->all();                             // Agent[]
 
 $system->agents()->isInstalled(Agent::CURSOR);         // `cursor` on PATH
@@ -178,14 +179,15 @@ $system->agents()->all();
 
 ### JS package managers
 
-`$project->js()->packageManagers()` reports the package manager *committed*
-to the project (presence of `package-lock.json` / `pnpm-lock.yaml` / etc.).
-`System::packageManagers()` reports the managers *installed* on the host.
+`$project->js()->packageManager()` reports the package manager *committed*
+to the project (presence of `package-lock.json` / `pnpm-lock.yaml` / etc.)
+as a single `?JsPackageManager`. `System::packageManagers()` reports the
+managers *installed* on the host as a set.
 
 ```php
 use Laravel\Roster\Enums\JsPackageManager;
 
-$project->js()->packageManagers()->is(JsPackageManager::PNPM);
+$project->js()->packageManager()?->is(JsPackageManager::PNPM);
 $system->packageManagers()->isInstalled(JsPackageManager::BUN);
 $system->packageManagers()->all();
 ```

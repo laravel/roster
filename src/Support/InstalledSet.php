@@ -18,6 +18,6 @@ class InstalledSet extends EnumSet
      */
     public function isInstalled(BackedEnum $value): bool
     {
-        return $this->is($value);
+        return $this->uses($value);
     }
 }

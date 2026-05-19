@@ -100,8 +100,7 @@ class ProjectManager
         return $this->instance()->frontend();
     }
 
-    /** @return EnumSet<StarterKit> */
-    public function starterKit(): EnumSet
+    public function starterKit(): ?StarterKit
     {
         return $this->instance()->starterKit();
     }

@@ -20,7 +20,6 @@ use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Frontend;
-use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Enums\StarterKit;
 use Laravel\Roster\Enums\TestFramework;
@@ -34,7 +33,6 @@ class Project
      * @param  EnumSet<Stack>  $stack
      * @param  EnumSet<BrowserTestFramework>  $browserTestFrameworks
      * @param  EnumSet<Frontend>  $frontend
-     * @param  EnumSet<StarterKit>  $starterKit
      * @param  EnumSet<Agent>  $agents
      * @param  EnumSet<Approach>  $approach
      */
@@ -45,7 +43,7 @@ class Project
         protected ?TestFramework $testFramework,
         protected EnumSet $browserTestFrameworks,
         protected EnumSet $frontend,
-        protected EnumSet $starterKit,
+        protected ?StarterKit $starterKit,
         protected EnumSet $agents,
         protected EnumSet $approach,
     ) {}
@@ -83,8 +81,7 @@ class Project
         return $this->frontend;
     }
 
-    /** @return EnumSet<StarterKit> */
-    public function starterKit(): EnumSet
+    public function starterKit(): ?StarterKit
     {
         return $this->starterKit;
     }
@@ -110,13 +107,9 @@ class Project
 
         $jsLockfile = new JsLockfile($basePath, $registry);
         $jsPackages = $jsLockfile->scan();
-        $committed = $jsLockfile->committedManager();
-
-        /** @var array<int, JsPackageManager> $committedManagers */
-        $committedManagers = $committed instanceof JsPackageManager ? [$committed] : [];
 
         $php = new PhpEcosystem($phpPackages);
-        $js = new JsEcosystem($jsPackages, new EnumSet($committedManagers));
+        $js = new JsEcosystem($jsPackages, $jsLockfile->committedManager());
 
         return new self(
             $php,
@@ -150,10 +143,10 @@ class Project
             'testFramework' => $this->testFramework?->value,
             'browserTestFrameworks' => $this->browserTestFrameworks->values(),
             'frontend' => $this->frontend->values(),
-            'starterKit' => $this->starterKit->values(),
+            'starterKit' => $this->starterKit?->value,
             'approach' => $this->approach->values(),
             'agents' => $this->agents->values(),
-            'jsPackageManagers' => $this->js->packageManagers()->values(),
+            'jsPackageManager' => $this->js->packageManager()?->value,
         ];
     }
 

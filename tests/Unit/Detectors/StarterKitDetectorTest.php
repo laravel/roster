@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Laravel\Roster\Detectors\StarterKitDetector;
 use Laravel\Roster\Enums\StarterKit;
 
-it('returns empty when no base marker exists', function (): void {
+it('returns null when no base marker exists', function (): void {
     $base = tempBase();
 
-    $detection = (new StarterKitDetector($base))->detect(phpEcosystem([]));
-    expect($detection->all())->toBe([]);
+    $kit = (new StarterKitDetector($base))->detect(phpEcosystem([]));
+    expect($kit)->toBeNull();
 
     cleanup($base);
 });
@@ -20,8 +20,8 @@ it('detects react starter kit via app.tsx + pages', function (): void {
     touchFile($base.'resources/js/app.tsx');
     mkdir($base.'resources/js/pages', 0777, true);
 
-    $detection = (new StarterKitDetector($base))->detect(phpEcosystem([]));
-    expect($detection->uses(StarterKit::REACT))->toBeTrue();
+    $kit = (new StarterKitDetector($base))->detect(phpEcosystem([]));
+    expect($kit?->is(StarterKit::REACT))->toBeTrue();
 
     cleanup($base);
 });
@@ -32,8 +32,8 @@ it('detects vue starter kit via app.ts + composables', function (): void {
     touchFile($base.'resources/js/app.ts');
     mkdir($base.'resources/js/composables', 0777, true);
 
-    $detection = (new StarterKitDetector($base))->detect(phpEcosystem([]));
-    expect($detection->uses(StarterKit::VUE))->toBeTrue();
+    $kit = (new StarterKitDetector($base))->detect(phpEcosystem([]));
+    expect($kit?->is(StarterKit::VUE))->toBeTrue();
 
     cleanup($base);
 });
@@ -44,8 +44,8 @@ it('detects livewire starter kit via flux views + livewire actions', function ()
     mkdir($base.'resources/views/flux', 0777, true);
     mkdir($base.'app/Livewire/Actions', 0777, true);
 
-    $detection = (new StarterKitDetector($base))->detect(phpEcosystem([]));
-    expect($detection->uses(StarterKit::LIVEWIRE))->toBeTrue();
+    $kit = (new StarterKitDetector($base))->detect(phpEcosystem([]));
+    expect($kit?->is(StarterKit::LIVEWIRE))->toBeTrue();
 
     cleanup($base);
 });
@@ -58,8 +58,8 @@ it('promotes to _WORKOS when workos package + services config present', function
     mkdir($base.'config', 0777, true);
     file_put_contents($base.'config'.DIRECTORY_SEPARATOR.'services.php', "<?php return ['workos' => []];");
 
-    $detection = (new StarterKitDetector($base))->detect(phpEcosystem(['workos/workos-php']));
-    expect($detection->uses(StarterKit::REACT_WORKOS))->toBeTrue();
+    $kit = (new StarterKitDetector($base))->detect(phpEcosystem(['workos/workos-php']));
+    expect($kit?->is(StarterKit::REACT_WORKOS))->toBeTrue();
 
     cleanup($base);
 });

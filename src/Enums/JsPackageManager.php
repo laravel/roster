@@ -23,4 +23,9 @@ enum JsPackageManager: string
     {
         return $this->value;
     }
+
+    public function is(self $value): bool
+    {
+        return $this === $value;
+    }
 }

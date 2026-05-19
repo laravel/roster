@@ -5,7 +5,6 @@ use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Support\EnumSet;
 
 expect()->extend('toBeOne', fn () => $this->toBe(1));
 
@@ -24,7 +23,7 @@ function jsEcosystem(array $specs): JsEcosystem
 {
     return new JsEcosystem(
         packagesFromSpecs($specs, PackageSource::NPM),
-        new EnumSet([]),
+        null,
     );
 }
 
