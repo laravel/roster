@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Registry;
 
 abstract class BasePackageScanner
 {
@@ -17,7 +16,6 @@ abstract class BasePackageScanner
 
     public function __construct(
         protected string $path,
-        protected Registry $registry,
     ) {}
 
     abstract protected function lockFile(): string;
@@ -63,7 +61,6 @@ abstract class BasePackageScanner
                 name: $packageName,
                 version: self::normalizeVersion((string) $version),
                 source: PackageSource::NPM,
-                alias: $this->registry->aliasFor(PackageSource::NPM, $packageName),
                 dev: $packageIsDev,
                 direct: $isDirect,
                 constraint: $constraint,

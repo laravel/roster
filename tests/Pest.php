@@ -9,7 +9,7 @@ use Laravel\Roster\PackageCollection;
 expect()->extend('toBeOne', fn () => $this->toBe(1));
 
 /**
- * @param  array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool, alias?: string|null}>  $specs
+ * @param  array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool}>  $specs
  */
 function phpEcosystem(array $specs): PhpEcosystem
 {
@@ -17,7 +17,7 @@ function phpEcosystem(array $specs): PhpEcosystem
 }
 
 /**
- * @param  array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool, alias?: string|null}>  $specs
+ * @param  array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool}>  $specs
  */
 function jsEcosystem(array $specs): JsEcosystem
 {
@@ -63,7 +63,7 @@ function cleanup(string $base): void
 }
 
 /**
- * @param  array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool, alias?: string|null}>  $specs
+ * @param  array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool}>  $specs
  */
 function packagesFromSpecs(array $specs, PackageSource $source): PackageCollection
 {
@@ -77,7 +77,6 @@ function packagesFromSpecs(array $specs, PackageSource $source): PackageCollecti
             name: $spec['name'],
             version: $spec['version'] ?? '1.0.0',
             source: $source,
-            alias: $spec['alias'] ?? null,
             dev: $spec['dev'] ?? false,
             direct: $spec['direct'] ?? false,
         ));

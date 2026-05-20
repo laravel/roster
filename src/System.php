@@ -7,18 +7,17 @@ namespace Laravel\Roster;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\PackageManagersDetector;
 use Laravel\Roster\Enums\Agent;
-use Laravel\Roster\Enums\JsPackageManager;
+use Laravel\Roster\Hosts\Js;
 use Laravel\Roster\Support\InstalledSet;
 
 class System
 {
     /**
      * @param  InstalledSet<Agent>  $agents
-     * @param  InstalledSet<JsPackageManager>  $packageManagers
      */
     public function __construct(
         protected InstalledSet $agents,
-        protected InstalledSet $packageManagers,
+        protected Js $js,
     ) {}
 
     /** @return InstalledSet<Agent> */
@@ -27,17 +26,16 @@ class System
         return $this->agents;
     }
 
-    /** @return InstalledSet<JsPackageManager> */
-    public function packageManagers(): InstalledSet
+    public function js(): Js
     {
-        return $this->packageManagers;
+        return $this->js;
     }
 
     public static function scan(): self
     {
         return new self(
             new InstalledSet(AgentsDetector::installed()),
-            new InstalledSet(PackageManagersDetector::installed()),
+            new Js(new InstalledSet(PackageManagersDetector::installed())),
         );
     }
 
@@ -48,7 +46,7 @@ class System
     {
         return [
             'agents' => $this->agents->values(),
-            'jsPackageManagers' => $this->packageManagers->values(),
+            'jsPackageManagers' => $this->js->packageManagers()->values(),
         ];
     }
 

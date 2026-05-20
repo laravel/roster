@@ -75,7 +75,6 @@ class Composer extends BasePackageScanner
                 name: $name,
                 version: self::normalizeVersion($version),
                 source: PackageSource::COMPOSER,
-                alias: $this->registry->aliasFor(PackageSource::COMPOSER, $name),
                 dev: $packageIsDev,
                 direct: $isDirect,
                 constraint: $constraint,

@@ -24,7 +24,6 @@ class PackageJson extends BasePackageScanner
                 name: $name,
                 version: self::normalizeVersion($constraint),
                 source: PackageSource::NPM,
-                alias: $this->registry->aliasFor(PackageSource::NPM, $name),
                 dev: $meta['isDev'],
                 direct: true,
                 constraint: $constraint,

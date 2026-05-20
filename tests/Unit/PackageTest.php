@@ -5,24 +5,21 @@ declare(strict_types=1);
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 
-it('exposes name and alias', function (): void {
+it('exposes name', function (): void {
     $package = new Package(
         name: 'pestphp/pest',
         version: '3.8.1',
         source: PackageSource::COMPOSER,
-        alias: 'pest',
     );
 
     expect($package->name())->toBe('pestphp/pest');
-    expect($package->alias())->toBe('pest');
 });
 
-it('matches on raw name and alias', function (): void {
-    $package = new Package('pestphp/pest', '3.8.1', PackageSource::COMPOSER, alias: 'pest');
+it('matches on raw name', function (): void {
+    $package = new Package('pestphp/pest', '3.8.1', PackageSource::COMPOSER);
 
-    expect($package->matches('pest'))->toBeTrue();
     expect($package->matches('pestphp/pest'))->toBeTrue();
-    expect($package->matches('phpunit'))->toBeFalse();
+    expect($package->matches('pest'))->toBeFalse();
 });
 
 it('reports major version', function (): void {

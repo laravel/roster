@@ -1,16 +1,14 @@
 <?php
 
 use Laravel\Roster\Enums\PackageSource;
-use Laravel\Roster\Registry;
 use Laravel\Roster\Scanners\Composer;
 
-it('parses installed packages with raw names and auto-aliases', function (): void {
+it('parses installed packages with raw names', function (): void {
     $path = __DIR__.'/../../fixtures/fog/composer.lock';
-    $packages = (new Composer($path, new Registry))->scan();
+    $packages = (new Composer($path))->scan();
 
     $laravel = $packages->first(fn ($p): bool => $p->name() === 'laravel/framework');
     expect($laravel)->not->toBeNull();
-    expect($laravel->alias())->toBe('framework');
     expect($laravel->version())->toEqual('11.44.2');
     expect($laravel->isDev())->toBeFalse();
     expect($laravel->isDirect())->toBeTrue();
@@ -20,7 +18,6 @@ it('parses installed packages with raw names and auto-aliases', function (): voi
 
     $pest = $packages->first(fn ($p): bool => $p->name() === 'pestphp/pest');
     expect($pest)->not->toBeNull();
-    expect($pest->alias())->toBe('pest');
     expect($pest->version())->toEqual('3.8.1');
     expect($pest->isDev())->toBeTrue();
 });
@@ -36,12 +33,11 @@ it('strips composer version prefixes', function (): void {
     $tempFile = tempnam(sys_get_temp_dir(), 'composer_lock_test');
     file_put_contents($tempFile, $composerLockContent);
 
-    $packages = (new Composer($tempFile, new Registry))->scan();
+    $packages = (new Composer($tempFile))->scan();
     unlink($tempFile);
 
     $inertia = $packages->first(fn ($p): bool => $p->name() === 'inertiajs/inertia-laravel');
     expect($inertia)->not->toBeNull();
-    expect($inertia->alias())->toBe('inertia-laravel');
     expect($inertia->version())->toEqual('2.0.5');
 });
 
@@ -58,7 +54,7 @@ it('respects composer vendor-dir config', function (): void {
         'packages-dev' => [],
     ]));
 
-    $packages = (new Composer($tempDir.DIRECTORY_SEPARATOR.'composer.lock', new Registry))->scan();
+    $packages = (new Composer($tempDir.DIRECTORY_SEPARATOR.'composer.lock'))->scan();
     $laravel = $packages->first(fn ($p): bool => $p->name() === 'laravel/framework');
 
     expect($laravel->path())->toEndWith('lib'.DIRECTORY_SEPARATOR.'packages'.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework');
@@ -70,7 +66,7 @@ it('respects composer vendor-dir config', function (): void {
 
 it('marks transitive dependencies as indirect', function (): void {
     $path = __DIR__.'/../../fixtures/fog/composer.lock';
-    $packages = (new Composer($path, new Registry))->scan();
+    $packages = (new Composer($path))->scan();
 
     $livewire = $packages->first(fn ($p): bool => $p->name() === 'livewire/livewire');
     expect($livewire->isDirect())->toBeTrue();
@@ -78,23 +74,4 @@ it('marks transitive dependencies as indirect', function (): void {
     $prompts = $packages->first(fn ($p): bool => $p->name() === 'laravel/prompts');
     expect($prompts)->not->toBeNull();
     expect($prompts->isDirect())->toBeFalse();
-});
-
-it('applies explicit registry aliases', function (): void {
-    $composerLockContent = '{
-        "packages": [
-            {"name": "spatie/laravel-permission", "version": "v6.10.0"}
-        ],
-        "packages-dev": []
-    }';
-
-    $tempFile = tempnam(sys_get_temp_dir(), 'composer_lock_test');
-    file_put_contents($tempFile, $composerLockContent);
-
-    $registry = (new Registry)->php('spatie/laravel-permission', 'permission');
-    $packages = (new Composer($tempFile, $registry))->scan();
-    unlink($tempFile);
-
-    $permission = $packages->first(fn ($p): bool => $p->name() === 'spatie/laravel-permission');
-    expect($permission->alias())->toBe('permission');
 });

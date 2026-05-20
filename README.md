@@ -67,78 +67,63 @@ Packages live under two ecosystems: `php()` (composer) and `js()` (npm /
 pnpm / yarn / bun). Both expose the same surface:
 
 ```php
-$ecosystem->uses(string $name, ?string $version = null, string $operator = '>='): bool
+$ecosystem->uses(string|array $packages, ?string $constraint = null): bool
+$ecosystem->usesAll(array $packages): bool
 ```
 
-`$name` is either the alias (`pest`, `inertia-react`) or the raw package
-name (`pestphp/pest`, `@inertiajs/react`). Pass `$version` to also do a
-SemVer comparison — when omitted, it's a pure presence check. The
-operator defaults to `>=`, which is what you almost always want.
+`uses()` returns true if **any** of the given packages is present.
+`usesAll()` returns true only if **every** package is present. Names are
+raw package names (`pestphp/pest`, `@inertiajs/react`, `vue`).
+`$constraint` is any composer-semver string (`^1.2.3`, `~1.2`, `>=11 <14`,
+`1.0 || ^2.0`, bare `1.2.3` = exact match). When omitted, it's a presence
+check only.
 
 ```php
-$project->php()->uses('pest');                          // alias
-$project->php()->uses('pestphp/pest');                  // raw
-$project->php()->uses('framework', '12.0.0');           // present and >= 12.0.0
-$project->php()->uses('framework', '12.0.0', '<');      // present and < 12.0.0
-$project->php()->package('pest')?->version();
-$project->php()->packages()->dev();
+// single
+$project->php()->uses('pestphp/pest');
+$project->php()->uses('laravel/framework', '^12.0');     // present and satisfies ^12.0
+$project->php()->uses('laravel/framework', '>=11 <14');  // composite range
 
-$project->js()->uses('vue');
+// any-of (indexed array = no constraints)
+$project->php()->uses(['pestphp/pest', 'phpunit/phpunit']);
+
+// any-of (assoc array = per-package constraints, composer.json style)
+$project->php()->uses([
+    'pestphp/pest' => '^3.0',
+    'phpunit/phpunit' => '^10.0',
+]);
+
+// all-of
+$project->php()->usesAll(['pestphp/pest', 'laravel/framework']);
+$project->php()->usesAll([
+    'pestphp/pest' => '^3.0',
+    'laravel/framework' => '^11.0',
+]);
+
+// JS works the same
 $project->js()->uses('@inertiajs/react');
-$project->js()->uses('vue', '3.0.0');
+$project->js()->uses(['vue' => '^3.0', 'react' => '^18.0']);
+$project->js()->usesAll(['vue', '@inertiajs/vue3']);
+
+// Package lookups
+$project->php()->package('pestphp/pest')?->version();
 $project->js()->package('vue')?->major();
+$project->php()->packages()->dev();
 ```
 
-### Aliases
+The array must be either all-indexed (just names) or all-assoc (name =>
+constraint). Mixing the two shapes throws `InvalidArgumentException`.
 
-Every package can always be queried by its raw name (`laravel/pint`,
-`@inertiajs/react`). On top of that, packages from the Laravel-ecosystem
-namespaces get a short alias automatically so you can write
-`$project->php()->uses('pint')` instead of the full vendor-qualified string.
-
-The rules:
-
-| Source   | Namespace      | Rule                                                                       | Example                                                       |
-|----------|----------------|----------------------------------------------------------------------------|---------------------------------------------------------------|
-| composer | `laravel/`     | strip vendor                                                               | `laravel/pint` → `pint`                                       |
-| composer | `inertiajs/`   | strip vendor; prepend `inertia-` if the result doesn't already start with `inertia` | `inertiajs/inertia-laravel` → `inertia-laravel`              |
-| composer | `pestphp/`     | strip vendor; prepend `pest-` if the result doesn't already start with `pest`       | `pestphp/pest` → `pest`, `pestphp/plugin-browser` → `pest-plugin-browser` |
-| npm      | `@inertiajs/`  | strip scope; prepend `inertia-` if the result doesn't already start with `inertia` | `@inertiajs/react` → `inertia-react`                          |
-
-Packages outside these namespaces have **no alias** — they are queryable only
-by raw name. Other npm scopes (`@vue/`, `@sveltejs/`, `@tanstack/`, etc.) are
-deliberately not auto-aliased because their stripped names (`compiler-sfc`,
-`kit`, `react-query`) are tool-internal and not useful as concept aliases.
-
-To register your own alias for a package, use `Project::extend()`. Explicit
-aliases always win over the auto-alias rules:
-
-```php
-use Laravel\Roster\Facades\Project;
-use Laravel\Roster\Registry;
-
-Project::extend(function (Registry $r) {
-    $r->php('spatie/laravel-permission', alias: 'permission');
-    $r->js('@tanstack/react-query', alias: 'react-query');
-});
-
-// Then either form works:
-$project->php()->uses('permission');
-$project->php()->uses('spatie/laravel-permission');
-```
-
-### Stack, test framework, frontend
+### Stack, frontend, browser test frameworks
 
 ```php
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
-use Laravel\Roster\Enums\TestFramework;
 
 $project->stack()->uses(Stack::INERTIA_REACT);
 $project->stack()->all();                              // Stack[]
 
-$project->testFramework()?->is(TestFramework::PEST);
 $project->browserTestFrameworks()->uses(BrowserTestFramework::PLAYWRIGHT);
 $project->browserTestFrameworks()->uses([
     BrowserTestFramework::PLAYWRIGHT,
@@ -150,15 +135,6 @@ $project->frontend()->uses(Frontend::REACT);
 
 `uses()` accepts either a single case or an array of cases. On `System`
 surfaces, use `isInstalled()` instead.
-
-### Starter kit
-
-```php
-use Laravel\Roster\Enums\StarterKit;
-
-$project->starterKit()?->is(StarterKit::REACT);
-$project->starterKit();                                // ?StarterKit (null when none match)
-```
 
 ### Agents
 
@@ -181,15 +157,15 @@ $system->agents()->all();
 
 `$project->js()->packageManager()` reports the package manager *committed*
 to the project (presence of `package-lock.json` / `pnpm-lock.yaml` / etc.)
-as a single `?JsPackageManager`. `System::packageManagers()` reports the
-managers *installed* on the host as a set.
+as a single `?JsPackageManager`. `$system->js()->packageManagers()` reports
+the managers *installed* on the host as a set.
 
 ```php
 use Laravel\Roster\Enums\JsPackageManager;
 
 $project->js()->packageManager()?->is(JsPackageManager::PNPM);
-$system->packageManagers()->isInstalled(JsPackageManager::BUN);
-$system->packageManagers()->all();
+$system->js()->packageManagers()->isInstalled(JsPackageManager::BUN);
+$system->js()->packageManagers()->all();
 ```
 
 ## Upgrading

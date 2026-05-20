@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Detectors;
 
 use Laravel\Roster\Ecosystems\JsEcosystem;
@@ -9,6 +11,13 @@ use Laravel\Roster\Support\EnumSet;
 
 class StackDetector
 {
+    /** @var list<array{stack: Stack, packages: list<string>}> */
+    private const INERTIA_RULES = [
+        ['stack' => Stack::INERTIA_REACT, 'packages' => ['@inertiajs/react']],
+        ['stack' => Stack::INERTIA_VUE, 'packages' => ['@inertiajs/vue3', '@inertiajs/vue']],
+        ['stack' => Stack::INERTIA_SVELTE, 'packages' => ['@inertiajs/svelte']],
+    ];
+
     /**
      * @return EnumSet<Stack>
      */
@@ -17,16 +26,14 @@ class StackDetector
         /** @var array<int, Stack> $stacks */
         $stacks = [];
 
-        if ($js->uses('@inertiajs/react') || $js->uses('inertia-react')) {
-            $stacks[] = Stack::INERTIA_REACT;
-        }
+        foreach (self::INERTIA_RULES as $rule) {
+            foreach ($rule['packages'] as $package) {
+                if ($js->uses($package)) {
+                    $stacks[] = $rule['stack'];
 
-        if ($js->uses('@inertiajs/vue3') || $js->uses('@inertiajs/vue') || $js->uses('inertia-vue')) {
-            $stacks[] = Stack::INERTIA_VUE;
-        }
-
-        if ($js->uses('@inertiajs/svelte') || $js->uses('inertia-svelte')) {
-            $stacks[] = Stack::INERTIA_SVELTE;
+                    continue 2;
+                }
+            }
         }
 
         if ($php->uses('livewire/livewire')) {
