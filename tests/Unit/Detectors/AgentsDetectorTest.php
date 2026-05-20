@@ -14,7 +14,7 @@ it('detects configured agents from filesystem markers', function (): void {
     $configured = AgentsDetector::configured($base);
     expect($configured)->toContain(Agent::CLAUDE_CODE);
     expect($configured)->toContain(Agent::CURSOR);
-    expect($configured)->not->toContain(Agent::PHPSTORM);
+    expect($configured)->not->toContain(Agent::CODEX);
 
     rmdir($base.'.claude');
     rmdir($base.'.cursor');

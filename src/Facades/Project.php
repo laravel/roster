@@ -19,6 +19,7 @@ use Laravel\Roster\ProjectManager;
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\BrowserTestFramework> browserTestFrameworks()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Frontend> frontend()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Agent> agents()
+ * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Editor> editors()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Approach> approach()
  * @method static string json()
  *

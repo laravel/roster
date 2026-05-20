@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Detectors;
 
+use BackedEnum;
 use Laravel\Roster\Enums\Agent;
-use Laravel\Roster\Support\SystemProbe;
 
-class AgentsDetector
+/**
+ * @extends MarkerDetector<Agent>
+ */
+class AgentsDetector extends MarkerDetector
 {
     /** @var array<string, list<string>> */
     private const PROJECT_MARKERS = [
@@ -26,8 +29,6 @@ class AgentsDetector
         Agent::AUGMENT->value => ['.augment'],
         Agent::ANTIGRAVITY->value => ['.antigravity'],
         Agent::WINDSURF->value => ['.windsurf', '.windsurfrules'],
-        Agent::PHPSTORM->value => ['.idea'],
-        Agent::VSCODE->value => ['.vscode'],
     ];
 
     /** @var array<string, list<string>> */
@@ -42,47 +43,20 @@ class AgentsDetector
         Agent::OPENCODE->value => ['opencode'],
         Agent::AMP->value => ['amp'],
         Agent::WINDSURF->value => ['windsurf'],
-        Agent::PHPSTORM->value => ['phpstorm'],
-        Agent::VSCODE->value => ['code'],
     ];
 
-    /**
-     * @return list<Agent>
-     */
-    public static function configured(string $basePath): array
+    protected static function projectMarkers(): array
     {
-        $configured = [];
-
-        foreach (self::PROJECT_MARKERS as $agentValue => $markers) {
-            foreach ($markers as $marker) {
-                if (SystemProbe::pathExists($basePath.str_replace('/', DIRECTORY_SEPARATOR, $marker))) {
-                    $configured[] = Agent::from($agentValue);
-
-                    break;
-                }
-            }
-        }
-
-        return $configured;
+        return self::PROJECT_MARKERS;
     }
 
-    /**
-     * @return list<Agent>
-     */
-    public static function installed(): array
+    protected static function systemBinaries(): array
     {
-        $installed = [];
+        return self::SYSTEM_BINARIES;
+    }
 
-        foreach (self::SYSTEM_BINARIES as $agentValue => $binaries) {
-            foreach ($binaries as $binary) {
-                if (SystemProbe::commandExists($binary)) {
-                    $installed[] = Agent::from($agentValue);
-
-                    break;
-                }
-            }
-        }
-
-        return $installed;
+    protected static function fromValue(string $value): BackedEnum
+    {
+        return Agent::from($value);
     }
 }

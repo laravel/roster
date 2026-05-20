@@ -17,7 +17,7 @@ class PackageManagersDetector
         $installed = [];
 
         foreach (JsPackageManager::cases() as $manager) {
-            if (SystemProbe::commandExists($manager->binary())) {
+            if (SystemProbe::commandExists($manager->value)) {
                 $installed[] = $manager;
             }
         }

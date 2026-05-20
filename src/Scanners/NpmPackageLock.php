@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Facades\Log;
@@ -28,24 +30,45 @@ class NpmPackageLock extends BasePackageScanner
 
         /** @var array<string, array<string, mixed>> $jsonPackages */
         $jsonPackages = $json['packages'];
-        $root = $jsonPackages[''] ?? [];
-        /** @var array<string, string> $dependencies */
-        $dependencies = $root['dependencies'] ?? [];
-        /** @var array<string, string> $devDependencies */
-        $devDependencies = $root['devDependencies'] ?? [];
 
-        $versionCb = function (string $packageName, string $version) use ($jsonPackages): string {
-            $entry = $jsonPackages["node_modules/{$packageName}"] ?? null;
-            if (is_array($entry) && isset($entry['version']) && is_scalar($entry['version'])) {
-                return (string) $entry['version'];
+        /** @var array<string, string> $allPackages */
+        $allPackages = [];
+        foreach ($jsonPackages as $key => $entry) {
+            if ($key === '') {
+                continue;
             }
 
-            return $version;
-        };
+            $name = $this->nameFromNodeModulesPath($key);
+            if ($name === null) {
+                continue;
+            }
 
-        $this->processDependencies($dependencies, $packages, false, $versionCb);
-        $this->processDependencies($devDependencies, $packages, true, $versionCb);
+            if (isset($allPackages[$name])) {
+                continue;
+            }
+
+            $version = isset($entry['version']) && is_scalar($entry['version']) ? (string) $entry['version'] : '';
+            $allPackages[$name] = $version;
+        }
+
+        $this->processDependencies($allPackages, $packages, false);
 
         return $packages;
+    }
+
+    private function nameFromNodeModulesPath(string $key): ?string
+    {
+        $marker = 'node_modules/';
+
+        // Only top-level entries (e.g. "node_modules/foo") are considered; nested
+        // entries like "node_modules/foo/node_modules/bar" are skipped so that
+        // each package is recorded once with its resolved top-level version.
+        if (! str_starts_with($key, $marker) || substr_count($key, $marker) !== 1) {
+            return null;
+        }
+
+        $name = substr($key, strlen($marker));
+
+        return $name === '' ? null : $name;
     }
 }

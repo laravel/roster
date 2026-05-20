@@ -21,6 +21,4 @@ enum Agent: string
     case AUGMENT = 'augment';
     case ANTIGRAVITY = 'antigravity';
     case WINDSURF = 'windsurf';
-    case PHPSTORM = 'phpstorm';
-    case VSCODE = 'vscode';
 }
