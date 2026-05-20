@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\ApproachDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
+use Laravel\Roster\Detectors\EditorsDetector;
 use Laravel\Roster\Detectors\FrontendDetector;
 use Laravel\Roster\Detectors\StackDetector;
 use Laravel\Roster\Ecosystems\JsEcosystem;
@@ -15,6 +16,7 @@ use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Enums\BrowserTestFramework;
+use Laravel\Roster\Enums\Editor;
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Scanners\Composer;
@@ -28,6 +30,7 @@ class Project
      * @param  EnumSet<BrowserTestFramework>  $browserTestFrameworks
      * @param  EnumSet<Frontend>  $frontend
      * @param  EnumSet<Agent>  $agents
+     * @param  EnumSet<Editor>  $editors
      * @param  EnumSet<Approach>  $approach
      */
     public function __construct(
@@ -37,6 +40,7 @@ class Project
         protected EnumSet $browserTestFrameworks,
         protected EnumSet $frontend,
         protected EnumSet $agents,
+        protected EnumSet $editors,
         protected EnumSet $approach,
     ) {}
 
@@ -74,6 +78,12 @@ class Project
         return $this->agents;
     }
 
+    /** @return EnumSet<Editor> */
+    public function editors(): EnumSet
+    {
+        return $this->editors;
+    }
+
     /** @return EnumSet<Approach> */
     public function approach(): EnumSet
     {
@@ -99,6 +109,7 @@ class Project
             (new BrowserTestFrameworkDetector)->detect($php, $js),
             (new FrontendDetector)->detect($js),
             new EnumSet(AgentsDetector::configured($basePath)),
+            new EnumSet(EditorsDetector::configured($basePath)),
             (new ApproachDetector($basePath))->detect(),
         );
     }
@@ -123,6 +134,7 @@ class Project
             'frontend' => $this->frontend->values(),
             'approach' => $this->approach->values(),
             'agents' => $this->agents->values(),
+            'editors' => $this->editors->values(),
             'jsPackageManager' => $this->js->packageManager()?->value,
         ];
     }

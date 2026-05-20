@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
 use Exception;
@@ -33,6 +35,25 @@ class PnpmPackageLock extends BasePackageScanner
             return $packages;
         }
 
+        /** @var array<string, string> $allPackages */
+        $allPackages = [];
+
+        /** @var array<string, mixed> $packagesMap */
+        $packagesMap = is_array($parsed['packages'] ?? null) ? $parsed['packages'] : [];
+        foreach ($packagesMap as $key => $_) {
+            $pair = $this->splitNameAndVersion((string) $key);
+            if ($pair === null) {
+                continue;
+            }
+
+            [$name, $version] = $pair;
+            if (isset($allPackages[$name])) {
+                continue;
+            }
+
+            $allPackages[$name] = $version;
+        }
+
         /** @var array<string, array<string, mixed>> $importers */
         $importers = $parsed['importers'] ?? [];
         $root = $importers['.'] ?? [];
@@ -42,26 +63,29 @@ class PnpmPackageLock extends BasePackageScanner
         /** @var array<string, array<string, mixed>> $rootDevDeps */
         $rootDevDeps = $root['devDependencies'] ?? [];
 
-        $this->processDependencies($this->extractVersions($rootDeps), $packages, false);
-        $this->processDependencies($this->extractVersions($rootDevDeps), $packages, true);
+        foreach ([$rootDeps, $rootDevDeps] as $entries) {
+            foreach ($entries as $name => $data) {
+                if (isset($data['version']) && is_scalar($data['version'])) {
+                    $allPackages[$name] = (string) $data['version'];
+                }
+            }
+        }
+
+        $this->processDependencies($allPackages, $packages, false);
 
         return $packages;
     }
 
     /**
-     * @param  array<string, array<string, mixed>>  $entries
-     * @return array<string, string>
+     * @return array{0: string, 1: string}|null
      */
-    private function extractVersions(array $entries): array
+    private function splitNameAndVersion(string $key): ?array
     {
-        $versions = [];
-
-        foreach ($entries as $name => $data) {
-            if (isset($data['version']) && is_scalar($data['version'])) {
-                $versions[$name] = (string) $data['version'];
-            }
+        $position = strrpos($key, '@');
+        if ($position === false || $position === 0) {
+            return null;
         }
 
-        return $versions;
+        return [substr($key, 0, $position), substr($key, $position + 1)];
     }
 }

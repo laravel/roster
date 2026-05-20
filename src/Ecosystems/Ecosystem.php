@@ -79,7 +79,7 @@ abstract class Ecosystem
             try {
                 (new VersionParser)->parseConstraints($constraint);
             } catch (UnexpectedValueException $e) {
-                throw new InvalidArgumentException("Invalid semver constraint: {$constraint}", previous: $e);
+                throw new InvalidArgumentException("Invalid semver constraint: {$constraint}", $e->getCode(), $e);
             }
         }
 

@@ -14,6 +14,7 @@ use Laravel\Roster\SystemManager;
  * @method static \Laravel\Roster\SystemManager fresh()
  * @method static \Laravel\Roster\System instance()
  * @method static \Laravel\Roster\Support\InstalledSet<\Laravel\Roster\Enums\Agent> agents()
+ * @method static \Laravel\Roster\Support\InstalledSet<\Laravel\Roster\Enums\Editor> editors()
  * @method static \Laravel\Roster\Hosts\Js js()
  * @method static string json()
  *

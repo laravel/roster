@@ -35,8 +35,10 @@ class JsLockfile
         $this->resolved = true;
 
         foreach (JsPackageManager::cases() as $case) {
-            if (file_exists($this->path.$case->lockFile())) {
-                return $this->resolvedManager = $case;
+            foreach ($case->lockFiles() as $lockFile) {
+                if (file_exists($this->path.$lockFile)) {
+                    return $this->resolvedManager = $case;
+                }
             }
         }
 

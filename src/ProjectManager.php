@@ -9,6 +9,7 @@ use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Enums\BrowserTestFramework;
+use Laravel\Roster\Enums\Editor;
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Support\CachesScan;
@@ -79,6 +80,12 @@ class ProjectManager
     public function agents(): EnumSet
     {
         return $this->instance()->agents();
+    }
+
+    /** @return EnumSet<Editor> */
+    public function editors(): EnumSet
+    {
+        return $this->instance()->editors();
     }
 
     /** @return EnumSet<Approach> */

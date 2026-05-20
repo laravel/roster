@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Facades\Log;
@@ -7,6 +9,11 @@ use Laravel\Roster\PackageCollection;
 
 class BunPackageLock extends BasePackageScanner
 {
+    /**
+     * Only the textual `bun.lock` format is parseable. Projects that ship the
+     * legacy binary `bun.lockb` are still identified as Bun by JsLockfile,
+     * but no packages can be extracted from the binary format.
+     */
     protected function lockFile(): string
     {
         return 'bun.lock';
@@ -32,24 +39,43 @@ class BunPackageLock extends BasePackageScanner
             return $packages;
         }
 
-        if (! isset($json['workspaces']) || ! is_array($json['workspaces'])
-            || ! isset($json['workspaces'][''], $json['packages'])) {
+        if (! isset($json['packages']) || ! is_array($json['packages'])) {
             Log::warning('Malformed bun.lock');
 
             return $packages;
         }
 
-        /** @var array<string, mixed> $workspace */
-        $workspace = $json['workspaces'][''];
+        /** @var array<string, string> $allPackages */
+        $allPackages = [];
+        foreach ($json['packages'] as $name => $entry) {
+            if (! is_string($name)) {
+                continue;
+            }
 
-        /** @var array<string, string> $dependencies */
-        $dependencies = $workspace['dependencies'] ?? [];
-        /** @var array<string, string> $devDependencies */
-        $devDependencies = $workspace['devDependencies'] ?? [];
+            if (isset($allPackages[$name])) {
+                continue;
+            }
 
-        $this->processDependencies($dependencies, $packages, false);
-        $this->processDependencies($devDependencies, $packages, true);
+            $allPackages[$name] = $this->extractVersion($entry);
+        }
+
+        $this->processDependencies($allPackages, $packages, false);
 
         return $packages;
+    }
+
+    private function extractVersion(mixed $entry): string
+    {
+        if (is_array($entry) && isset($entry[0]) && is_string($entry[0])) {
+            $position = strrpos($entry[0], '@');
+
+            return $position === false ? $entry[0] : substr($entry[0], $position + 1);
+        }
+
+        if (is_string($entry)) {
+            return $entry;
+        }
+
+        return '';
     }
 }

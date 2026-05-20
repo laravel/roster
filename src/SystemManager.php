@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Laravel\Roster;
 
 use Laravel\Roster\Enums\Agent;
+use Laravel\Roster\Enums\Editor;
 use Laravel\Roster\Hosts\Js;
 use Laravel\Roster\Support\CachesScan;
 use Laravel\Roster\Support\InstalledSet;
+use Laravel\Roster\Support\SystemProbe;
 
 class SystemManager
 {
@@ -35,6 +37,12 @@ class SystemManager
         return $this->instance()->agents();
     }
 
+    /** @return InstalledSet<Editor> */
+    public function editors(): InstalledSet
+    {
+        return $this->instance()->editors();
+    }
+
     public function js(): Js
     {
         return $this->instance()->js();
@@ -48,5 +56,6 @@ class SystemManager
     protected function resetCachedInstance(): void
     {
         $this->cached = null;
+        SystemProbe::resetCache();
     }
 }

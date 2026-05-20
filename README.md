@@ -136,19 +136,20 @@ $project->frontend()->uses(Frontend::REACT);
 
 The `uses` method accepts either a single case or an array of cases. On `System` surfaces, use the `isInstalled` method instead.
 
-### Agents
+### Agents and Editors
 
-The `Project::agents` method reports the agents *configured* in the repository, detected through filesystem markers such as `.claude`, `.cursor`, and `AGENTS.md`. The `System::agents` method reports the agents *installed* on the host, detected by looking for matching binaries on the `PATH`:
+Agents (AI coding tools such as Claude Code, Cursor, and Codex) and editors (IDEs such as PHPStorm and VSCode) are exposed through separate enums. Each may be reported on the `Project` surface (detected through filesystem markers like `.claude`, `.cursor`, `.idea`, or `AGENTS.md`) or on the `System` surface (detected by looking for matching binaries on the `PATH`):
 
 ```php
 use Laravel\Roster\Enums\Agent;
+use Laravel\Roster\Enums\Editor;
 
 $project->agents()->uses(Agent::CLAUDE_CODE);
 $project->agents()->uses([Agent::CLAUDE_CODE, Agent::CURSOR]);
-$project->agents()->all();                             // Agent[]
+$project->editors()->uses(Editor::PHPSTORM);
 
 $system->agents()->isInstalled(Agent::CURSOR);
-$system->agents()->all();
+$system->editors()->isInstalled(Editor::VSCODE);
 ```
 
 ### JS Package Managers
