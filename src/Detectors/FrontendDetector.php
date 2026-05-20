@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Detectors;
 
 use Laravel\Roster\Ecosystems\JsEcosystem;
@@ -8,6 +10,13 @@ use Laravel\Roster\Support\EnumSet;
 
 class FrontendDetector
 {
+    /** @var array<string, Frontend> */
+    private const RULES = [
+        'vue' => Frontend::VUE,
+        'react' => Frontend::REACT,
+        'svelte' => Frontend::SVELTE,
+    ];
+
     /**
      * @return EnumSet<Frontend>
      */
@@ -16,16 +25,10 @@ class FrontendDetector
         /** @var array<int, Frontend> $found */
         $found = [];
 
-        if ($js->uses('vue')) {
-            $found[] = Frontend::VUE;
-        }
-
-        if ($js->uses('react')) {
-            $found[] = Frontend::REACT;
-        }
-
-        if ($js->uses('svelte')) {
-            $found[] = Frontend::SVELTE;
+        foreach (self::RULES as $package => $frontend) {
+            if ($js->uses($package)) {
+                $found[] = $frontend;
+            }
         }
 
         return new EnumSet($found);

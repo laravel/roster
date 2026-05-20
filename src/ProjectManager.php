@@ -11,8 +11,6 @@ use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
-use Laravel\Roster\Enums\StarterKit;
-use Laravel\Roster\Enums\TestFramework;
 use Laravel\Roster\Support\CachesScan;
 use Laravel\Roster\Support\EnumSet;
 
@@ -33,31 +31,13 @@ class ProjectManager
 
     protected ?Project $cached = null;
 
-    public function __construct(protected Registry $registry) {}
-
-    /**
-     * @param  callable(Registry): void  $callback
-     */
-    public function extend(callable $callback): self
-    {
-        $callback($this->registry);
-        $this->cached = null;
-
-        return $this;
-    }
-
-    public function registry(): Registry
-    {
-        return $this->registry;
-    }
-
     public function scan(?string $basePath = null): Project
     {
         $resolvedBase = Project::normalizeBasePath($basePath);
 
         return $this->cached = $this->rememberScan(
             $this->cacheKey($resolvedBase),
-            fn (): Project => Project::scan($resolvedBase, $this->registry),
+            fn (): Project => Project::scan($resolvedBase),
             Project::class,
         );
     }
@@ -83,11 +63,6 @@ class ProjectManager
         return $this->instance()->stack();
     }
 
-    public function testFramework(): ?TestFramework
-    {
-        return $this->instance()->testFramework();
-    }
-
     /** @return EnumSet<BrowserTestFramework> */
     public function browserTestFrameworks(): EnumSet
     {
@@ -98,11 +73,6 @@ class ProjectManager
     public function frontend(): EnumSet
     {
         return $this->instance()->frontend();
-    }
-
-    public function starterKit(): ?StarterKit
-    {
-        return $this->instance()->starterKit();
     }
 
     /** @return EnumSet<Agent> */
@@ -129,13 +99,7 @@ class ProjectManager
 
     private function cacheKey(string $basePath): string
     {
-        $parts = [
-            'base' => $basePath,
-            'registry' => $this->registry->signature(),
-            'locks' => $this->lockfileHash($basePath),
-        ];
-
-        return 'roster:project:'.md5(serialize($parts));
+        return 'roster:project:'.md5($basePath.'|'.$this->lockfileHash($basePath));
     }
 
     private function lockfileHash(string $basePath): string

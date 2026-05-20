@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Laravel\Roster;
 
 use Laravel\Roster\Enums\Agent;
-use Laravel\Roster\Enums\JsPackageManager;
+use Laravel\Roster\Hosts\Js;
 use Laravel\Roster\Support\CachesScan;
 use Laravel\Roster\Support\InstalledSet;
 
@@ -35,10 +35,9 @@ class SystemManager
         return $this->instance()->agents();
     }
 
-    /** @return InstalledSet<JsPackageManager> */
-    public function packageManagers(): InstalledSet
+    public function js(): Js
     {
-        return $this->instance()->packageManagers();
+        return $this->instance()->js();
     }
 
     public function json(): string

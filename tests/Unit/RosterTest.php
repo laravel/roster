@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Enums\Stack;
-use Laravel\Roster\Enums\TestFramework;
 use Laravel\Roster\Project;
 
 it('scans the fog fixture end to end', function (): void {
@@ -13,16 +12,14 @@ it('scans the fog fixture end to end', function (): void {
 
     $project = Project::scan($path);
 
-    expect($project->php()->uses('pest'))->toBeTrue();
     expect($project->php()->uses('pestphp/pest'))->toBeTrue();
-    expect($project->php()->uses('framework'))->toBeTrue();
+    expect($project->php()->uses('laravel/framework'))->toBeTrue();
     expect($project->php()->uses('livewire/livewire'))->toBeTrue();
-    expect($project->php()->uses('pint'))->toBeTrue();
+    expect($project->php()->uses('laravel/pint'))->toBeTrue();
 
     expect($project->js()->uses('tailwindcss'))->toBeTrue();
     expect($project->js()->uses('@laravel/echo-react'))->toBeTrue();
 
-    expect($project->testFramework())->toBe(TestFramework::PEST);
     expect($project->stack()->uses(Stack::LIVEWIRE))->toBeTrue();
     expect($project->frontend()->uses(Frontend::VUE))->toBeFalse();
 
@@ -38,5 +35,4 @@ it('renders json without error', function (): void {
     expect($payload)->toHaveKey('php');
     expect($payload)->toHaveKey('js');
     expect($payload)->toHaveKey('stack');
-    expect($payload)->toHaveKey('testFramework');
 });

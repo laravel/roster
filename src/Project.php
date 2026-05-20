@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace Laravel\Roster;
 
-use Illuminate\Container\Container;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Str;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\ApproachDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\FrontendDetector;
 use Laravel\Roster\Detectors\StackDetector;
-use Laravel\Roster\Detectors\StarterKitDetector;
-use Laravel\Roster\Detectors\TestFrameworkDetector;
 use Laravel\Roster\Ecosystems\JsEcosystem;
 use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\Agent;
@@ -21,8 +17,6 @@ use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
-use Laravel\Roster\Enums\StarterKit;
-use Laravel\Roster\Enums\TestFramework;
 use Laravel\Roster\Scanners\Composer;
 use Laravel\Roster\Scanners\JsLockfile;
 use Laravel\Roster\Support\EnumSet;
@@ -40,10 +34,8 @@ class Project
         protected PhpEcosystem $php,
         protected JsEcosystem $js,
         protected EnumSet $stack,
-        protected ?TestFramework $testFramework,
         protected EnumSet $browserTestFrameworks,
         protected EnumSet $frontend,
-        protected ?StarterKit $starterKit,
         protected EnumSet $agents,
         protected EnumSet $approach,
     ) {}
@@ -64,11 +56,6 @@ class Project
         return $this->stack;
     }
 
-    public function testFramework(): ?TestFramework
-    {
-        return $this->testFramework;
-    }
-
     /** @return EnumSet<BrowserTestFramework> */
     public function browserTestFrameworks(): EnumSet
     {
@@ -79,11 +66,6 @@ class Project
     public function frontend(): EnumSet
     {
         return $this->frontend;
-    }
-
-    public function starterKit(): ?StarterKit
-    {
-        return $this->starterKit;
     }
 
     /** @return EnumSet<Agent> */
@@ -98,14 +80,13 @@ class Project
         return $this->approach;
     }
 
-    public static function scan(?string $basePath = null, ?Registry $registry = null): self
+    public static function scan(?string $basePath = null): self
     {
-        $registry ??= self::resolveRegistry();
         $basePath = self::normalizeBasePath($basePath);
 
-        $phpPackages = (new Composer($basePath.'composer.lock', $registry))->scan();
+        $phpPackages = (new Composer($basePath.'composer.lock'))->scan();
 
-        $jsLockfile = new JsLockfile($basePath, $registry);
+        $jsLockfile = new JsLockfile($basePath);
         $jsPackages = $jsLockfile->scan();
 
         $php = new PhpEcosystem($phpPackages);
@@ -115,10 +96,8 @@ class Project
             $php,
             $js,
             (new StackDetector)->detect($php, $js),
-            (new TestFrameworkDetector)->detect($php),
             (new BrowserTestFrameworkDetector)->detect($php, $js),
             (new FrontendDetector)->detect($js),
-            (new StarterKitDetector($basePath))->detect($php),
             new EnumSet(AgentsDetector::configured($basePath)),
             (new ApproachDetector($basePath))->detect(),
         );
@@ -140,10 +119,8 @@ class Project
             'php' => array_map(fn (Package $p): array => $p->toArray(), $this->php->packages()->all()),
             'js' => array_map(fn (Package $p): array => $p->toArray(), $this->js->packages()->all()),
             'stack' => $this->stack->values(),
-            'testFramework' => $this->testFramework?->value,
             'browserTestFrameworks' => $this->browserTestFrameworks->values(),
             'frontend' => $this->frontend->values(),
-            'starterKit' => $this->starterKit?->value,
             'approach' => $this->approach->values(),
             'agents' => $this->agents->values(),
             'jsPackageManager' => $this->js->packageManager()?->value,
@@ -153,15 +130,5 @@ class Project
     public function json(): string
     {
         return json_encode($this->toArray(), JSON_PRETTY_PRINT) ?: '{}';
-    }
-
-    private static function resolveRegistry(): Registry
-    {
-        try {
-            /** @var Registry */
-            return Container::getInstance()->make(Registry::class);
-        } catch (BindingResolutionException) {
-            return new Registry;
-        }
     }
 }

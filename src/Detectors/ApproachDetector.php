@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Detectors;
 
 use Laravel\Roster\Enums\Approach;
@@ -7,6 +9,13 @@ use Laravel\Roster\Support\EnumSet;
 
 class ApproachDetector
 {
+    /** @var list<array{approach: Approach, paths: list<string>}> */
+    private const RULES = [
+        ['approach' => Approach::ACTION, 'paths' => ['app/Actions']],
+        ['approach' => Approach::DDD, 'paths' => ['app/Domains']],
+        ['approach' => Approach::MODULAR, 'paths' => ['modules', 'Modules', 'app-modules']],
+    ];
+
     public function __construct(protected string $basePath) {}
 
     /**
@@ -17,18 +26,14 @@ class ApproachDetector
         /** @var array<int, Approach> $found */
         $found = [];
 
-        if (is_dir($this->basePath.'app'.DIRECTORY_SEPARATOR.'Actions')) {
-            $found[] = Approach::ACTION;
-        }
+        foreach (self::RULES as $rule) {
+            foreach ($rule['paths'] as $relative) {
+                if (is_dir($this->basePath.str_replace('/', DIRECTORY_SEPARATOR, $relative))) {
+                    $found[] = $rule['approach'];
 
-        if (is_dir($this->basePath.'app'.DIRECTORY_SEPARATOR.'Domains')) {
-            $found[] = Approach::DDD;
-        }
-
-        if (is_dir($this->basePath.'modules')
-            || is_dir($this->basePath.'Modules')
-            || is_dir($this->basePath.'app-modules')) {
-            $found[] = Approach::MODULAR;
+                    continue 2;
+                }
+            }
         }
 
         return new EnumSet($found);

@@ -6,7 +6,6 @@ namespace Laravel\Roster\Scanners;
 
 use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\PackageCollection;
-use Laravel\Roster\Registry;
 
 class JsLockfile
 {
@@ -14,17 +13,14 @@ class JsLockfile
 
     private ?JsPackageManager $resolvedManager = null;
 
-    public function __construct(
-        protected string $path,
-        protected Registry $registry,
-    ) {}
+    public function __construct(protected string $path) {}
 
     public function scan(): PackageCollection
     {
         $manager = $this->committedManager();
 
         if (! $manager instanceof JsPackageManager) {
-            return (new PackageJson($this->path, $this->registry))->scan();
+            return (new PackageJson($this->path))->scan();
         }
 
         return $this->scannerFor($manager)->scan();
@@ -50,10 +46,10 @@ class JsLockfile
     private function scannerFor(JsPackageManager $manager): BasePackageScanner
     {
         return match ($manager) {
-            JsPackageManager::NPM => new NpmPackageLock($this->path, $this->registry),
-            JsPackageManager::PNPM => new PnpmPackageLock($this->path, $this->registry),
-            JsPackageManager::YARN => new YarnPackageLock($this->path, $this->registry),
-            JsPackageManager::BUN => new BunPackageLock($this->path, $this->registry),
+            JsPackageManager::NPM => new NpmPackageLock($this->path),
+            JsPackageManager::PNPM => new PnpmPackageLock($this->path),
+            JsPackageManager::YARN => new YarnPackageLock($this->path),
+            JsPackageManager::BUN => new BunPackageLock($this->path),
         };
     }
 }

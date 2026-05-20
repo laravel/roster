@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster;
 
 use Laravel\Roster\Enums\PackageSource;
@@ -10,7 +12,6 @@ class Package
         protected string $name,
         protected string $version,
         protected PackageSource $source,
-        protected ?string $alias = null,
         protected bool $dev = false,
         protected bool $direct = false,
         protected string $constraint = '',
@@ -20,19 +21,6 @@ class Package
     public function name(): string
     {
         return $this->name;
-    }
-
-    public function alias(): ?string
-    {
-        return $this->alias;
-    }
-
-    public function withAlias(?string $alias): self
-    {
-        $clone = clone $this;
-        $clone->alias = $alias;
-
-        return $clone;
     }
 
     public function version(): string
@@ -74,17 +62,16 @@ class Package
 
     public function matches(string $query): bool
     {
-        return $this->name === $query || $this->alias === $query;
+        return $this->name === $query;
     }
 
     /**
-     * @return array{name: string, alias: ?string, version: string, constraint: string, direct: bool, dev: bool, source: string, path: ?string}
+     * @return array{name: string, version: string, constraint: string, direct: bool, dev: bool, source: string, path: ?string}
      */
     public function toArray(): array
     {
         return [
             'name' => $this->name,
-            'alias' => $this->alias,
             'version' => $this->version,
             'constraint' => $this->constraint,
             'direct' => $this->direct,
