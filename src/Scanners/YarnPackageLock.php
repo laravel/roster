@@ -2,9 +2,7 @@
 
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 
 class YarnPackageLock extends BasePackageScanner
 {
@@ -21,17 +19,14 @@ class YarnPackageLock extends BasePackageScanner
         return 'yarn.lock';
     }
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    public function scan(): Collection
+    public function scan(): PackageCollection
     {
-        $mappedItems = collect();
+        $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
-        $contents = $this->validateFile($lockFilePath, 'Yarn lock');
+        $contents = $this->readContents($lockFilePath, 'Yarn lock');
         if ($contents === null) {
-            return $mappedItems;
+            return $packages;
         }
 
         $dependencies = [];
@@ -40,13 +35,15 @@ class YarnPackageLock extends BasePackageScanner
 
         foreach ($lines as $line) {
             $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
 
-            if ($line === '' || str_starts_with($line, '#')) {
+            if (str_starts_with($line, '#')) {
                 continue;
             }
 
             $packageName = $this->parsePackageHeader($line);
-
             if ($packageName !== null) {
                 $currentPackage = $packageName;
 
@@ -54,17 +51,16 @@ class YarnPackageLock extends BasePackageScanner
             }
 
             $version = $this->parseVersion($line);
-
             if ($currentPackage !== null && $version !== null) {
                 $dependencies[$currentPackage] = $version;
                 $currentPackage = null;
             }
         }
 
-        // Yarn lock does not distinguish devDependencies :/
-        $this->processDependencies($dependencies, $mappedItems, false);
+        // Yarn lock does not distinguish devDependencies; package.json fills that in.
+        $this->processDependencies($dependencies, $packages, false);
 
-        return $mappedItems;
+        return $packages;
     }
 
     private function parsePackageHeader(string $line): ?string

@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 
 class NpmPackageLock extends BasePackageScanner
 {
@@ -14,48 +14,61 @@ class NpmPackageLock extends BasePackageScanner
         return 'package-lock.json';
     }
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    public function scan(): Collection
+    public function scan(): PackageCollection
     {
-        $mappedItems = collect();
+        $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
-        $contents = $this->validateFile($lockFilePath);
-        if ($contents === null) {
-            return $mappedItems;
-        }
-
-        $json = json_decode($contents, true);
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            Log::warning('Failed to decode Package: '.$lockFilePath.'. '.json_last_error_msg());
-
-            return $mappedItems;
-        }
-
-        if (! array_key_exists('packages', $json)) {
-            Log::warning('Malformed package-lock');
-
-            return $mappedItems;
-        }
-
-        $dependencies = $json['packages']['']['dependencies'] ?? [];
-        $devDependencies = $json['packages']['']['devDependencies'] ?? [];
-        $packages = array_filter($json['packages'], fn ($key) => $key !== '', ARRAY_FILTER_USE_KEY);
-
-        $versionCb = function (string $packageName, string $version) use ($packages): string {
-            $key = "node_modules/{$packageName}";
-            if (array_key_exists($key, $packages)) {
-                return $packages[$key]['version'];
+        $json = self::readJsonFile($lockFilePath);
+        if ($json === null || ! array_key_exists('packages', $json)) {
+            if (file_exists($lockFilePath)) {
+                Log::warning('Failed to decode package-lock: '.$lockFilePath);
             }
 
-            return $version;
-        };
+            return $packages;
+        }
 
-        $this->processDependencies($dependencies, $mappedItems, false, $versionCb);
-        $this->processDependencies($devDependencies, $mappedItems, true, $versionCb);
+        /** @var array<string, array<string, mixed>> $jsonPackages */
+        $jsonPackages = $json['packages'];
 
-        return $mappedItems;
+        /** @var array<string, string> $allPackages */
+        $allPackages = [];
+        foreach ($jsonPackages as $key => $entry) {
+            if ($key === '') {
+                continue;
+            }
+
+            $name = $this->nameFromNodeModulesPath($key);
+            if ($name === null) {
+                continue;
+            }
+
+            if (isset($allPackages[$name])) {
+                continue;
+            }
+
+            $version = isset($entry['version']) && is_scalar($entry['version']) ? (string) $entry['version'] : '';
+            $allPackages[$name] = $version;
+        }
+
+        $this->processDependencies($allPackages, $packages, false);
+
+        return $packages;
+    }
+
+    private function nameFromNodeModulesPath(string $key): ?string
+    {
+        $marker = 'node_modules/';
+
+        // Only top-level entries (e.g. "node_modules/foo") are considered; nested
+        // entries like "node_modules/foo/node_modules/bar" are skipped so that
+        // each package is recorded once with its resolved top-level version.
+        if (! str_starts_with($key, $marker) || substr_count($key, $marker) !== 1) {
+            return null;
+        }
+
+        $name = substr($key, strlen($marker));
+
+        return $name === '' ? null : $name;
     }
 }
