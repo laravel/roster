@@ -7,7 +7,7 @@ namespace Laravel\Roster\Scanners;
 use Illuminate\Support\Facades\Log;
 use Laravel\Roster\PackageCollection;
 
-class NpmPackageLock extends BasePackageScanner
+class NpmPackageLock extends JsPackageScanner
 {
     protected function lockFile(): string
     {

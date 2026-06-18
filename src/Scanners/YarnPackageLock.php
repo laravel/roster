@@ -4,7 +4,7 @@ namespace Laravel\Roster\Scanners;
 
 use Laravel\Roster\PackageCollection;
 
-class YarnPackageLock extends BasePackageScanner
+class YarnPackageLock extends JsPackageScanner
 {
     private const YARN_V1_HEADER = '/^("?)(@[^@"\/]+\/[^@"]+|[^@"]+)(@[^:"]+)?\1:$/';
 

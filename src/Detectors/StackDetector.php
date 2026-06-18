@@ -7,7 +7,6 @@ namespace Laravel\Roster\Detectors;
 use Laravel\Roster\Ecosystems\JsEcosystem;
 use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\Stack;
-use Laravel\Roster\Support\EnumSet;
 
 class StackDetector
 {
@@ -19,16 +18,15 @@ class StackDetector
     ];
 
     /**
-     * @return EnumSet<Stack>
+     * @return list<Stack>
      */
-    public function detect(PhpEcosystem $php, JsEcosystem $js): EnumSet
+    public static function detect(PhpEcosystem $php, JsEcosystem $js): array
     {
-        /** @var array<int, Stack> $stacks */
         $stacks = [];
 
         foreach (self::INERTIA_RULES as $rule) {
             foreach ($rule['packages'] as $package) {
-                if ($js->uses($package)) {
+                if ($js->usesDirect($package)) {
                     $stacks[] = $rule['stack'];
 
                     continue 2;
@@ -36,12 +34,12 @@ class StackDetector
             }
         }
 
-        if ($php->uses('livewire/livewire')) {
+        if ($php->usesDirect('livewire/livewire')) {
             $stacks[] = Stack::LIVEWIRE;
         }
 
-        $hasApi = $php->uses('laravel/sanctum') || $php->uses('laravel/passport');
-        $hasViewLayer = $stacks !== [] || $php->uses('laravel/folio') || $php->uses('livewire/volt');
+        $hasApi = $php->usesDirect('laravel/sanctum') || $php->usesDirect('laravel/passport');
+        $hasViewLayer = $stacks !== [] || $php->usesDirect('laravel/folio') || $php->usesDirect('livewire/volt');
 
         if ($hasApi && ! $hasViewLayer) {
             $stacks[] = Stack::API;
@@ -51,6 +49,6 @@ class StackDetector
             $stacks[] = Stack::BLADE;
         }
 
-        return new EnumSet($stacks);
+        return $stacks;
     }
 }

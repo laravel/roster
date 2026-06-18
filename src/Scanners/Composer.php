@@ -1,40 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Facades\Log;
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
+use Laravel\Roster\Scanners\Concerns\ParsesManifests;
 
-class Composer extends BasePackageScanner
+class Composer
 {
+    use ParsesManifests;
+
     protected string $vendorDir = 'vendor';
 
-    protected function lockFile(): string
-    {
-        return 'composer.lock';
-    }
+    protected ?string $resolvedBase = null;
 
-    protected function resolvedBase(): string
-    {
-        if ($this->resolvedBase !== null) {
-            return $this->resolvedBase;
-        }
+    /** @var array<string, array{constraint: string, isDev: bool}>|null */
+    protected ?array $directPackages = null;
 
-        $dir = dirname($this->path);
-
-        return $this->resolvedBase = realpath($dir) ?: $dir;
-    }
+    public function __construct(protected string $lockFilePath) {}
 
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection;
 
-        $json = self::readJsonFile($this->path);
+        $json = self::readJsonFile($this->lockFilePath);
         if ($json === null || ! array_key_exists('packages', $json)) {
-            if (file_exists($this->path)) {
-                Log::warning('Failed to decode composer.lock: '.$this->path);
+            if (file_exists($this->lockFilePath)) {
+                Log::warning('Failed to decode composer.lock: '.$this->lockFilePath);
             }
 
             return $packages;
@@ -86,7 +82,7 @@ class Composer extends BasePackageScanner
     /**
      * @return array<string, array{constraint: string, isDev: bool}>
      */
-    protected function directDependencies(): array
+    private function directDependencies(): array
     {
         if ($this->directPackages !== null) {
             return $this->directPackages;
@@ -105,7 +101,18 @@ class Composer extends BasePackageScanner
         return $this->directPackages = self::collectManifestDeps($json, 'require', 'require-dev');
     }
 
-    protected function computePath(string $packageName): string
+    private function resolvedBase(): string
+    {
+        if ($this->resolvedBase !== null) {
+            return $this->resolvedBase;
+        }
+
+        $dir = dirname($this->lockFilePath);
+
+        return $this->resolvedBase = realpath($dir) ?: $dir;
+    }
+
+    private function computePath(string $packageName): string
     {
         $vendorPath = str_replace('/', DIRECTORY_SEPARATOR, $this->vendorDir);
         $packageSegment = str_replace('/', DIRECTORY_SEPARATOR, $packageName);

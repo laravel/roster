@@ -105,12 +105,12 @@ class Project
         return new self(
             $php,
             $js,
-            (new StackDetector)->detect($php, $js),
-            (new BrowserTestFrameworkDetector)->detect($php, $js),
-            (new FrontendDetector)->detect($js),
+            new EnumSet(StackDetector::detect($php, $js)),
+            new EnumSet(BrowserTestFrameworkDetector::detect($php, $js, $basePath)),
+            new EnumSet(FrontendDetector::detect($js)),
             new EnumSet(AgentsDetector::configured($basePath)),
             new EnumSet(EditorsDetector::configured($basePath)),
-            (new ApproachDetector($basePath))->detect(),
+            new EnumSet(ApproachDetector::detect($basePath)),
         );
     }
 

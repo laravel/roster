@@ -78,7 +78,7 @@ function packagesFromSpecs(array $specs, PackageSource $source): PackageCollecti
             version: $spec['version'] ?? '1.0.0',
             source: $source,
             dev: $spec['dev'] ?? false,
-            direct: $spec['direct'] ?? false,
+            direct: $spec['direct'] ?? true,
         ));
     }
 

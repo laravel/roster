@@ -9,8 +9,7 @@ it('detects action approach from app/Actions directory', function (): void {
     $base = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_approach_'.uniqid().DIRECTORY_SEPARATOR;
     mkdir($base.'app'.DIRECTORY_SEPARATOR.'Actions', 0777, true);
 
-    $detection = (new ApproachDetector($base))->detect();
-    expect($detection->uses(Approach::ACTION))->toBeTrue();
+    expect(ApproachDetector::detect($base))->toContain(Approach::ACTION);
 
     rmdir($base.'app'.DIRECTORY_SEPARATOR.'Actions');
     rmdir($base.'app');
@@ -22,8 +21,7 @@ it('detects modular approach from modules / Modules / app-modules', function ():
         $base = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_modular_'.uniqid().DIRECTORY_SEPARATOR;
         mkdir($base.$dir, 0777, true);
 
-        $detection = (new ApproachDetector($base))->detect();
-        expect($detection->uses(Approach::MODULAR))->toBeTrue();
+        expect(ApproachDetector::detect($base))->toContain(Approach::MODULAR);
 
         rmdir($base.$dir);
         rmdir($base);
@@ -34,8 +32,7 @@ it('returns empty detection on a bare directory', function (): void {
     $base = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_empty_'.uniqid().DIRECTORY_SEPARATOR;
     mkdir($base);
 
-    $detection = (new ApproachDetector($base))->detect();
-    expect($detection->all())->toBe([]);
+    expect(ApproachDetector::detect($base))->toBe([]);
 
     rmdir($base);
 });

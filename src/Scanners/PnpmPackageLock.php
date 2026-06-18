@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Roster\PackageCollection;
 use Symfony\Component\Yaml\Yaml;
 
-class PnpmPackageLock extends BasePackageScanner
+class PnpmPackageLock extends JsPackageScanner
 {
     protected function lockFile(): string
     {

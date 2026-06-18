@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Laravel\Roster;
 
+use Laravel\Roster\Detectors\AgentsDetector;
+use Laravel\Roster\Detectors\ApproachDetector;
+use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
+use Laravel\Roster\Detectors\EditorsDetector;
 use Laravel\Roster\Ecosystems\JsEcosystem;
 use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\Agent;
@@ -106,7 +110,9 @@ class ProjectManager
 
     private function cacheKey(string $basePath): string
     {
-        return 'roster:project:'.md5($basePath.'|'.$this->lockfileHash($basePath));
+        return 'roster:project:'.md5(
+            $basePath.'|'.$this->lockfileHash($basePath).'|'.$this->markerHash($basePath)
+        );
     }
 
     private function lockfileHash(string $basePath): string
@@ -120,5 +126,43 @@ class ProjectManager
         }
 
         return hash_final($hash);
+    }
+
+    /**
+     * Hash the presence of every directory marker the detectors watch, so a
+     * newly added `.claude` or `app/Actions` invalidates the cache even though
+     * no lockfile changed.
+     */
+    private function markerHash(string $basePath): string
+    {
+        $markers = [
+            ...AgentsDetector::markerPaths(),
+            ...EditorsDetector::markerPaths(),
+            ...ApproachDetector::markerPaths(),
+            ...BrowserTestFrameworkDetector::markerPaths(),
+        ];
+        $markers = array_values(array_unique($markers));
+        sort($markers);
+
+        $hash = hash_init('md5');
+
+        foreach ($markers as $marker) {
+            hash_update($hash, $marker.':'.($this->markerPresent($basePath, $marker) ? '1' : '0').'|');
+        }
+
+        return hash_final($hash);
+    }
+
+    private function markerPresent(string $basePath, string $marker): bool
+    {
+        $path = $basePath.str_replace('/', DIRECTORY_SEPARATOR, $marker);
+
+        if (str_contains($marker, '*')) {
+            $matches = glob($path);
+
+            return is_array($matches) && $matches !== [];
+        }
+
+        return file_exists($path);
     }
 }

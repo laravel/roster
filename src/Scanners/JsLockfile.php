@@ -45,7 +45,7 @@ class JsLockfile
         return null;
     }
 
-    private function scannerFor(JsPackageManager $manager): BasePackageScanner
+    private function scannerFor(JsPackageManager $manager): JsPackageScanner
     {
         return match ($manager) {
             JsPackageManager::NPM => new NpmPackageLock($this->path),

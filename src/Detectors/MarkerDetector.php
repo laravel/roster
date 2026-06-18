@@ -72,6 +72,24 @@ abstract class MarkerDetector
         return $installed;
     }
 
+    /**
+     * Every relative project marker this detector watches, for cache keying.
+     *
+     * @return list<string>
+     */
+    public static function markerPaths(): array
+    {
+        $paths = [];
+
+        foreach (static::projectMarkers() as $markers) {
+            foreach ($markers as $marker) {
+                $paths[] = $marker;
+            }
+        }
+
+        return array_values(array_unique($paths));
+    }
+
     private static function markerMatches(string $basePath, string $marker): bool
     {
         $path = $basePath.str_replace('/', DIRECTORY_SEPARATOR, $marker);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Laravel\Roster\Detectors;
 
 use Laravel\Roster\Enums\Approach;
-use Laravel\Roster\Support\EnumSet;
 
 class ApproachDetector
 {
@@ -16,19 +15,16 @@ class ApproachDetector
         ['approach' => Approach::MODULAR, 'paths' => ['modules', 'Modules', 'app-modules']],
     ];
 
-    public function __construct(protected string $basePath) {}
-
     /**
-     * @return EnumSet<Approach>
+     * @return list<Approach>
      */
-    public function detect(): EnumSet
+    public static function detect(string $basePath): array
     {
-        /** @var array<int, Approach> $found */
         $found = [];
 
         foreach (self::RULES as $rule) {
             foreach ($rule['paths'] as $relative) {
-                if (is_dir($this->basePath.str_replace('/', DIRECTORY_SEPARATOR, $relative))) {
+                if (is_dir($basePath.str_replace('/', DIRECTORY_SEPARATOR, $relative))) {
                     $found[] = $rule['approach'];
 
                     continue 2;
@@ -36,6 +32,14 @@ class ApproachDetector
             }
         }
 
-        return new EnumSet($found);
+        return $found;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function markerPaths(): array
+    {
+        return array_merge(...array_column(self::RULES, 'paths'));
     }
 }

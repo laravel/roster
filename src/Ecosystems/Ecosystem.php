@@ -63,6 +63,15 @@ abstract class Ecosystem
         return true;
     }
 
+    /**
+     * Whether the package is present as a direct dependency (declared in the
+     * manifest), as opposed to only being pulled in transitively.
+     */
+    public function usesDirect(string $name): bool
+    {
+        return $this->package($name)?->isDirect() ?? false;
+    }
+
     public function package(string $name): ?Package
     {
         return $this->packages->first(fn (Package $package): bool => $package->matches($name));
