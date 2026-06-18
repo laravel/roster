@@ -101,7 +101,14 @@ abstract class Ecosystem
             return true;
         }
 
-        return Semver::satisfies($package->version(), $constraint);
+        $version = $package->version();
+
+        // A version that normalizes to empty (e.g. `dev-main`, `*`) cannot match a constraint.
+        if ($version === '') {
+            return false;
+        }
+
+        return Semver::satisfies($version, $constraint);
     }
 
     /**
