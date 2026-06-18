@@ -6,7 +6,7 @@ use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 
-class PackageJson extends BasePackageScanner
+class PackageJson extends JsPackageScanner
 {
     protected function lockFile(): string
     {

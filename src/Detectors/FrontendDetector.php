@@ -6,7 +6,6 @@ namespace Laravel\Roster\Detectors;
 
 use Laravel\Roster\Ecosystems\JsEcosystem;
 use Laravel\Roster\Enums\Frontend;
-use Laravel\Roster\Support\EnumSet;
 
 class FrontendDetector
 {
@@ -18,19 +17,18 @@ class FrontendDetector
     ];
 
     /**
-     * @return EnumSet<Frontend>
+     * @return list<Frontend>
      */
-    public function detect(JsEcosystem $js): EnumSet
+    public static function detect(JsEcosystem $js): array
     {
-        /** @var array<int, Frontend> $found */
         $found = [];
 
         foreach (self::RULES as $package => $frontend) {
-            if ($js->uses($package)) {
+            if ($js->usesDirect($package)) {
                 $found[] = $frontend;
             }
         }
 
-        return new EnumSet($found);
+        return $found;
     }
 }

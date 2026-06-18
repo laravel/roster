@@ -7,7 +7,7 @@ namespace Laravel\Roster\Scanners;
 use Illuminate\Support\Facades\Log;
 use Laravel\Roster\PackageCollection;
 
-class BunPackageLock extends BasePackageScanner
+class BunPackageLock extends JsPackageScanner
 {
     /**
      * Only the textual `bun.lock` format is parseable. Projects that ship the
