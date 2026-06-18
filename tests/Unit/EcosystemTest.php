@@ -37,6 +37,16 @@ it('throws on invalid semver constraint', function (): void {
     expect(fn (): bool => $php->uses('foo', 'not-a-constraint'))->toThrow(InvalidArgumentException::class);
 });
 
+it('does not satisfy a constraint when the package version is empty', function (): void {
+    $php = phpEcosystem([
+        ['name' => 'vendor/dev-pkg', 'version' => ''],
+    ]);
+
+    expect($php->uses('vendor/dev-pkg'))->toBeTrue()
+        ->and($php->uses('vendor/dev-pkg', '^1.0'))->toBeFalse()
+        ->and($php->usesAll(['vendor/dev-pkg' => '^1.0']))->toBeFalse();
+});
+
 it('uses with array of names checks any-of', function (): void {
     $php = phpEcosystem([
         ['name' => 'pestphp/pest'],
