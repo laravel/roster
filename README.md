@@ -159,7 +159,7 @@ The `$project->js()->packageManager` method reports the package manager *committ
 ```php
 use Laravel\Roster\Enums\JsPackageManager;
 
-$project->js()->packageManager()?->is(JsPackageManager::PNPM);
+$project->js()->packageManager() === JsPackageManager::PNPM;
 
 $system->js()->packageManagers()->isInstalled(JsPackageManager::BUN);
 $system->js()->packageManagers()->all();
