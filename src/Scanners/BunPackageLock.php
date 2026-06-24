@@ -1,60 +1,81 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 
-class BunPackageLock extends BasePackageScanner
+class BunPackageLock extends JsPackageScanner
 {
+    /**
+     * Only the textual `bun.lock` format is parseable. Projects that ship the
+     * legacy binary `bun.lockb` are still identified as Bun by JsLockfile,
+     * but no packages can be extracted from the binary format.
+     */
     protected function lockFile(): string
     {
         return 'bun.lock';
     }
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    public function scan(): Collection
+    public function scan(): PackageCollection
     {
-        $mappedItems = collect();
+        $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
-        $contents = $this->validateFile($lockFilePath);
+        $contents = $this->readContents($lockFilePath);
         if ($contents === null) {
-            return $mappedItems;
+            return $packages;
         }
 
-        // Remove trailing commas before decoding
-        /** @var string $contents */
-        $contents = preg_replace('/,\s*([]}])/m', '$1', $contents);
-        $json = json_decode($contents, true);
+        // Bun's lock format is JSON-like but permits trailing commas.
+        $sanitized = preg_replace('/,\s*([]}])/m', '$1', $contents) ?? $contents;
+
+        $json = json_decode($sanitized, true);
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            Log::warning('Failed to decode Package: '.$lockFilePath.'. '.json_last_error_msg());
+            Log::warning('Failed to decode bun.lock: '.$lockFilePath);
 
-            return $mappedItems;
+            return $packages;
         }
 
-        /** @var array<string, array<string, mixed>> $json */
-        if (! isset($json['workspaces']['']) || ! isset($json['packages'])) {
+        if (! isset($json['packages']) || ! is_array($json['packages'])) {
             Log::warning('Malformed bun.lock');
 
-            return $mappedItems;
+            return $packages;
         }
 
-        /** @var array<string, mixed> $workspace */
-        $workspace = $json['workspaces'][''];
+        /** @var array<string, string> $allPackages */
+        $allPackages = [];
+        foreach ($json['packages'] as $name => $entry) {
+            if (! is_string($name)) {
+                continue;
+            }
 
-        /** @var array<string, string> $dependencies */
-        $dependencies = $workspace['dependencies'] ?? [];
-        /** @var array<string, string> $devDependencies */
-        $devDependencies = $workspace['devDependencies'] ?? [];
+            if (isset($allPackages[$name])) {
+                continue;
+            }
 
-        $this->processDependencies($dependencies, $mappedItems, false);
-        $this->processDependencies($devDependencies, $mappedItems, true);
+            $allPackages[$name] = $this->extractVersion($entry);
+        }
 
-        return $mappedItems;
+        $this->processDependencies($allPackages, $packages, false);
+
+        return $packages;
+    }
+
+    private function extractVersion(mixed $entry): string
+    {
+        if (is_array($entry) && isset($entry[0]) && is_string($entry[0])) {
+            $position = strrpos($entry[0], '@');
+
+            return $position === false ? $entry[0] : substr($entry[0], $position + 1);
+        }
+
+        if (is_string($entry)) {
+            return $entry;
+        }
+
+        return '';
     }
 }

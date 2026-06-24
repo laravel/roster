@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Laravel\Roster\Support;
+
+use BackedEnum;
+use Illuminate\Support\Arr;
+
+/**
+ * @template T of BackedEnum
+ */
+class EnumSet
+{
+    /**
+     * @param  array<int, T>  $cases
+     */
+    public function __construct(protected array $cases) {}
+
+    /**
+     * @param  T|array<int, T>  $value
+     */
+    public function uses(mixed $value): bool
+    {
+        foreach (Arr::wrap($value) as $needle) {
+            if (in_array($needle, $this->cases, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array<int, T>
+     */
+    public function all(): array
+    {
+        return $this->cases;
+    }
+
+    /**
+     * @return array<int, string|int>
+     */
+    public function values(): array
+    {
+        return array_map(fn (BackedEnum $c): int|string => $c->value, $this->cases);
+    }
+}

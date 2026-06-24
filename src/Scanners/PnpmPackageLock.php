@@ -1,72 +1,113 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
+use Exception;
 use Illuminate\Support\Facades\Log;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 use Symfony\Component\Yaml\Yaml;
 
-class PnpmPackageLock extends BasePackageScanner
+class PnpmPackageLock extends JsPackageScanner
 {
     protected function lockFile(): string
     {
         return 'pnpm-lock.yaml';
     }
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    public function scan(): Collection
+    public function scan(): PackageCollection
     {
-        $mappedItems = collect();
+        $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
-        $contents = $this->validateFile($lockFilePath, 'PNPM lock');
+        $contents = $this->readContents($lockFilePath, 'PNPM lock');
         if ($contents === null) {
-            return $mappedItems;
+            return $packages;
         }
 
         try {
             /** @var array<string, mixed> $parsed */
             $parsed = Yaml::parse($contents);
-        } catch (\Exception $e) {
-            Log::error('Failed to parse YAML: '.$e->getMessage());
+        } catch (Exception $exception) {
+            Log::error('Failed to parse YAML: '.$exception->getMessage());
 
-            return $mappedItems;
+            return $packages;
         }
 
-        /** @var array<string, string> $dependencies */
-        $dependencies = [];
-        /** @var array<string, string> $devDependencies */
-        $devDependencies = [];
+        /** @var array<string, string> $allPackages */
+        $allPackages = [];
+
+        /** @var array<string, mixed> $packagesMap */
+        $packagesMap = is_array($parsed['packages'] ?? null) ? $parsed['packages'] : [];
+        foreach ($packagesMap as $key => $_) {
+            $pair = $this->splitNameAndVersion((string) $key);
+            if ($pair === null) {
+                continue;
+            }
+
+            [$name, $version] = $pair;
+            if (isset($allPackages[$name])) {
+                continue;
+            }
+
+            $allPackages[$name] = $version;
+        }
 
         /** @var array<string, array<string, mixed>> $importers */
         $importers = $parsed['importers'] ?? [];
         $root = $importers['.'] ?? [];
-        /** @var array<string, array<string, mixed>> $rootDependencies */
-        $rootDependencies = $root['dependencies'] ?? [];
-        /** @var array<string, array<string, mixed>> $rootDevDependencies */
-        $rootDevDependencies = $root['devDependencies'] ?? [];
 
-        foreach ($rootDependencies as $name => $data) {
-            if (isset($data['version'])) {
-                $dependencies[$name] = $data['version'];
+        /** @var array<string, array<string, mixed>> $rootDeps */
+        $rootDeps = $root['dependencies'] ?? [];
+        /** @var array<string, array<string, mixed>> $rootDevDeps */
+        $rootDevDeps = $root['devDependencies'] ?? [];
+
+        foreach ([$rootDeps, $rootDevDeps] as $entries) {
+            foreach ($entries as $name => $data) {
+                if (isset($data['version']) && is_scalar($data['version'])) {
+                    $allPackages[$name] = $this->stripPeerSuffix((string) $data['version']);
+                }
             }
         }
 
-        foreach ($rootDevDependencies as $name => $data) {
-            if (isset($data['version'])) {
-                $devDependencies[$name] = $data['version'];
+        $this->processDependencies($allPackages, $packages, false);
+
+        return $packages;
+    }
+
+    /**
+     * @return array{0: string, 1: string}|null
+     */
+    private function splitNameAndVersion(string $key): ?array
+    {
+        $key = $this->stripPeerSuffix($key);
+
+        // pnpm v5/v6: `/lodash/4.17.21`, `/@babel/core/7.0.0`.
+        if (str_starts_with($key, '/')) {
+            $key = substr($key, 1);
+            $position = strrpos($key, '/');
+
+            if ($position === false || $position === 0) {
+                return null;
             }
+
+            return [substr($key, 0, $position), substr($key, $position + 1)];
         }
 
-        /** @var array<string, string> $dependencies */
-        /** @var array<string, string> $devDependencies */
-        $this->processDependencies($dependencies, $mappedItems, false);
-        $this->processDependencies($devDependencies, $mappedItems, true);
+        // pnpm v9: `lodash@4.17.21`, `@babel/core@7.0.0`.
+        $position = strrpos($key, '@');
+        if ($position === false || $position === 0) {
+            return null;
+        }
 
-        return $mappedItems;
+        return [substr($key, 0, $position), substr($key, $position + 1)];
+    }
+
+    private function stripPeerSuffix(string $value): string
+    {
+        $paren = strpos($value, '(');
+
+        return $paren === false ? $value : substr($value, 0, $paren);
     }
 }
