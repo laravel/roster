@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Laravel\Roster\Console;
 
 use Illuminate\Console\Command;
+use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Project;
 use Laravel\Roster\System;
 
 class ScanCommand extends Command
 {
-    protected $signature = 'roster:scan {directory} {--no-system : Skip system probes}';
+    protected $signature = 'roster:scan {directory} {--approaches : Detect source-code approaches (scans every PHP source file)} {--no-system : Skip system probes}';
 
-    protected $description = 'Detect packages, stacks, frameworks, and agents in use and output as JSON';
+    protected $description = 'Detect packages, stacks, frameworks, agents, and approaches in use and output as JSON';
 
     public function handle(): int
     {
@@ -30,7 +31,14 @@ class ScanCommand extends Command
             return self::FAILURE;
         }
 
-        $payload = Project::scan($directory)->toArray();
+        $project = Project::scan($directory);
+        $payload = $project->toArray();
+
+        if ($this->option('approaches')) {
+            $payload['approaches'] = $project->approaches()->all()
+                ->map(fn (ApproachResult $result): array => $result->toArray())
+                ->all();
+        }
 
         if (! $this->option('no-system')) {
             $payload['system'] = System::scan()->toArray();

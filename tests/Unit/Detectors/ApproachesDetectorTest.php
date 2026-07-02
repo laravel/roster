@@ -1,0 +1,310 @@
+<?php
+
+declare(strict_types=1);
+
+use Laravel\Roster\ApproachResult;
+use Laravel\Roster\Detectors\ApproachesDetector;
+use Laravel\Roster\Enums\Approach;
+use Laravel\Roster\Support\ApproachSet;
+
+function detectApproaches(string $app): ApproachSet
+{
+    return new ApproachSet(ApproachesDetector::detect(
+        dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'approaches'.DIRECTORY_SEPARATOR.$app,
+    ));
+}
+
+function writeModel(string $base, string $name, string $property): void
+{
+    touchFile($base.'app/Models/'.$name.'.php');
+    file_put_contents(
+        $base.'app/Models/'.$name.'.php',
+        "<?php\n\nnamespace App\\Models;\n\nclass {$name}\n{\n    protected \${$property} = [];\n}\n",
+    );
+}
+
+it('detects fillable as the dominant mass-assignment style', function (): void {
+    $approaches = detectApproaches('fillable-models-app');
+
+    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue()
+        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+
+    expect($result->matched)->toBe(6)
+        ->and($result->total)->toBe(6)
+        ->and($result->confidence)->toBe(1.0)
+        ->and($result->paths)->toHaveCount(6)
+        ->and($result->paths[0])->toContain('Models');
+});
+
+it('detects guarded as the dominant mass-assignment style', function (): void {
+    $approaches = detectApproaches('guarded-models-app');
+
+    expect($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeTrue()
+        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_GUARDED->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+});
+
+it('stays silent when models are split between fillable and guarded', function (): void {
+    $approaches = detectApproaches('mixed-models-app');
+
+    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeFalse()
+        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse()
+        ->and($approaches->all())->toBeEmpty();
+});
+
+it('detects screaming snake enum case naming with one vote per case', function (): void {
+    $approaches = detectApproaches('screaming-enums-app');
+
+    expect($approaches->uses(Approach::ENUM_CASE_SCREAMING_SNAKE))->toBeTrue();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::ENUM_CASE_SCREAMING_SNAKE->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5)
+        ->and($result->paths)->toHaveCount(2);
+});
+
+it('does not count switch case labels as enum cases', function (): void {
+    $approaches = detectApproaches('enum-switch-app');
+
+    expect($approaches->uses(Approach::ENUM_CASE_SCREAMING_SNAKE))->toBeTrue();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::ENUM_CASE_SCREAMING_SNAKE->value);
+
+    // The `case Active:` inside the switch must not vote — 5 enum cases, not 6.
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+});
+
+it('detects pascal enum case naming', function (): void {
+    $approaches = detectApproaches('pascal-enums-app');
+
+    expect($approaches->uses(Approach::ENUM_CASE_PASCAL))->toBeTrue()
+        ->and($approaches->uses(Approach::ENUM_CASE_SCREAMING_SNAKE))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::ENUM_CASE_PASCAL->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+});
+
+it('detects camel enum case naming', function (): void {
+    $approaches = detectApproaches('camel-enums-app');
+
+    expect($approaches->uses(Approach::ENUM_CASE_CAMEL))->toBeTrue();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::ENUM_CASE_CAMEL->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+});
+
+it('counts enum cases declared after a method with string interpolation', function (): void {
+    $approaches = detectApproaches('interpolated-enums-app');
+
+    expect($approaches->uses(Approach::ENUM_CASE_SCREAMING_SNAKE))->toBeTrue();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::ENUM_CASE_SCREAMING_SNAKE->value);
+
+    // The `{$this->value}` interpolation must not skew brace depth — all
+    // 5 cases vote, including the 3 declared after the label() method.
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+});
+
+it('detects pipe-delimited validation rule syntax', function (): void {
+    $approaches = detectApproaches('pipe-validation-app');
+
+    expect($approaches->uses(Approach::VALIDATION_PIPE_SYNTAX))->toBeTrue()
+        ->and($approaches->uses(Approach::VALIDATION_ARRAY_SYNTAX))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::VALIDATION_PIPE_SYNTAX->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5)
+        ->and($result->paths[0])->toContain('Requests');
+});
+
+it('detects array validation rule syntax', function (): void {
+    $approaches = detectApproaches('array-validation-app');
+
+    expect($approaches->uses(Approach::VALIDATION_ARRAY_SYNTAX))->toBeTrue()
+        ->and($approaches->uses(Approach::VALIDATION_PIPE_SYNTAX))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::VALIDATION_ARRAY_SYNTAX->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+});
+
+it('detects the #[Scope] attribute style with one vote per scope', function (): void {
+    $approaches = detectApproaches('attribute-scopes-app');
+
+    expect($approaches->uses(Approach::QUERY_SCOPE_ATTRIBUTE))->toBeTrue()
+        ->and($approaches->uses(Approach::QUERY_SCOPE_METHOD))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::QUERY_SCOPE_ATTRIBUTE->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+});
+
+it('detects the scopeXxx() naming style', function (): void {
+    $approaches = detectApproaches('naming-scopes-app');
+
+    expect($approaches->uses(Approach::QUERY_SCOPE_METHOD))->toBeTrue()
+        ->and($approaches->uses(Approach::QUERY_SCOPE_ATTRIBUTE))->toBeFalse();
+});
+
+it('samples Models directories anywhere beneath a PSR-4 root', function (): void {
+    $approaches = detectApproaches('nested-models-app');
+
+    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->paths[0])->toContain('src/Domain/Orders/Models');
+});
+
+it('stays silent when there are too few votes', function (): void {
+    expect(detectApproaches('carbon-app')->all())->toBeEmpty();
+});
+
+it('rejects a 4/5 majority via the Wilson lower bound', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta'] as $name) {
+        writeModel($base, $name, 'fillable');
+    }
+
+    writeModel($base, 'Hotel', 'guarded');
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeFalse()
+        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('accepts a 90/100 majority via the Wilson lower bound', function (): void {
+    $base = tempBase();
+
+    for ($i = 1; $i <= 90; $i++) {
+        writeModel($base, 'Fillable'.$i, 'fillable');
+    }
+
+    for ($i = 1; $i <= 10; $i++) {
+        writeModel($base, 'Guarded'.$i, 'guarded');
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+
+    expect($result->matched)->toBe(90)
+        ->and($result->total)->toBe(100)
+        ->and($result->confidence)->toBe(0.9)
+        ->and($result->paths)->toHaveCount(100);
+
+    cleanup($base);
+});
+
+it('skips models declaring both fillable and guarded', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeModel($base, $name, 'fillable');
+    }
+
+    touchFile($base.'app/Models/Both.php');
+    file_put_contents(
+        $base.'app/Models/Both.php',
+        "<?php\n\nnamespace App\\Models;\n\nclass Both\n{\n    protected \$fillable = [];\n\n    protected \$guarded = [];\n}\n",
+    );
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5)
+        ->and($result->paths)->toHaveCount(5);
+
+    cleanup($base);
+});
+
+it('never lets vendor or node_modules code vote', function (): void {
+    $base = tempBase();
+
+    // A PSR-4 mapping that resolves to the project root pulls everything in.
+    file_put_contents($base.'composer.json', json_encode([
+        'autoload' => ['psr-4' => ['App\\' => '.']],
+    ]));
+
+    foreach (['vendor/acme/pkg/src', 'node_modules/pkg'] as $dir) {
+        for ($i = 1; $i <= 5; $i++) {
+            touchFile($base.$dir.'/Models/Dep'.$i.'.php');
+            file_put_contents(
+                $base.$dir.'/Models/Dep'.$i.'.php',
+                "<?php\n\nclass Dep{$i}\n{\n    protected \$guarded = [];\n}\n",
+            );
+        }
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->all())->toBeEmpty();
+
+    cleanup($base);
+});
+
+it('accepts an array of approaches with any-of semantics', function (): void {
+    $approaches = detectApproaches('fillable-models-app');
+
+    expect($approaches->uses([Approach::MASS_ASSIGNMENT_FILLABLE, Approach::MASS_ASSIGNMENT_GUARDED]))->toBeTrue()
+        ->and($approaches->uses([Approach::MASS_ASSIGNMENT_GUARDED, Approach::ENUM_CASE_CAMEL]))->toBeFalse();
+});
+
+it('dedupes files reachable through overlapping source roots', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'composer.json', json_encode([
+        'autoload' => ['psr-4' => ['App\\' => 'app/', 'App\\Models\\' => 'app/Models/']],
+    ]));
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeModel($base, $name, 'fillable');
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+
+    expect($result->total)->toBe(5);
+
+    cleanup($base);
+});

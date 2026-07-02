@@ -35,6 +35,22 @@ it('outputs empty JSON for empty directory', function (): void {
     rmdir($emptyDir);
 });
 
+it('includes approaches only when requested', function (): void {
+    $path = __DIR__.'/../fixtures/approaches/fillable-models-app';
+
+    Artisan::call('roster:scan', ['directory' => $path, '--no-system' => true]);
+    $decoded = json_decode(Artisan::output(), true);
+
+    expect($decoded)->not->toHaveKey('approaches');
+
+    Artisan::call('roster:scan', ['directory' => $path, '--approaches' => true, '--no-system' => true]);
+    $decoded = json_decode(Artisan::output(), true);
+
+    expect($decoded)->toHaveKey('approaches');
+    expect($decoded['approaches'])->toHaveKey('mass-assignment-fillable');
+    expect($decoded['approaches']['mass-assignment-fillable']['matched'])->toBe(6);
+});
+
 it('returns failure for non-existent directory', function (): void {
     $exitCode = Artisan::call('roster:scan', ['directory' => '/non/existent/directory']);
     expect($exitCode)->toBe(1);

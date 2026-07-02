@@ -16,6 +16,7 @@ use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Editor;
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
+use Laravel\Roster\Support\ApproachSet;
 use Laravel\Roster\Support\CachesScan;
 use Laravel\Roster\Support\EnumSet;
 
@@ -96,6 +97,11 @@ class ProjectManager
     public function approach(): EnumSet
     {
         return $this->instance()->approach();
+    }
+
+    public function approaches(): ApproachSet
+    {
+        return $this->instance()->approaches();
     }
 
     public function json(): string
