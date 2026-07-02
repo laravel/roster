@@ -14,6 +14,7 @@ return RectorConfig::configure()
         __DIR__.'/tests',
     ])
     ->withSkip([
+        __DIR__.'/tests/fixtures',
         ReadOnlyPropertyRector::class,
         EncapsedStringsToSprintfRector::class,
         NewlineBetweenClassLikeStmtsRector::class,

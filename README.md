@@ -165,6 +165,36 @@ $system->js()->packageManagers()->isInstalled(JsPackageManager::BUN);
 $system->js()->packageManagers()->all();
 ```
 
+### Approaches
+
+The `approaches` method inspects the project's **own source code** — not its manifests — and reports which stylistic conventions the application has adopted: `$fillable` vs `$guarded` mass assignment, enum case casing, pipe vs array validation rule syntax, and `#[Scope]` vs `scopeXxx()` query scopes:
+
+```php
+use Laravel\Roster\Enums\Approach;
+
+$project->approaches()->uses(Approach::MASS_ASSIGNMENT_FILLABLE); // is this the dominant style?
+$project->approaches()->uses([                                    // any-of, like EnumSet
+    Approach::VALIDATION_PIPE_SYNTAX,
+    Approach::VALIDATION_ARRAY_SYNTAX,
+]);
+$project->approaches()->all();                                    // Collection<string, ApproachResult>
+```
+
+An approach is only reported when it is backed by enough evidence: at least 5 votes (one per model, enum case, form request, or scope), and a Wilson score lower bound (95% confidence) of at least 0.5 for the winning style — so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent.
+
+Each `ApproachResult` exposes the winning `approach`, its raw `confidence` ratio, the `matched` and `total` vote counts, and the `paths` of the files that voted:
+
+```php
+$result = $project->approaches()->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+
+$result->confidence; // 0.9
+$result->matched;    // 9
+$result->total;      // 10
+$result->paths;      // ['/app/Models/User.php', ...]
+```
+
+Source files are discovered from the `composer.json` PSR-4 autoload roots unioned with `app/`, and subdirectories such as `Models/` are matched anywhere beneath a root, so modular layouts like `src/Domain/Orders/Models/` are sampled too. `vendor/`, `node_modules/`, and hidden directories are always excluded. Because source files change without touching any lockfile, approaches are never persisted with the cached scan — they are computed lazily per process, and only when you ask for them: `toArray()` and `json()` stay cheap and omit them, while `roster:scan` accepts an `--approaches` flag to include them in its output.
+
 ## Upgrading
 
 See [UPGRADE.md](UPGRADE.md) for migrating from 0.x.

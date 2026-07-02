@@ -1,0 +1,4 @@
+{
+    "name": "acme/pascal-enums-app",
+    "autoload": { "psr-4": { "App\\": "app/" } }
+}

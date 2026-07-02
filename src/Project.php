@@ -7,6 +7,7 @@ namespace Laravel\Roster;
 use Illuminate\Support\Str;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\ApproachDetector;
+use Laravel\Roster\Detectors\ApproachesDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\EditorsDetector;
 use Laravel\Roster\Detectors\FrontendDetector;
@@ -21,10 +22,13 @@ use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Scanners\Composer;
 use Laravel\Roster\Scanners\JsLockfile;
+use Laravel\Roster\Support\ApproachSet;
 use Laravel\Roster\Support\EnumSet;
 
 class Project
 {
+    protected ?ApproachSet $approaches = null;
+
     /**
      * @param  EnumSet<Stack>  $stack
      * @param  EnumSet<BrowserTestFramework>  $browserTestFrameworks
@@ -34,6 +38,7 @@ class Project
      * @param  EnumSet<Approach>  $approach
      */
     public function __construct(
+        protected string $basePath,
         protected PhpEcosystem $php,
         protected JsEcosystem $js,
         protected EnumSet $stack,
@@ -90,6 +95,16 @@ class Project
         return $this->approach;
     }
 
+    /**
+     * The stylistic conventions the project's own source code has adopted.
+     * Computed lazily and never persisted with the cached scan — source files
+     * change without touching any lockfile the scan cache is keyed on.
+     */
+    public function approaches(): ApproachSet
+    {
+        return $this->approaches ??= new ApproachSet(ApproachesDetector::detect($this->basePath));
+    }
+
     public static function scan(?string $basePath = null): self
     {
         $basePath = self::normalizeBasePath($basePath);
@@ -103,6 +118,7 @@ class Project
         $js = new JsEcosystem($jsPackages, $jsLockfile->committedManager());
 
         return new self(
+            $basePath,
             $php,
             $js,
             new EnumSet(StackDetector::detect($php, $js)),
@@ -142,5 +158,33 @@ class Project
     public function json(): string
     {
         return json_encode($this->toArray(), JSON_PRETTY_PRINT) ?: '{}';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function __serialize(): array
+    {
+        $properties = get_object_vars($this);
+        unset($properties['approaches']);
+
+        return $properties;
+    }
+
+    /**
+     * @param  array{basePath: string, php: PhpEcosystem, js: JsEcosystem, stack: EnumSet<Stack>, browserTestFrameworks: EnumSet<BrowserTestFramework>, frontend: EnumSet<Frontend>, agents: EnumSet<Agent>, editors: EnumSet<Editor>, approach: EnumSet<Approach>}  $properties
+     */
+    public function __unserialize(array $properties): void
+    {
+        $this->basePath = $properties['basePath'];
+        $this->php = $properties['php'];
+        $this->js = $properties['js'];
+        $this->stack = $properties['stack'];
+        $this->browserTestFrameworks = $properties['browserTestFrameworks'];
+        $this->frontend = $properties['frontend'];
+        $this->agents = $properties['agents'];
+        $this->editors = $properties['editors'];
+        $this->approach = $properties['approach'];
+        $this->approaches = null;
     }
 }
