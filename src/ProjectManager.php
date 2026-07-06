@@ -190,6 +190,7 @@ class ProjectManager
             ...EditorsDetector::markerPaths(),
             ...BrowserTestFrameworkDetector::markerPaths(),
         ];
+
         $markers = array_values(array_unique($markers));
         sort($markers);
 
