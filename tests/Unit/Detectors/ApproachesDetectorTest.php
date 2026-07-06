@@ -64,7 +64,7 @@ it('stays silent when models are split between fillable and guarded', function (
 
     expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeFalse()
         ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse()
-        ->and($approaches->all())->toBeEmpty();
+        ->and($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeTrue();
 });
 
 it('detects screaming snake enum case naming with one vote per case', function (): void {
@@ -156,24 +156,24 @@ it('detects array validation rule syntax', function (): void {
         ->and($result->total)->toBe(5);
 });
 
-it('detects the #[Scope] attribute style with one vote per scope', function (): void {
+it('counts #[Scope] attributes as attribute-syntax votes', function (): void {
     $approaches = detectApproaches('attribute-scopes-app');
 
-    expect($approaches->uses(Approach::QUERY_SCOPE_ATTRIBUTE))->toBeTrue()
-        ->and($approaches->uses(Approach::QUERY_SCOPE_METHOD))->toBeFalse();
+    expect($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeTrue()
+        ->and($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::QUERY_SCOPE_ATTRIBUTE->value);
+    $result = $approaches->all()->get(Approach::MODEL_ATTRIBUTE_SYNTAX->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
 });
 
-it('detects the scopeXxx() naming style', function (): void {
+it('counts scopeXxx() methods as property-syntax votes', function (): void {
     $approaches = detectApproaches('naming-scopes-app');
 
-    expect($approaches->uses(Approach::QUERY_SCOPE_METHOD))->toBeTrue()
-        ->and($approaches->uses(Approach::QUERY_SCOPE_ATTRIBUTE))->toBeFalse();
+    expect($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeTrue()
+        ->and($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeFalse();
 });
 
 it('samples Models directories anywhere beneath a PSR-4 root', function (): void {
@@ -422,4 +422,532 @@ it('recomputes memoized approaches when a convention is registered later', funct
     expect($project->approaches()->uses(CustomConvention::THIN_MODELS))->toBeTrue();
 
     ApproachesDetector::flushExtensions();
+});
+
+function writeAttributeModel(string $base, string $name, string $attribute): void
+{
+    touchFile($base.'app/Models/'.$name.'.php');
+    file_put_contents(
+        $base.'app/Models/'.$name.'.php',
+        "<?php\n\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Attributes\\{$attribute};\n\n#[{$attribute}(['name'])]\nclass {$name}\n{\n}\n",
+    );
+}
+
+it('counts #[Fillable] and #[Guarded] attributes as mass-assignment votes', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeAttributeModel($base, $name, 'Fillable');
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue()
+        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+
+    cleanup($base);
+});
+
+it('lets attribute-style models outvote legacy property-style models', function (): void {
+    $base = tempBase();
+
+    foreach (['Legacy1', 'Legacy2'] as $name) {
+        writeModel($base, $name, 'guarded');
+    }
+
+    foreach (['New1', 'New2', 'New3', 'New4', 'New5', 'New6', 'New7', 'New8', 'New9', 'New10', 'New11'] as $name) {
+        writeAttributeModel($base, $name, 'Fillable');
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue()
+        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects attribute syntax as the dominant model configuration style', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeAttributeModel($base, $name, 'Fillable');
+    }
+
+    foreach (['Delta', 'Hotel'] as $name) {
+        writeAttributeModel($base, $name, 'Hidden');
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeTrue()
+        ->and($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MODEL_ATTRIBUTE_SYNTAX->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+
+    cleanup($base);
+});
+
+it('detects property syntax as the dominant model configuration style', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta'] as $name) {
+        writeModel($base, $name, 'fillable');
+    }
+
+    writeModel($base, 'Hotel', 'hidden');
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeTrue()
+        ->and($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('stays silent on model config syntax when styles are contested', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeAttributeModel($base, $name, 'Fillable');
+    }
+
+    foreach (['Delta', 'Hotel'] as $name) {
+        writeModel($base, $name, 'fillable');
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeFalse()
+        ->and($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects form requests as the dominant validation style', function (): void {
+    $approaches = detectApproaches('pipe-validation-app');
+
+    expect($approaches->uses(Approach::VALIDATION_FORM_REQUEST))->toBeTrue()
+        ->and($approaches->uses(Approach::VALIDATION_INLINE))->toBeFalse();
+});
+
+it('detects inline validation as the dominant validation style', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        touchFile($base.'app/Http/Controllers/'.$name.'Controller.php');
+        file_put_contents(
+            $base.'app/Http/Controllers/'.$name.'Controller.php',
+            "<?php\n\nnamespace App\\Http\\Controllers;\n\nclass {$name}Controller\n{\n    public function store(\$request)\n    {\n        \$request->validate(['name' => 'required']);\n    }\n}\n",
+        );
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::VALIDATION_INLINE))->toBeTrue()
+        ->and($approaches->uses(Approach::VALIDATION_FORM_REQUEST))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::VALIDATION_INLINE->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+
+    cleanup($base);
+});
+
+it('stays silent when validation is split between inline and form requests', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        touchFile($base.'app/Http/Requests/'.$name.'Request.php');
+        file_put_contents(
+            $base.'app/Http/Requests/'.$name.'Request.php',
+            "<?php\n\nnamespace App\\Http\\Requests;\n\nclass {$name}Request\n{\n    public function rules(): array\n    {\n        return [];\n    }\n}\n",
+        );
+    }
+
+    foreach (['Delta', 'Hotel'] as $name) {
+        touchFile($base.'app/Http/Controllers/'.$name.'Controller.php');
+        file_put_contents(
+            $base.'app/Http/Controllers/'.$name.'Controller.php',
+            "<?php\n\nnamespace App\\Http\\Controllers;\n\nclass {$name}Controller\n{\n    public function store(\$request)\n    {\n        \$request->validate(['name' => 'required']);\n    }\n}\n",
+        );
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::VALIDATION_FORM_REQUEST))->toBeFalse()
+        ->and($approaches->uses(Approach::VALIDATION_INLINE))->toBeFalse();
+
+    cleanup($base);
+});
+
+function writeSource(string $base, string $relative, string $body): void
+{
+    touchFile($base.$relative);
+    file_put_contents($base.$relative, "<?php\n\n".$body."\n");
+}
+
+it('detects invokable controllers as the dominant style', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Http/Controllers/{$name}Controller.php", <<<PHP
+        class {$name}Controller
+        {
+            public function __invoke(): string
+            {
+                return 'ok';
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::CONTROLLER_INVOKABLE))->toBeTrue()
+        ->and($approaches->uses(Approach::CONTROLLER_MULTI_ACTION))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects multi-action controllers and lets single-action plain controllers abstain', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Http/Controllers/{$name}Controller.php", <<<PHP
+        class {$name}Controller
+        {
+            public function index(): string
+            {
+                return 'list';
+            }
+
+            public function store(): string
+            {
+                return 'created';
+            }
+        }
+        PHP);
+    }
+
+    writeSource($base, 'app/Http/Controllers/AmbiguousController.php', <<<'PHP'
+    class AmbiguousController
+    {
+        public function index(): string
+        {
+            return 'list';
+        }
+    }
+    PHP);
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::CONTROLLER_MULTI_ACTION))->toBeTrue()
+        ->and($approaches->uses(Approach::CONTROLLER_INVOKABLE))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::CONTROLLER_MULTI_ACTION->value);
+
+    expect($result->total)->toBe(5);
+
+    cleanup($base);
+});
+
+it('detects command signature attribute vs property syntax', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeSource($base, "app/Console/Commands/{$name}Command.php", <<<PHP
+        #[Signature('{$name}:run')]
+        #[Description('Run {$name}')]
+        class {$name}Command
+        {
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::COMMAND_ATTRIBUTE_SYNTAX))->toBeTrue()
+        ->and($approaches->uses(Approach::COMMAND_PROPERTY_SYNTAX))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects command signature properties', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeSource($base, "app/Console/Commands/{$name}Command.php", <<<PHP
+        class {$name}Command
+        {
+            protected \$signature = '{$name}:run';
+
+            protected \$description = 'Run {$name}';
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::COMMAND_PROPERTY_SYNTAX))->toBeTrue()
+        ->and($approaches->uses(Approach::COMMAND_ATTRIBUTE_SYNTAX))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects http client throw style only in files using the Http client', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Services/{$name}.php", <<<PHP
+        class {$name}
+        {
+            public function handle(): void
+            {
+                Http::get('https://example.com')->throw();
+            }
+        }
+        PHP);
+    }
+
+    writeSource($base, 'app/Services/NotHttp.php', <<<'PHP'
+    class NotHttp
+    {
+        public function handle($upload): void
+        {
+            $upload->failed();
+            $upload->successful();
+        }
+    }
+    PHP);
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::HTTP_CLIENT_THROW))->toBeTrue()
+        ->and($approaches->uses(Approach::HTTP_CLIENT_STATUS_CHECK))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects http client status-check style', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeSource($base, "app/Services/{$name}.php", <<<PHP
+        class {$name}
+        {
+            public function handle(): bool
+            {
+                \$response = Http::get('https://example.com');
+
+                return \$response->successful() && ! \$response->failed();
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::HTTP_CLIENT_STATUS_CHECK))->toBeTrue()
+        ->and($approaches->uses(Approach::HTTP_CLIENT_THROW))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects the notify trait style over the Notification facade', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Actions/{$name}.php", <<<PHP
+        class {$name}
+        {
+            public function handle(\$user): void
+            {
+                \$user->notify(new InvoicePaid());
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::NOTIFICATION_NOTIFY))->toBeTrue()
+        ->and($approaches->uses(Approach::NOTIFICATION_FACADE))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects the Notification facade style', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Actions/{$name}.php", <<<PHP
+        class {$name}
+        {
+            public function handle(\$users): void
+            {
+                Notification::send(\$users, new InvoicePaid());
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::NOTIFICATION_FACADE))->toBeTrue()
+        ->and($approaches->uses(Approach::NOTIFICATION_NOTIFY))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects the dominant authorization call style in controllers', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Http/Controllers/{$name}Controller.php", <<<PHP
+        class {$name}Controller
+        {
+            public function update(\$request, \$post): void
+            {
+                Gate::authorize('update', \$post);
+            }
+        }
+        PHP);
+    }
+
+    writeSource($base, 'app/Http/Controllers/LegacyController.php', <<<'PHP'
+    class LegacyController
+    {
+        public function update($request, $post): void
+        {
+            $this->authorize('update', $post);
+        }
+    }
+    PHP);
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::AUTHORIZATION_GATE))->toBeTrue()
+        ->and($approaches->uses(Approach::AUTHORIZATION_TRAIT))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::AUTHORIZATION_GATE->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(6);
+
+    cleanup($base);
+});
+
+it('detects the dominant auth user retrieval style', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Http/Controllers/{$name}Controller.php", <<<PHP
+        class {$name}Controller
+        {
+            public function show(\$request): mixed
+            {
+                return \$request->user();
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::AUTH_REQUEST))->toBeTrue()
+        ->and($approaches->uses(Approach::AUTH_FACADE))->toBeFalse()
+        ->and($approaches->uses(Approach::AUTH_HELPER))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects the auth facade and helper retrieval styles', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Services/{$name}.php", <<<PHP
+        class {$name}
+        {
+            public function handle(): mixed
+            {
+                return Auth::user() ?? Auth::id();
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::AUTH_FACADE))->toBeTrue()
+        ->and($approaches->uses(Approach::AUTH_HELPER))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects uuid model keys and abstains on files mixing both traits', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Models/{$name}.php", <<<PHP
+        class {$name}
+        {
+            use HasUuids;
+        }
+        PHP);
+    }
+
+    writeSource($base, 'app/Models/Mixed.php', <<<'PHP'
+    class Mixed
+    {
+        use HasUuids;
+        use HasUlids;
+    }
+    PHP);
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MODEL_UUID_KEYS))->toBeTrue()
+        ->and($approaches->uses(Approach::MODEL_ULID_KEYS))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MODEL_UUID_KEYS->value);
+
+    expect($result->total)->toBe(5);
+
+    cleanup($base);
+});
+
+it('detects ulid model keys', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Models/{$name}.php", <<<PHP
+        class {$name}
+        {
+            use HasUlids;
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MODEL_ULID_KEYS))->toBeTrue()
+        ->and($approaches->uses(Approach::MODEL_UUID_KEYS))->toBeFalse();
+
+    cleanup($base);
 });

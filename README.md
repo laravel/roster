@@ -208,7 +208,7 @@ $project->approaches()->uses([Approach::ACTION, Approach::DDD]);
 
 ### Source Conventions
 
-The `approaches` method also inspects the project's **own source code** — not its manifests — and reports which stylistic conventions the application has adopted: `$fillable` vs `$guarded` mass assignment, enum case casing, pipe vs array validation rule syntax, and `#[Scope]` vs `scopeXxx()` query scopes:
+The `approaches` method also inspects the project's **own source code** — not its manifests — and reports which stylistic conventions the application has adopted: `fillable` vs `guarded` mass assignment (detected in both the `protected $fillable` property and `#[Fillable]` attribute spellings), attribute vs property model configuration (`#[Fillable]`, `#[Hidden]`, `#[Scope]` versus `protected $fillable`, `protected $hidden`, `scopeXxx()`), enum case casing, pipe vs array validation rule syntax, and inline validation vs form requests (`$request->validate([...])` versus dedicated `rules()` classes under `Http/Requests`):
 
 ```php
 use Laravel\Roster\Enums\Approach;
