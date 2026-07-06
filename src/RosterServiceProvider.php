@@ -11,8 +11,6 @@ class RosterServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ProjectManager::class, fn (): ProjectManager => new ProjectManager);
-
-        $this->app->singleton(SystemManager::class, fn (): SystemManager => new SystemManager);
     }
 
     public function boot(): void

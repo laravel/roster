@@ -31,28 +31,9 @@ class AgentsDetector extends MarkerDetector
         Agent::WINDSURF->value => ['.windsurf', '.windsurfrules'],
     ];
 
-    /** @var array<string, list<string>> */
-    private const SYSTEM_BINARIES = [
-        Agent::CLAUDE_CODE->value => ['claude'],
-        Agent::CURSOR->value => ['cursor'],
-        Agent::CODEX->value => ['codex'],
-        Agent::COPILOT->value => ['gh-copilot'],
-        Agent::GEMINI->value => ['gemini'],
-        Agent::JUNIE->value => ['junie'],
-        Agent::KIRO->value => ['kiro'],
-        Agent::OPENCODE->value => ['opencode'],
-        Agent::AMP->value => ['amp'],
-        Agent::WINDSURF->value => ['windsurf'],
-    ];
-
     protected static function projectMarkers(): array
     {
         return self::PROJECT_MARKERS;
-    }
-
-    protected static function systemBinaries(): array
-    {
-        return self::SYSTEM_BINARIES;
     }
 
     protected static function fromValue(string $value): BackedEnum

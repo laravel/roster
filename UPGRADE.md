@@ -41,7 +41,7 @@ You should update the following dependency in your application's `composer.json`
 
 **Likelihood Of Impact: High**
 
-The `Laravel\Roster\Facades\Roster` facade has been removed and replaced by two facades: `Laravel\Roster\Facades\Project`, which reads your project's lockfiles and configuration markers, and `Laravel\Roster\Facades\System`, which probes the host machine for binaries on the `PATH`. Calls to `Roster::scan()` should be replaced with `Project::scan()` or `System::scan()` depending on which surface you need:
+The `Laravel\Roster\Facades\Roster` facade has been removed and replaced by the `Laravel\Roster\Facades\Project` facade, which reads your project's lockfiles and configuration markers. Calls to `Roster::scan()` should be replaced with `Project::scan()`:
 
 ```php
 // 0.x...
@@ -51,10 +51,8 @@ Roster::scan();
 
 // 1.0...
 use Laravel\Roster\Facades\Project;
-use Laravel\Roster\Facades\System;
 
 Project::scan();
-System::scan();
 ```
 
 ### The `Packages` Enum
@@ -127,14 +125,11 @@ Project::stack()->uses(Stack::INERTIA_REACT);
 
 **Likelihood Of Impact: Medium**
 
-The `Ides` enum has been removed and split into two enums: `Laravel\Roster\Enums\Agent` for AI coding tools (Claude Code, Cursor, Codex, etc.) and `Laravel\Roster\Enums\Editor` for IDEs (PHPStorm, VSCode, Zed, Sublime Text). Each is reported on both surfaces:
+The `Ides` enum has been removed and split into two enums: `Laravel\Roster\Enums\Agent` for AI coding tools (Claude Code, Cursor, Codex, etc.) and `Laravel\Roster\Enums\Editor` for IDEs (PHPStorm, VSCode, Zed, Sublime Text). Each is detected through the project's filesystem markers:
 
 ```php
 Project::agents()->uses(Agent::CLAUDE_CODE);
 Project::editors()->uses(Editor::PHPSTORM);
-
-System::agents()->uses(Agent::CURSOR);
-System::editors()->uses(Editor::VSCODE);
 ```
 
 ### JS Package Managers
@@ -151,7 +146,7 @@ $roster->nodePackageManager();
 Project::js()->packageManager(); // ?JsPackageManager
 ```
 
-Package managers installed on the host machine may now be checked via `System::jsPackageManagers()`. Bun is detected via either `bun.lock` or `bun.lockb`.
+Bun is detected via either `bun.lock` or `bun.lockb`.
 
 ### Removed Detections
 
@@ -162,6 +157,8 @@ The `TestFramework` and `StarterKit` detections have been removed. Test framewor
 ```php
 Project::php()->uses('pestphp/pest');
 ```
+
+Detection of binaries installed on the host machine has also been removed — Roster now only reports on the project itself.
 
 ### The `Approaches` Enum
 
@@ -178,8 +175,8 @@ Project::approaches()->uses([Approach::ACTION, Approach::DDD]);
 
 **Likelihood Of Impact: Low**
 
-The `roster:scan` Artisan command now requires a directory argument and emits a combined JSON document with the project surface at the top level and a `system` key for the host probe. You may pass `--no-system` to skip the host probe:
+The `roster:scan` Artisan command now requires a directory argument and emits the project surface as a JSON document. You may pass `--approaches` to include source-code approach detection:
 
 ```bash
-php artisan roster:scan /path/to/project --no-system
+php artisan roster:scan /path/to/project --approaches
 ```

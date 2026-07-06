@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Laravel\Roster\Detectors;
 
 use BackedEnum;
-use Laravel\Roster\Support\SystemProbe;
 
 /**
  * @template TEnum of BackedEnum
@@ -19,13 +18,6 @@ abstract class MarkerDetector
      * @return array<string, list<string>>
      */
     abstract protected static function projectMarkers(): array;
-
-    /**
-     * System binaries keyed by enum value.
-     *
-     * @return array<string, list<string>>
-     */
-    abstract protected static function systemBinaries(): array;
 
     /**
      * @return TEnum
@@ -50,26 +42,6 @@ abstract class MarkerDetector
         }
 
         return $configured;
-    }
-
-    /**
-     * @return list<TEnum>
-     */
-    public static function installed(): array
-    {
-        $installed = [];
-
-        foreach (static::systemBinaries() as $value => $binaries) {
-            foreach ($binaries as $binary) {
-                if (SystemProbe::commandExists($binary)) {
-                    $installed[] = static::fromValue((string) $value);
-
-                    break;
-                }
-            }
-        }
-
-        return $installed;
     }
 
     /**

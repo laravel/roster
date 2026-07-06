@@ -8,7 +8,7 @@ uses(TestCase::class);
 it('outputs JSON for directory with packages', function (): void {
     $path = __DIR__.'/../fixtures/fog';
 
-    Artisan::call('roster:scan', ['directory' => $path, '--no-system' => true]);
+    Artisan::call('roster:scan', ['directory' => $path]);
 
     $output = Artisan::output();
     $decoded = json_decode($output, true);
@@ -23,7 +23,7 @@ it('outputs empty JSON for empty directory', function (): void {
     $emptyDir = sys_get_temp_dir().'/roster_test_empty_'.uniqid();
     mkdir($emptyDir);
 
-    Artisan::call('roster:scan', ['directory' => $emptyDir, '--no-system' => true]);
+    Artisan::call('roster:scan', ['directory' => $emptyDir]);
 
     $output = Artisan::output();
     $decoded = json_decode($output, true);
@@ -38,12 +38,12 @@ it('outputs empty JSON for empty directory', function (): void {
 it('includes approaches only when requested', function (): void {
     $path = __DIR__.'/../fixtures/approaches/fillable-models-app';
 
-    Artisan::call('roster:scan', ['directory' => $path, '--no-system' => true]);
+    Artisan::call('roster:scan', ['directory' => $path]);
     $decoded = json_decode(Artisan::output(), true);
 
     expect($decoded)->not->toHaveKey('approaches');
 
-    Artisan::call('roster:scan', ['directory' => $path, '--approaches' => true, '--no-system' => true]);
+    Artisan::call('roster:scan', ['directory' => $path, '--approaches' => true]);
     $decoded = json_decode(Artisan::output(), true);
 
     expect($decoded)->toHaveKey('approaches');

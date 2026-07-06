@@ -20,22 +20,9 @@ class EditorsDetector extends MarkerDetector
         Editor::SUBLIME_TEXT->value => ['*.sublime-project', '*.sublime-workspace'],
     ];
 
-    /** @var array<string, list<string>> */
-    private const SYSTEM_BINARIES = [
-        Editor::PHPSTORM->value => ['phpstorm'],
-        Editor::VSCODE->value => ['code'],
-        Editor::ZED->value => ['zed'],
-        Editor::SUBLIME_TEXT->value => ['subl'],
-    ];
-
     protected static function projectMarkers(): array
     {
         return self::PROJECT_MARKERS;
-    }
-
-    protected static function systemBinaries(): array
-    {
-        return self::SYSTEM_BINARIES;
     }
 
     protected static function fromValue(string $value): BackedEnum

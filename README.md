@@ -32,9 +32,7 @@
 
 Laravel Roster is a detection package for the Laravel ecosystem. It reads your project's lockfiles, configuration markers, and (optionally) probes the host machine to answer questions about what is in use.
 
-Roster exposes two surfaces. The `Project` facade reads your project's lockfiles and configuration markers to report installed packages, the application's stack, the frontend in use, browser test frameworks, configured AI agents, and the committed JS package manager. The `System` facade probes the host machine for AI agents, editors, and JS package manager binaries available on the `PATH`.
-
-The two surfaces are kept separate because they have different lifecycles. Project scans are cheap and are keyed on your project's files, while system probes shell out to the operating system and do not depend on your project state.
+The `Project` facade reads your project's lockfiles and configuration markers to report installed packages, the application's stack, the frontend in use, browser test frameworks, configured AI agents and editors, the committed JS package manager, and the conventions the codebase has adopted.
 
 ## Installation
 
@@ -46,32 +44,26 @@ composer require laravel/roster --dev
 
 ## Basic Usage
 
-Within a Laravel application, you may call the `Project` and `System` facades directly. The first call triggers a scan and the result is cached for subsequent calls:
+Within a Laravel application, you may call the `Project` facade directly. The first call triggers a scan and the result is cached for subsequent calls:
 
 ```php
-use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Facades\Project;
-use Laravel\Roster\Facades\System;
 
 Project::php()->uses('pestphp/pest');
 Project::stack()->uses(Stack::INERTIA_REACT);
-System::agents()->uses(Agent::CURSOR);
 ```
 
-Outside of a Laravel container, or when you would like an explicit handle, you may use the static `scan` methods:
+Outside of a Laravel container, or when you would like an explicit handle, you may use the static `scan` method:
 
 ```php
 use Laravel\Roster\Project;
-use Laravel\Roster\System;
 
 $project = Project::scan();          // uses base_path() / getcwd()
 $project = Project::scan($basePath);
-
-$system = System::scan();
 ```
 
-The examples that follow use `$project` and `$system` for clarity, but every call works on the corresponding facade.
+The examples that follow use `$project` for clarity, but every call works on the facade.
 
 ## Detecting Packages
 
@@ -167,7 +159,7 @@ The `uses` method accepts either a single case or an array of cases.
 
 ## Detecting Agents and Editors
 
-Agents (AI coding tools such as Claude Code, Cursor, and Codex) and editors (IDEs such as PHPStorm and VSCode) are exposed through separate enums. Each may be reported on the `Project` surface (detected through filesystem markers like `.claude`, `.cursor`, `.idea`, or `AGENTS.md`) or on the `System` surface (detected by looking for matching binaries on the `PATH`):
+Agents (AI coding tools such as Claude Code, Cursor, and Codex) and editors (IDEs such as PHPStorm and VSCode) are exposed through separate enums, detected through filesystem markers like `.claude`, `.cursor`, `.idea`, or `AGENTS.md`:
 
 ```php
 use Laravel\Roster\Enums\Agent;
@@ -176,22 +168,16 @@ use Laravel\Roster\Enums\Editor;
 $project->agents()->uses(Agent::CLAUDE_CODE);
 $project->agents()->uses([Agent::CLAUDE_CODE, Agent::CURSOR]);
 $project->editors()->uses(Editor::PHPSTORM);
-
-$system->agents()->uses(Agent::CURSOR);
-$system->editors()->uses(Editor::VSCODE);
 ```
 
 ## Detecting JS Package Managers
 
-The `$project->js()->packageManager` method reports the package manager *committed* to the project as a single nullable enum, based on which lockfile is present (`package-lock.json`, `pnpm-lock.yaml`, and so on). The `$system->jsPackageManagers` method reports every package manager *installed* on the host as an `EnumSet`:
+The `$project->js()->packageManager` method reports the package manager *committed* to the project as a single nullable enum, based on which lockfile is present (`package-lock.json`, `pnpm-lock.yaml`, and so on):
 
 ```php
 use Laravel\Roster\Enums\JsPackageManager;
 
 $project->js()->packageManager() === JsPackageManager::PNPM;
-
-$system->jsPackageManagers()->uses(JsPackageManager::BUN);
-$system->jsPackageManagers()->all();
 ```
 
 ## Detecting Approaches
@@ -243,22 +229,22 @@ Because source files change without touching any lockfile, approaches are never 
 
 ## Caching
 
-Both facades cache their scans using your application's configured cache driver, and gracefully fall back to a direct scan when no driver is configured or the driver fails.
+The `Project` facade caches its scans using your application's configured cache driver, and gracefully falls back to a direct scan when no driver is configured or the driver fails.
 
-`Project` keys the cache on a hash of your lockfile contents and detector marker directories, so edits to `composer.lock` or a newly added `.claude` directory invalidate automatically. `System` caches with a TTL of one hour.
+The cache is keyed on a hash of your lockfile contents and detector marker directories, so edits to `composer.lock` or a newly added `.claude` directory invalidate automatically.
 
 ## The `roster:scan` Command
 
-The `roster:scan` Artisan command scans a directory and emits a combined JSON document with the project surface at the top level and a `system` key for the host probe:
+The `roster:scan` Artisan command scans a directory and emits the project surface as a JSON document:
 
 ```bash
 php artisan roster:scan /path/to/project
 ```
 
-You may pass `--no-system` to skip the host probe, or `--approaches` to include source-code approach detection (which scans every PHP source file):
+You may pass `--approaches` to include source-code approach detection (which scans every PHP source file):
 
 ```bash
-php artisan roster:scan /path/to/project --approaches --no-system
+php artisan roster:scan /path/to/project --approaches
 ```
 
 ## Upgrading
