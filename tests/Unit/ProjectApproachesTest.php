@@ -26,7 +26,6 @@ it('keeps the array payload cheap by omitting approaches', function (): void {
 it('drops approaches on serialization and recomputes them lazily', function (): void {
     $project = Project::scan(approachesFixturePath('fillable-models-app'));
 
-    // Warm the lazy detection, then round-trip like the scan cache would.
     $project->approaches();
 
     $restored = unserialize(serialize($project));

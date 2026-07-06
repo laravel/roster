@@ -81,7 +81,6 @@ it('does not count switch case labels as enum cases', function (): void {
     /** @var ApproachResult $result */
     $result = $approaches->all()->get(Approach::ENUM_CASE_SCREAMING_SNAKE->value);
 
-    // The `case Active:` inside the switch must not vote — 5 enum cases, not 6.
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
 });
@@ -119,8 +118,6 @@ it('counts enum cases declared after a method with string interpolation', functi
     /** @var ApproachResult $result */
     $result = $approaches->all()->get(Approach::ENUM_CASE_SCREAMING_SNAKE->value);
 
-    // The `{$this->value}` interpolation must not skew brace depth — all
-    // 5 cases vote, including the 3 declared after the label() method.
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
 });
@@ -298,7 +295,6 @@ it('skips models declaring both fillable and guarded', function (): void {
 it('never lets vendor or node_modules code vote', function (): void {
     $base = tempBase();
 
-    // A PSR-4 mapping that resolves to the project root pulls everything in.
     file_put_contents($base.'composer.json', json_encode([
         'autoload' => ['psr-4' => ['App\\' => '.']],
     ]));

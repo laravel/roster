@@ -122,11 +122,6 @@ class ProjectManager
         return hash_final($hash);
     }
 
-    /**
-     * Hash the presence of every directory marker the detectors watch, so a
-     * newly added `.claude` invalidates the cache even though no lockfile
-     * changed.
-     */
     private function markerHash(string $basePath): string
     {
         $markers = [

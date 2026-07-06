@@ -9,11 +9,6 @@ use Laravel\Roster\PackageCollection;
 
 class BunPackageLock extends JsPackageScanner
 {
-    /**
-     * Only the textual `bun.lock` format is parseable. Projects that ship the
-     * legacy binary `bun.lockb` are still identified as Bun by JsLockfile,
-     * but no packages can be extracted from the binary format.
-     */
     protected function lockFile(): string
     {
         return 'bun.lock';
@@ -29,7 +24,6 @@ class BunPackageLock extends JsPackageScanner
             return $packages;
         }
 
-        // Bun's lock format is JSON-like but permits trailing commas.
         $sanitized = preg_replace('/,\s*([]}])/m', '$1', $contents) ?? $contents;
 
         $json = json_decode($sanitized, true);

@@ -57,7 +57,6 @@ class YarnPackageLock extends JsPackageScanner
             }
         }
 
-        // Yarn lock does not distinguish devDependencies; package.json fills that in.
         $this->processDependencies($dependencies, $packages, false);
 
         return $packages;

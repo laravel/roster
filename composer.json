@@ -20,7 +20,7 @@
         "symfony/yaml": "^7.2|^8.0"
     },
     "require-dev": {
-        "laravel/pint": "^1.14",
+        "laravel/pint": "^1.29",
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^9.0|^10.0|^11.0",
         "pestphp/pest": "^3.0|^4.1",

@@ -85,12 +85,6 @@ class Project
         return $this->editors;
     }
 
-    /**
-     * The conventions the project's own directory layout and source code have
-     * adopted. Computed lazily and never persisted with the cached scan —
-     * source files change without touching any lockfile the scan cache is
-     * keyed on.
-     */
     public function approaches(): ApproachSet
     {
         return $this->approaches ??= new ApproachSet(ApproachesDetector::detect($this->basePath));

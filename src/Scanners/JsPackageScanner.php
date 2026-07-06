@@ -10,11 +10,6 @@ use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use Laravel\Roster\Scanners\Concerns\ParsesManifests;
 
-/**
- * Base for the JS lockfile scanners. Constructed with the project base
- * directory; packages resolve under `node_modules` and direct/dev status
- * is read from `package.json`.
- */
 abstract class JsPackageScanner
 {
     use ParsesManifests;

@@ -4,6 +4,7 @@
         "tests/fixtures"
     ],
     "rules": {
+        "Pint/phpdoc_type_annotations_only": true,
         "global_namespace_import": {
             "import_classes": true,
             "import_constants": true

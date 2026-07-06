@@ -7,19 +7,18 @@ use Laravel\Roster\Enums\BrowserTestFramework;
 
 it('detects a framework only when its package and marker are both present', function (): void {
     $base = tempBase();
-    mkdir($base.'tests/Browser', 0777, true);          // Dusk marker
-    touchFile($base.'playwright.config.ts');           // Playwright marker
-
+    mkdir($base.'tests/Browser', 0777, true);
+    touchFile($base.'playwright.config.ts');
     $found = BrowserTestFrameworkDetector::detect(
         phpEcosystem(['laravel/dusk', 'pestphp/pest-plugin-browser']),
         jsEcosystem(['@playwright/test', 'cypress']),
         $base,
     );
 
-    expect($found)->toContain(BrowserTestFramework::DUSK);          // package + tests/Browser
-    expect($found)->toContain(BrowserTestFramework::PEST_BROWSER);  // package alone is enough
-    expect($found)->toContain(BrowserTestFramework::PLAYWRIGHT);    // package + config
-    expect($found)->not->toContain(BrowserTestFramework::CYPRESS);  // package present, but no config
+    expect($found)->toContain(BrowserTestFramework::DUSK);
+    expect($found)->toContain(BrowserTestFramework::PEST_BROWSER);
+    expect($found)->toContain(BrowserTestFramework::PLAYWRIGHT);
+    expect($found)->not->toContain(BrowserTestFramework::CYPRESS);
     expect($found)->toHaveCount(3);
 
     cleanup($base);

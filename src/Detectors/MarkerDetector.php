@@ -12,9 +12,6 @@ use BackedEnum;
 abstract class MarkerDetector
 {
     /**
-     * Project filesystem markers keyed by enum value. Markers may include
-     * glob characters (e.g. `*.sublime-project`).
-     *
      * @return array<string, list<string>>
      */
     abstract protected static function projectMarkers(): array;
@@ -45,8 +42,6 @@ abstract class MarkerDetector
     }
 
     /**
-     * Every relative project marker this detector watches, for cache keying.
-     *
      * @return list<string>
      */
     public static function markerPaths(): array

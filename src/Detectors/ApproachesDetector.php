@@ -9,21 +9,10 @@ use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Support\SourceFiles;
 
-/**
- * Detects the conventions the application's own source code has adopted.
- * Structural conventions (action classes, DDD, modules) are read from
- * directory markers and always report with full confidence. Stylistic
- * conventions tally votes for competing styles and only report a winner
- * backed by enough evidence: at least MIN_SAMPLE votes with more than
- * CONFIDENCE_FLOOR of them for the winner — so 4/5 is rejected, 90/100
- * passes, and a split stays silent.
- */
 class ApproachesDetector
 {
-    /** Minimum number of votes before a style is considered at all. */
     protected const MIN_SAMPLE = 5;
 
-    /** The winning style must hold strictly more than this share of the votes. */
     protected const CONFIDENCE_FLOOR = 0.8;
 
     /** @var list<array{approach: Approach, paths: list<string>}> */
@@ -84,10 +73,6 @@ class ApproachesDetector
         return $results;
     }
 
-    /**
-     * One vote per model: `protected $fillable` vs `protected $guarded`.
-     * Models declaring both or neither abstain.
-     */
     protected function massAssignment(): ?ApproachResult
     {
         $tally = [
@@ -113,9 +98,6 @@ class ApproachesDetector
         return $this->dominant($tally, $paths);
     }
 
-    /**
-     * One vote per enum case (not per file), classified by name casing.
-     */
     protected function enumCasing(): ?ApproachResult
     {
         $tally = [
@@ -150,11 +132,6 @@ class ApproachesDetector
         return $this->dominant($tally, $paths);
     }
 
-    /**
-     * One vote per Form Request with a rules() method: pipe strings
-     * (`'required|max:255'`) vs arrays (`['required', 'max:255']`), the
-     * dominant local notation deciding each file's vote.
-     */
     protected function validationSyntax(): ?ApproachResult
     {
         $tally = [
@@ -184,9 +161,6 @@ class ApproachesDetector
         return $this->dominant($tally, $paths);
     }
 
-    /**
-     * One vote per query scope: the `#[Scope]` attribute vs `scopeXxx()` naming.
-     */
     protected function queryScopes(): ?ApproachResult
     {
         $tally = [
@@ -214,9 +188,6 @@ class ApproachesDetector
     }
 
     /**
-     * Reduce a style tally to its dominant winner, or null when there is too
-     * little evidence or the styles are mixed.
-     *
      * @param  array<string, int>  $tally  approach value => votes
      * @param  list<string>  $paths
      */
@@ -247,10 +218,6 @@ class ApproachesDetector
     }
 
     /**
-     * Enum case declarations terminate with `;` or `= value;`, while `case`
-     * labels inside `switch` bodies terminate with `:` — so a line-based match
-     * cannot confuse the two.
-     *
      * @return list<string>
      */
     protected function enumCaseNames(string $code): array

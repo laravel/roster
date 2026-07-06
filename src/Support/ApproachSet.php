@@ -27,9 +27,6 @@ class ApproachSet
     }
 
     /**
-     * Whether any of the given approaches is the project's confidently-detected
-     * dominant style.
-     *
      * @param  Approach|array<int, Approach>  $approach
      */
     public function uses(Approach|array $approach): bool
@@ -44,8 +41,6 @@ class ApproachSet
     }
 
     /**
-     * All confidently-detected approaches, keyed by approach value.
-     *
      * @return Collection<string, ApproachResult>
      */
     public function all(): Collection

@@ -60,9 +60,6 @@ class NpmPackageLock extends JsPackageScanner
     {
         $marker = 'node_modules/';
 
-        // Only top-level entries (e.g. "node_modules/foo") are considered; nested
-        // entries like "node_modules/foo/node_modules/bar" are skipped so that
-        // each package is recorded once with its resolved top-level version.
         if (! str_starts_with($key, $marker) || substr_count($key, $marker) !== 1) {
             return null;
         }

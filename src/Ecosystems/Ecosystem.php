@@ -16,12 +16,6 @@ class Ecosystem
     public function __construct(protected PackageCollection $packages) {}
 
     /**
-     * Returns true if the project uses the given package(s).
-     *
-     * Single name: `uses('pestphp/pest')` or `uses('pestphp/pest', '^3.0')`.
-     * Indexed array: any-of `uses(['pestphp/pest', 'phpunit/phpunit'])`.
-     * Assoc array: any-of with constraints `uses(['pestphp/pest' => '^3.0'])`.
-     *
      * @param  string|array<int|string, string>  $packages
      *
      * @throws InvalidArgumentException
@@ -46,8 +40,6 @@ class Ecosystem
     }
 
     /**
-     * Returns true if the project uses every listed package.
-     *
      * @param  array<int|string, string>  $packages
      *
      * @throws InvalidArgumentException
@@ -63,10 +55,6 @@ class Ecosystem
         return true;
     }
 
-    /**
-     * Whether the package is present as a direct dependency (declared in the
-     * manifest), as opposed to only being pulled in transitively.
-     */
     public function usesDirect(string $name): bool
     {
         return $this->package($name)?->isDirect() ?? false;
@@ -103,7 +91,6 @@ class Ecosystem
 
         $version = $package->version();
 
-        // A version that normalizes to empty (e.g. `dev-main`, `*`) cannot match a constraint.
         if ($version === '') {
             return false;
         }

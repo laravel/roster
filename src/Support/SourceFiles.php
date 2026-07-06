@@ -11,10 +11,6 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 use UnexpectedValueException;
 
-/**
- * Enumerates the application's own PHP source files from its composer.json
- * PSR-4 autoload roots unioned with app/, deduped by real path.
- */
 class SourceFiles
 {
     protected string $basePath;
@@ -34,12 +30,6 @@ class SourceFiles
     }
 
     /**
-     * PHP files across every source root. When a subpath is given it matches
-     * anywhere beneath the root (`(^|/)Models/`), so modular layouts like
-     * `src/Domain/Orders/Models/Order.php` are sampled — not just `app/Models/`.
-     * A root that is itself the target directory (e.g. a PSR-4 mapping straight
-     * into `src/Models`) is not matched — the subpath must appear beneath it.
-     *
      * @return list<string>
      */
     public function php(?string $subpath = null): array
@@ -68,11 +58,6 @@ class SourceFiles
         return $files;
     }
 
-    /**
-     * Cheap containment check that does not populate the content cache — used
-     * to skip files before a heavier parse without retaining every scanned
-     * file's bytes.
-     */
     public function contains(string $path, string $needle): bool
     {
         if (array_key_exists($path, $this->contents)) {
@@ -172,10 +157,6 @@ class SourceFiles
     }
 
     /**
-     * Walks a root for PHP files, pruning dependency and hidden directories so
-     * a PSR-4 mapping that resolves to the project root (e.g. `"App\\": "."`)
-     * cannot let vendor code vote on the application's conventions.
-     *
      * @return list<string>
      */
     protected function enumeratePhpFiles(string $root): array
@@ -199,7 +180,7 @@ class SourceFiles
                 }
             }
         } catch (UnexpectedValueException) {
-            // Keep whatever was collected before the unreadable entry.
+            //
         }
 
         sort($files);
