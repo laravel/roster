@@ -1,7 +1,7 @@
 <?php
 
+use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\Ecosystems\JsEcosystem;
-use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
@@ -11,9 +11,9 @@ expect()->extend('toBeOne', fn () => $this->toBe(1));
 /**
  * @param  array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool}>  $specs
  */
-function phpEcosystem(array $specs): PhpEcosystem
+function phpEcosystem(array $specs): Ecosystem
 {
-    return new PhpEcosystem(packagesFromSpecs($specs, PackageSource::COMPOSER));
+    return new Ecosystem(packagesFromSpecs($specs, PackageSource::COMPOSER));
 }
 
 /**

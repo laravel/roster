@@ -15,13 +15,6 @@ it('exposes name', function (): void {
     expect($package->name())->toBe('pestphp/pest');
 });
 
-it('matches on raw name', function (): void {
-    $package = new Package('pestphp/pest', '3.8.1', PackageSource::COMPOSER);
-
-    expect($package->matches('pestphp/pest'))->toBeTrue();
-    expect($package->matches('pest'))->toBeFalse();
-});
-
 it('reports major version', function (): void {
     $package = new Package('vue', '3.4.0', PackageSource::NPM);
 

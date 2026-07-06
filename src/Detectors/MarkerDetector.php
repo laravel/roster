@@ -90,7 +90,7 @@ abstract class MarkerDetector
         return array_values(array_unique($paths));
     }
 
-    private static function markerMatches(string $basePath, string $marker): bool
+    public static function markerMatches(string $basePath, string $marker): bool
     {
         $path = $basePath.str_replace('/', DIRECTORY_SEPARATOR, $marker);
 
@@ -100,6 +100,6 @@ abstract class MarkerDetector
             return is_array($matches) && $matches !== [];
         }
 
-        return SystemProbe::pathExists($path);
+        return file_exists($path);
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Detectors;
 
+use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\Ecosystems\JsEcosystem;
-use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\Stack;
 
 class StackDetector
@@ -20,7 +20,7 @@ class StackDetector
     /**
      * @return list<Stack>
      */
-    public static function detect(PhpEcosystem $php, JsEcosystem $js): array
+    public static function detect(Ecosystem $php, JsEcosystem $js): array
     {
         $stacks = [];
 

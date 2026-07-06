@@ -41,14 +41,4 @@ class SystemProbe
 
         return self::$cache[$binary] = ($exit === 0);
     }
-
-    public static function pathExists(string $path): bool
-    {
-        return $path !== '' && file_exists($path);
-    }
-
-    public static function resetCache(): void
-    {
-        self::$cache = [];
-    }
 }

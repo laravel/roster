@@ -9,10 +9,6 @@ use Laravel\Roster\PackageCollection;
 
 class JsLockfile
 {
-    private bool $resolved = false;
-
-    private ?JsPackageManager $resolvedManager = null;
-
     public function __construct(protected string $path) {}
 
     public function scan(): PackageCollection
@@ -28,16 +24,10 @@ class JsLockfile
 
     public function committedManager(): ?JsPackageManager
     {
-        if ($this->resolved) {
-            return $this->resolvedManager;
-        }
-
-        $this->resolved = true;
-
         foreach (JsPackageManager::cases() as $case) {
             foreach ($case->lockFiles() as $lockFile) {
                 if (file_exists($this->path.$lockFile)) {
-                    return $this->resolvedManager = $case;
+                    return $case;
                 }
             }
         }

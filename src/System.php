@@ -9,44 +9,46 @@ use Laravel\Roster\Detectors\EditorsDetector;
 use Laravel\Roster\Detectors\PackageManagersDetector;
 use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\Editor;
-use Laravel\Roster\Hosts\Js;
-use Laravel\Roster\Support\InstalledSet;
+use Laravel\Roster\Enums\JsPackageManager;
+use Laravel\Roster\Support\EnumSet;
 
 class System
 {
     /**
-     * @param  InstalledSet<Agent>  $agents
-     * @param  InstalledSet<Editor>  $editors
+     * @param  EnumSet<Agent>  $agents
+     * @param  EnumSet<Editor>  $editors
+     * @param  EnumSet<JsPackageManager>  $jsPackageManagers
      */
     public function __construct(
-        protected InstalledSet $agents,
-        protected InstalledSet $editors,
-        protected Js $js,
+        protected EnumSet $agents,
+        protected EnumSet $editors,
+        protected EnumSet $jsPackageManagers,
     ) {}
 
-    /** @return InstalledSet<Agent> */
-    public function agents(): InstalledSet
+    /** @return EnumSet<Agent> */
+    public function agents(): EnumSet
     {
         return $this->agents;
     }
 
-    /** @return InstalledSet<Editor> */
-    public function editors(): InstalledSet
+    /** @return EnumSet<Editor> */
+    public function editors(): EnumSet
     {
         return $this->editors;
     }
 
-    public function js(): Js
+    /** @return EnumSet<JsPackageManager> */
+    public function jsPackageManagers(): EnumSet
     {
-        return $this->js;
+        return $this->jsPackageManagers;
     }
 
     public static function scan(): self
     {
         return new self(
-            new InstalledSet(AgentsDetector::installed()),
-            new InstalledSet(EditorsDetector::installed()),
-            new Js(new InstalledSet(PackageManagersDetector::installed())),
+            new EnumSet(AgentsDetector::installed()),
+            new EnumSet(EditorsDetector::installed()),
+            new EnumSet(PackageManagersDetector::installed()),
         );
     }
 
@@ -58,7 +60,7 @@ class System
         return [
             'agents' => $this->agents->values(),
             'editors' => $this->editors->values(),
-            'jsPackageManagers' => $this->js->packageManagers()->values(),
+            'jsPackageManagers' => $this->jsPackageManagers->values(),
         ];
     }
 

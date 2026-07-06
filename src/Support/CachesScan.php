@@ -12,32 +12,6 @@ trait CachesScan
 {
     protected int $ttl = 3600;
 
-    protected bool $useCache = true;
-
-    public function ttl(int $seconds): self
-    {
-        $this->ttl = $seconds;
-
-        return $this;
-    }
-
-    public function withoutCache(): self
-    {
-        $this->useCache = false;
-        $this->resetCachedInstance();
-
-        return $this;
-    }
-
-    public function fresh(): self
-    {
-        $this->resetCachedInstance();
-
-        return $this;
-    }
-
-    abstract protected function resetCachedInstance(): void;
-
     /**
      * @template TValue of object
      *
@@ -47,10 +21,6 @@ trait CachesScan
      */
     protected function rememberScan(string $key, Closure $scan, string $expected): object
     {
-        if (! $this->useCache) {
-            return $scan();
-        }
-
         $repo = $this->cacheRepository();
         if (! $repo instanceof CacheRepository) {
             return $scan();

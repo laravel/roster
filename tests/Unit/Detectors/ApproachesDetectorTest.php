@@ -188,7 +188,46 @@ it('stays silent when there are too few votes', function (): void {
     expect(detectApproaches('carbon-app')->all())->toBeEmpty();
 });
 
-it('rejects a 4/5 majority via the Wilson lower bound', function (): void {
+it('detects directory conventions with full confidence', function (): void {
+    $base = tempBase();
+    mkdir($base.'app'.DIRECTORY_SEPARATOR.'Actions', 0777, true);
+
+    $approaches = new ApproachSet(ApproachesDetector::detect(rtrim($base, DIRECTORY_SEPARATOR)));
+
+    expect($approaches->uses(Approach::ACTION))->toBeTrue()
+        ->and($approaches->uses(Approach::DDD))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::ACTION->value);
+
+    expect($result->confidence)->toBe(1.0)
+        ->and($result->paths[0])->toContain('Actions');
+
+    cleanup($base);
+});
+
+it('detects the modular convention from any module directory', function (): void {
+    foreach (['modules', 'Modules', 'app-modules'] as $dir) {
+        $base = tempBase();
+        mkdir($base.$dir);
+
+        $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+        expect($approaches->uses(Approach::MODULAR))->toBeTrue();
+
+        cleanup($base);
+    }
+});
+
+it('reports no directory conventions on a bare directory', function (): void {
+    $base = tempBase();
+
+    expect((new ApproachSet(ApproachesDetector::detect($base)))->all())->toBeEmpty();
+
+    cleanup($base);
+});
+
+it('rejects a 4/5 majority as insufficient evidence', function (): void {
     $base = tempBase();
 
     foreach (['Alpha', 'Bravo', 'Charlie', 'Delta'] as $name) {
@@ -205,7 +244,7 @@ it('rejects a 4/5 majority via the Wilson lower bound', function (): void {
     cleanup($base);
 });
 
-it('accepts a 90/100 majority via the Wilson lower bound', function (): void {
+it('accepts a 90/100 majority', function (): void {
     $base = tempBase();
 
     for ($i = 1; $i <= 90; $i++) {

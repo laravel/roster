@@ -7,23 +7,44 @@
 <a href="https://packagist.org/packages/laravel/roster"><img src="https://img.shields.io/packagist/l/laravel/roster" alt="License"></a>
 </p>
 
+- [Introduction](#introduction)
+- [Installation](#installation)
+- [Basic Usage](#basic-usage)
+- [Detecting Packages](#detecting-packages)
+    - [Version Constraints](#version-constraints)
+    - [Checking Multiple Packages](#checking-multiple-packages)
+    - [Retrieving Packages](#retrieving-packages)
+- [Detecting Stacks and Frontends](#detecting-stacks-and-frontends)
+- [Detecting Agents and Editors](#detecting-agents-and-editors)
+- [Detecting JS Package Managers](#detecting-js-package-managers)
+- [Detecting Approaches](#detecting-approaches)
+    - [Directory Conventions](#directory-conventions)
+    - [Source Conventions](#source-conventions)
+- [Caching](#caching)
+- [The `roster:scan` Command](#the-rosterscan-command)
+- [Upgrading](#upgrading)
+- [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
+- [Security Vulnerabilities](#security-vulnerabilities)
+- [License](#license)
+
 ## Introduction
 
 Laravel Roster is a detection package for the Laravel ecosystem. It reads your project's lockfiles, configuration markers, and (optionally) probes the host machine to answer questions about what is in use.
 
-Roster exposes two surfaces. The `Project` facade reads your project's lockfiles and configuration markers to report installed packages, the application's stack, the frontend in use, browser test frameworks, configured AI agents, and the committed JS package manager. The `System` facade probes the host machine for AI agents and JS package manager binaries available on the `PATH`.
+Roster exposes two surfaces. The `Project` facade reads your project's lockfiles and configuration markers to report installed packages, the application's stack, the frontend in use, browser test frameworks, configured AI agents, and the committed JS package manager. The `System` facade probes the host machine for AI agents, editors, and JS package manager binaries available on the `PATH`.
 
-The two surfaces are kept separate because they have different lifecycles. Project scans are cheap and are keyed on a hash of your lockfile contents, while system probes shell out to the operating system and do not depend on your project state.
+The two surfaces are kept separate because they have different lifecycles. Project scans are cheap and are keyed on your project's files, while system probes shell out to the operating system and do not depend on your project state.
 
 ## Installation
 
-You may install Roster as a development dependency via Composer:
+You may install Roster as a development dependency via the Composer package manager:
 
 ```bash
 composer require laravel/roster --dev
 ```
 
-## Usage
+## Basic Usage
 
 Within a Laravel application, you may call the `Project` and `System` facades directly. The first call triggers a scan and the result is cached for subsequent calls:
 
@@ -35,7 +56,7 @@ use Laravel\Roster\Facades\System;
 
 Project::php()->uses('pestphp/pest');
 Project::stack()->uses(Stack::INERTIA_REACT);
-System::agents()->isInstalled(Agent::CURSOR);
+System::agents()->uses(Agent::CURSOR);
 ```
 
 Outside of a Laravel container, or when you would like an explicit handle, you may use the static `scan` methods:
@@ -52,7 +73,7 @@ $system = System::scan();
 
 The examples that follow use `$project` and `$system` for clarity, but every call works on the corresponding facade.
 
-### Packages
+## Detecting Packages
 
 Packages are exposed through two ecosystems: `php()` for Composer and `js()` for npm, pnpm, yarn, and bun. Both ecosystems share the same surface:
 
@@ -61,19 +82,25 @@ $ecosystem->uses(string|array $packages, ?string $constraint = null): bool
 $ecosystem->usesAll(array $packages): bool
 ```
 
-The `uses` method returns `true` when **any** of the given packages is present. The `usesAll` method returns `true` only when **every** package is present. Names are the raw package names you would write in `composer.json` or `package.json`.
-
-The `$constraint` argument accepts any composer-semver string, such as `^1.2.3`, `~1.2`, `>=11 <14`, or `1.0 || ^2.0`. A bare version like `1.2.3` means an exact match. When omitted, only the package's presence is checked.
-
-You may check a single package by name, optionally with a constraint:
+The `uses` method returns `true` when **any** of the given packages is present, while the `usesAll` method returns `true` only when **every** package is present. Names are the raw package names you would write in your `composer.json` or `package.json` files:
 
 ```php
 $project->php()->uses('pestphp/pest');
+$project->js()->uses('@inertiajs/react');
+```
+
+### Version Constraints
+
+You may pass a version constraint as the second argument to the `uses` method. The constraint accepts any composer-semver string, such as `^1.2.3`, `~1.2`, `>=11 <14`, or `1.0 || ^2.0`. A bare version like `1.2.3` means an exact match. When omitted, only the package's presence is checked:
+
+```php
 $project->php()->uses('laravel/framework', '^12.0');
 $project->php()->uses('laravel/framework', '>=11 <14');
 ```
 
-To check if **any** of several packages are present, pass an indexed array of names. Pass an associative array when you would like per-package constraints:
+### Checking Multiple Packages
+
+To check if **any** of several packages are present, you may pass an indexed array of names to the `uses` method. Pass an associative array when you would like per-package constraints:
 
 ```php
 $project->php()->uses(['pestphp/pest', 'phpunit/phpunit']);
@@ -84,7 +111,7 @@ $project->php()->uses([
 ]);
 ```
 
-To require that **all** of several packages are present, use the `usesAll` method:
+To require that **all** of several packages are present, you may use the `usesAll` method:
 
 ```php
 $project->php()->usesAll(['pestphp/pest', 'laravel/framework']);
@@ -98,10 +125,14 @@ $project->php()->usesAll([
 The JS ecosystem behaves the same way:
 
 ```php
-$project->js()->uses('@inertiajs/react');
 $project->js()->uses(['vue' => '^3.0', 'react' => '^18.0']);
 $project->js()->usesAll(['vue', '@inertiajs/vue3']);
 ```
+
+> [!WARNING]
+> The array passed to the `uses` and `usesAll` methods must be either entirely indexed (just names) or entirely associative (name to constraint). Mixing the two shapes throws an `InvalidArgumentException`.
+
+### Retrieving Packages
 
 You may also retrieve the underlying `Package` instance or collection:
 
@@ -111,9 +142,7 @@ $project->js()->package('vue')?->major();
 $project->php()->packages()->dev();
 ```
 
-The array passed to `uses` and `usesAll` must be either entirely indexed (just names) or entirely associative (name to constraint). Mixing the two shapes throws an `InvalidArgumentException`.
-
-### Stack, Frontend, and Browser Test Frameworks
+## Detecting Stacks and Frontends
 
 The `stack`, `frontend`, and `browserTestFrameworks` methods on the `Project` surface return an `EnumSet` containing every detected case. You may invoke the `uses` method to check for membership, and the `all` method to retrieve every detected case:
 
@@ -134,9 +163,9 @@ $project->browserTestFrameworks()->uses([
 $project->frontend()->uses(Frontend::REACT);
 ```
 
-The `uses` method accepts either a single case or an array of cases. On `System` surfaces, use the `isInstalled` method instead.
+The `uses` method accepts either a single case or an array of cases.
 
-### Agents and Editors
+## Detecting Agents and Editors
 
 Agents (AI coding tools such as Claude Code, Cursor, and Codex) and editors (IDEs such as PHPStorm and VSCode) are exposed through separate enums. Each may be reported on the `Project` surface (detected through filesystem markers like `.claude`, `.cursor`, `.idea`, or `AGENTS.md`) or on the `System` surface (detected by looking for matching binaries on the `PATH`):
 
@@ -148,26 +177,41 @@ $project->agents()->uses(Agent::CLAUDE_CODE);
 $project->agents()->uses([Agent::CLAUDE_CODE, Agent::CURSOR]);
 $project->editors()->uses(Editor::PHPSTORM);
 
-$system->agents()->isInstalled(Agent::CURSOR);
-$system->editors()->isInstalled(Editor::VSCODE);
+$system->agents()->uses(Agent::CURSOR);
+$system->editors()->uses(Editor::VSCODE);
 ```
 
-### JS Package Managers
+## Detecting JS Package Managers
 
-The `$project->js()->packageManager` method reports the package manager *committed* to the project as a single nullable enum, based on which lockfile is present (`package-lock.json`, `pnpm-lock.yaml`, and so on). The `$system->js()->packageManagers` method reports every package manager *installed* on the host as an `InstalledSet`:
+The `$project->js()->packageManager` method reports the package manager *committed* to the project as a single nullable enum, based on which lockfile is present (`package-lock.json`, `pnpm-lock.yaml`, and so on). The `$system->jsPackageManagers` method reports every package manager *installed* on the host as an `EnumSet`:
 
 ```php
 use Laravel\Roster\Enums\JsPackageManager;
 
 $project->js()->packageManager() === JsPackageManager::PNPM;
 
-$system->js()->packageManagers()->isInstalled(JsPackageManager::BUN);
-$system->js()->packageManagers()->all();
+$system->jsPackageManagers()->uses(JsPackageManager::BUN);
+$system->jsPackageManagers()->all();
 ```
 
-### Approaches
+## Detecting Approaches
 
-The `approaches` method inspects the project's **own source code** — not its manifests — and reports which stylistic conventions the application has adopted: `$fillable` vs `$guarded` mass assignment, enum case casing, pipe vs array validation rule syntax, and `#[Scope]` vs `scopeXxx()` query scopes:
+The `approaches` method reports the conventions a project has adopted — both structural conventions read from the directory layout and stylistic conventions read from the source code itself.
+
+### Directory Conventions
+
+Architectural conventions are detected from the project's directory layout — `app/Actions` (`Approach::ACTION`), `app/Domains` (`Approach::DDD`), and module directories such as `modules` or `app-modules` (`Approach::MODULAR`). Since a directory is either present or not, these always report with a confidence of `1.0`:
+
+```php
+use Laravel\Roster\Enums\Approach;
+
+$project->approaches()->uses(Approach::ACTION);
+$project->approaches()->uses([Approach::ACTION, Approach::DDD]);
+```
+
+### Source Conventions
+
+The `approaches` method also inspects the project's **own source code** — not its manifests — and reports which stylistic conventions the application has adopted: `$fillable` vs `$guarded` mass assignment, enum case casing, pipe vs array validation rule syntax, and `#[Scope]` vs `scopeXxx()` query scopes:
 
 ```php
 use Laravel\Roster\Enums\Approach;
@@ -180,7 +224,7 @@ $project->approaches()->uses([                                    // any-of, lik
 $project->approaches()->all();                                    // Collection<string, ApproachResult>
 ```
 
-An approach is only reported when it is backed by enough evidence: at least 5 votes (one per model, enum case, form request, or scope), and a Wilson score lower bound (95% confidence) of at least 0.5 for the winning style — so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent.
+A stylistic approach is only reported when it is backed by enough evidence: at least 5 votes (one per model, enum case, form request, or scope), with more than 80% of them for the winning style — so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent.
 
 Each `ApproachResult` exposes the winning `approach`, its raw `confidence` ratio, the `matched` and `total` vote counts, and the `paths` of the files that voted:
 
@@ -193,11 +237,33 @@ $result->total;      // 10
 $result->paths;      // ['/app/Models/User.php', ...]
 ```
 
-Source files are discovered from the `composer.json` PSR-4 autoload roots unioned with `app/`, and subdirectories such as `Models/` are matched anywhere beneath a root, so modular layouts like `src/Domain/Orders/Models/` are sampled too. `vendor/`, `node_modules/`, and hidden directories are always excluded. Because source files change without touching any lockfile, approaches are never persisted with the cached scan — they are computed lazily per process, and only when you ask for them: `toArray()` and `json()` stay cheap and omit them, while `roster:scan` accepts an `--approaches` flag to include them in its output.
+Source files are discovered from the `composer.json` PSR-4 autoload roots unioned with `app/`, and subdirectories such as `Models/` are matched anywhere beneath a root, so modular layouts like `src/Domain/Orders/Models/` are sampled too. `vendor/`, `node_modules/`, and hidden directories are always excluded.
+
+Because source files change without touching any lockfile, approaches are never persisted with the cached scan — they are computed lazily per process, and only when you ask for them: `toArray()` and `json()` stay cheap and omit them, while the `roster:scan` command accepts an `--approaches` flag to include them in its output.
+
+## Caching
+
+Both facades cache their scans using your application's configured cache driver, and gracefully fall back to a direct scan when no driver is configured or the driver fails.
+
+`Project` keys the cache on a hash of your lockfile contents and detector marker directories, so edits to `composer.lock` or a newly added `.claude` directory invalidate automatically. `System` caches with a TTL of one hour.
+
+## The `roster:scan` Command
+
+The `roster:scan` Artisan command scans a directory and emits a combined JSON document with the project surface at the top level and a `system` key for the host probe:
+
+```bash
+php artisan roster:scan /path/to/project
+```
+
+You may pass `--no-system` to skip the host probe, or `--approaches` to include source-code approach detection (which scans every PHP source file):
+
+```bash
+php artisan roster:scan /path/to/project --approaches --no-system
+```
 
 ## Upgrading
 
-See [UPGRADE.md](UPGRADE.md) for migrating from 0.x.
+Please consult the [upgrade guide](UPGRADE.md) when upgrading from 0.x.
 
 ## Contributing
 

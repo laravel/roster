@@ -8,14 +8,11 @@ use Illuminate\Support\Facades\Facade;
 use Laravel\Roster\SystemManager;
 
 /**
- * @method static \Laravel\Roster\SystemManager ttl(int $seconds)
- * @method static \Laravel\Roster\SystemManager withoutCache()
  * @method static \Laravel\Roster\System scan()
- * @method static \Laravel\Roster\SystemManager fresh()
  * @method static \Laravel\Roster\System instance()
- * @method static \Laravel\Roster\Support\InstalledSet<\Laravel\Roster\Enums\Agent> agents()
- * @method static \Laravel\Roster\Support\InstalledSet<\Laravel\Roster\Enums\Editor> editors()
- * @method static \Laravel\Roster\Hosts\Js js()
+ * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Agent> agents()
+ * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Editor> editors()
+ * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\JsPackageManager> jsPackageManagers()
  * @method static string json()
  *
  * @see SystemManager

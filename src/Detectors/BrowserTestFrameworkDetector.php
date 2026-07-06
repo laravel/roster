@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Detectors;
 
+use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\Ecosystems\JsEcosystem;
-use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\PackageSource;
 
@@ -44,7 +44,7 @@ class BrowserTestFrameworkDetector
     /**
      * @return list<BrowserTestFramework>
      */
-    public static function detect(PhpEcosystem $php, JsEcosystem $js, string $basePath): array
+    public static function detect(Ecosystem $php, JsEcosystem $js, string $basePath): array
     {
         $found = [];
 

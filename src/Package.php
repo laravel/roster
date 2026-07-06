@@ -60,11 +60,6 @@ class Package
         return $this->path;
     }
 
-    public function matches(string $query): bool
-    {
-        return $this->name === $query;
-    }
-
     /**
      * @return array{name: string, version: string, constraint: string, direct: bool, dev: bool, source: string, path: ?string}
      */

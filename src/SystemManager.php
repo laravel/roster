@@ -6,10 +6,9 @@ namespace Laravel\Roster;
 
 use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\Editor;
-use Laravel\Roster\Hosts\Js;
+use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Support\CachesScan;
-use Laravel\Roster\Support\InstalledSet;
-use Laravel\Roster\Support\SystemProbe;
+use Laravel\Roster\Support\EnumSet;
 
 class SystemManager
 {
@@ -31,31 +30,26 @@ class SystemManager
         return $this->cached ??= $this->scan();
     }
 
-    /** @return InstalledSet<Agent> */
-    public function agents(): InstalledSet
+    /** @return EnumSet<Agent> */
+    public function agents(): EnumSet
     {
         return $this->instance()->agents();
     }
 
-    /** @return InstalledSet<Editor> */
-    public function editors(): InstalledSet
+    /** @return EnumSet<Editor> */
+    public function editors(): EnumSet
     {
         return $this->instance()->editors();
     }
 
-    public function js(): Js
+    /** @return EnumSet<JsPackageManager> */
+    public function jsPackageManagers(): EnumSet
     {
-        return $this->instance()->js();
+        return $this->instance()->jsPackageManagers();
     }
 
     public function json(): string
     {
         return $this->instance()->json();
-    }
-
-    protected function resetCachedInstance(): void
-    {
-        $this->cached = null;
-        SystemProbe::resetCache();
     }
 }

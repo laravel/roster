@@ -18,14 +18,4 @@ class PackageCollection extends Collection
     {
         return $this->filter(fn (Package $package): bool => ! $package->isDev())->values();
     }
-
-    public function direct(): static
-    {
-        return $this->filter(fn (Package $package): bool => $package->isDirect())->values();
-    }
-
-    public function indirect(): static
-    {
-        return $this->filter(fn (Package $package): bool => ! $package->isDirect())->values();
-    }
 }

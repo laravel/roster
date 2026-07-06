@@ -6,16 +6,14 @@ namespace Laravel\Roster;
 
 use Illuminate\Support\Str;
 use Laravel\Roster\Detectors\AgentsDetector;
-use Laravel\Roster\Detectors\ApproachDetector;
 use Laravel\Roster\Detectors\ApproachesDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\EditorsDetector;
 use Laravel\Roster\Detectors\FrontendDetector;
 use Laravel\Roster\Detectors\StackDetector;
+use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\Ecosystems\JsEcosystem;
-use Laravel\Roster\Ecosystems\PhpEcosystem;
 use Laravel\Roster\Enums\Agent;
-use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Editor;
 use Laravel\Roster\Enums\Frontend;
@@ -35,21 +33,19 @@ class Project
      * @param  EnumSet<Frontend>  $frontend
      * @param  EnumSet<Agent>  $agents
      * @param  EnumSet<Editor>  $editors
-     * @param  EnumSet<Approach>  $approach
      */
     public function __construct(
         protected string $basePath,
-        protected PhpEcosystem $php,
+        protected Ecosystem $php,
         protected JsEcosystem $js,
         protected EnumSet $stack,
         protected EnumSet $browserTestFrameworks,
         protected EnumSet $frontend,
         protected EnumSet $agents,
         protected EnumSet $editors,
-        protected EnumSet $approach,
     ) {}
 
-    public function php(): PhpEcosystem
+    public function php(): Ecosystem
     {
         return $this->php;
     }
@@ -89,16 +85,11 @@ class Project
         return $this->editors;
     }
 
-    /** @return EnumSet<Approach> */
-    public function approach(): EnumSet
-    {
-        return $this->approach;
-    }
-
     /**
-     * The stylistic conventions the project's own source code has adopted.
-     * Computed lazily and never persisted with the cached scan — source files
-     * change without touching any lockfile the scan cache is keyed on.
+     * The conventions the project's own directory layout and source code have
+     * adopted. Computed lazily and never persisted with the cached scan —
+     * source files change without touching any lockfile the scan cache is
+     * keyed on.
      */
     public function approaches(): ApproachSet
     {
@@ -114,7 +105,7 @@ class Project
         $jsLockfile = new JsLockfile($basePath);
         $jsPackages = $jsLockfile->scan();
 
-        $php = new PhpEcosystem($phpPackages);
+        $php = new Ecosystem($phpPackages);
         $js = new JsEcosystem($jsPackages, $jsLockfile->committedManager());
 
         return new self(
@@ -126,7 +117,6 @@ class Project
             new EnumSet(FrontendDetector::detect($js)),
             new EnumSet(AgentsDetector::configured($basePath)),
             new EnumSet(EditorsDetector::configured($basePath)),
-            new EnumSet(ApproachDetector::detect($basePath)),
         );
     }
 
@@ -148,7 +138,6 @@ class Project
             'stack' => $this->stack->values(),
             'browserTestFrameworks' => $this->browserTestFrameworks->values(),
             'frontend' => $this->frontend->values(),
-            'approach' => $this->approach->values(),
             'agents' => $this->agents->values(),
             'editors' => $this->editors->values(),
             'jsPackageManager' => $this->js->packageManager()?->value,
@@ -172,7 +161,7 @@ class Project
     }
 
     /**
-     * @param  array{basePath: string, php: PhpEcosystem, js: JsEcosystem, stack: EnumSet<Stack>, browserTestFrameworks: EnumSet<BrowserTestFramework>, frontend: EnumSet<Frontend>, agents: EnumSet<Agent>, editors: EnumSet<Editor>, approach: EnumSet<Approach>}  $properties
+     * @param  array{basePath: string, php: Ecosystem, js: JsEcosystem, stack: EnumSet<Stack>, browserTestFrameworks: EnumSet<BrowserTestFramework>, frontend: EnumSet<Frontend>, agents: EnumSet<Agent>, editors: EnumSet<Editor>}  $properties
      */
     public function __unserialize(array $properties): void
     {
@@ -184,7 +173,6 @@ class Project
         $this->frontend = $properties['frontend'];
         $this->agents = $properties['agents'];
         $this->editors = $properties['editors'];
-        $this->approach = $properties['approach'];
         $this->approaches = null;
     }
 }

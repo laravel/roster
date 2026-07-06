@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Laravel\Roster\Ecosystems\PhpEcosystem;
+use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\PackageCollection;
 
 it('finds a package by raw name', function (): void {
@@ -32,7 +32,7 @@ it('compares versions through uses with semver constraints', function (): void {
 });
 
 it('throws on invalid semver constraint', function (): void {
-    $php = new PhpEcosystem(new PackageCollection);
+    $php = new Ecosystem(new PackageCollection);
 
     expect(fn (): bool => $php->uses('foo', 'not-a-constraint'))->toThrow(InvalidArgumentException::class);
 });

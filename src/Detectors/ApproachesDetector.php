@@ -4,36 +4,48 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Detectors;
 
+use Illuminate\Support\Str;
 use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Support\SourceFiles;
 
 /**
- * Detects the stylistic conventions the application's own source code has
- * adopted. Each detector tallies votes for competing styles and only reports
- * a winner backed by enough evidence: at least MIN_SAMPLE votes and a Wilson
- * score lower bound (95% CI) of at least WILSON_FLOOR for the winner's
- * proportion — so 4/5 is rejected, 90/100 passes, and a split stays silent.
+ * Detects the conventions the application's own source code has adopted.
+ * Structural conventions (action classes, DDD, modules) are read from
+ * directory markers and always report with full confidence. Stylistic
+ * conventions tally votes for competing styles and only report a winner
+ * backed by enough evidence: at least MIN_SAMPLE votes with more than
+ * CONFIDENCE_FLOOR of them for the winner — so 4/5 is rejected, 90/100
+ * passes, and a split stays silent.
  */
 class ApproachesDetector
 {
     /** Minimum number of votes before a style is considered at all. */
     protected const MIN_SAMPLE = 5;
 
-    /** Gate on the Wilson lower bound rather than the raw ratio, so a small sample cannot over-claim (9/10 ≠ 90/100). */
-    protected const WILSON_FLOOR = 0.5;
+    /** The winning style must hold strictly more than this share of the votes. */
+    protected const CONFIDENCE_FLOOR = 0.8;
 
-    /** z for a 95% confidence interval. */
-    protected const Z = 1.96;
+    /** @var list<array{approach: Approach, paths: list<string>}> */
+    private const DIRECTORY_RULES = [
+        ['approach' => Approach::ACTION, 'paths' => ['app/Actions']],
+        ['approach' => Approach::DDD, 'paths' => ['app/Domains']],
+        ['approach' => Approach::MODULAR, 'paths' => ['modules', 'Modules', 'app-modules']],
+    ];
 
-    public function __construct(protected SourceFiles $files) {}
+    protected string $basePath;
+
+    public function __construct(string $basePath, protected SourceFiles $files)
+    {
+        $this->basePath = Str::finish($basePath, DIRECTORY_SEPARATOR);
+    }
 
     /**
      * @return list<ApproachResult>
      */
     public static function detect(string $basePath): array
     {
-        return (new self(new SourceFiles($basePath)))->all();
+        return (new self($basePath, new SourceFiles($basePath)))->all();
     }
 
     /**
@@ -42,11 +54,34 @@ class ApproachesDetector
     public function all(): array
     {
         return array_values(array_filter([
+            ...$this->directoryConventions(),
             $this->massAssignment(),
             $this->enumCasing(),
             $this->validationSyntax(),
             $this->queryScopes(),
         ]));
+    }
+
+    /**
+     * @return list<ApproachResult>
+     */
+    protected function directoryConventions(): array
+    {
+        $results = [];
+
+        foreach (self::DIRECTORY_RULES as $rule) {
+            foreach ($rule['paths'] as $relative) {
+                $path = $this->basePath.str_replace('/', DIRECTORY_SEPARATOR, $relative);
+
+                if (is_dir($path)) {
+                    $results[] = new ApproachResult($rule['approach'], 1.0, 1, 1, [$path]);
+
+                    break;
+                }
+            }
+        }
+
+        return $results;
     }
 
     /**
@@ -180,8 +215,7 @@ class ApproachesDetector
 
     /**
      * Reduce a style tally to its dominant winner, or null when there is too
-     * little evidence or the styles are mixed. Gating uses the Wilson score
-     * lower bound; the reported confidence is the raw ratio.
+     * little evidence or the styles are mixed.
      *
      * @param  array<string, int>  $tally  approach value => votes
      * @param  list<string>  $paths
@@ -199,7 +233,7 @@ class ApproachesDetector
         $winner = (string) array_key_first($tally);
         $votes = $tally[$winner];
 
-        if ($this->wilsonLower($votes, $total) < self::WILSON_FLOOR) {
+        if ($votes / $total <= self::CONFIDENCE_FLOOR) {
             return null;
         }
 
@@ -213,99 +247,17 @@ class ApproachesDetector
     }
 
     /**
-     * Lower bound of the Wilson score interval for a binomial proportion.
-     */
-    protected function wilsonLower(int $successes, int $total): float
-    {
-        if ($total === 0) {
-            return 0.0;
-        }
-
-        $z = self::Z;
-        $z2 = $z * $z;
-        $phat = $successes / $total;
-
-        $center = ($phat + $z2 / (2 * $total)) / (1 + $z2 / $total);
-        $margin = ($z / (1 + $z2 / $total)) * sqrt($phat * (1 - $phat) / $total + $z2 / (4 * $total * $total));
-
-        return $center - $margin;
-    }
-
-    /**
-     * Collect enum case names via a token scan that tracks brace depth, so
-     * `case` labels inside `switch` bodies and the word "enum" in comments or
-     * strings are never mistaken for enum cases.
+     * Enum case declarations terminate with `;` or `= value;`, while `case`
+     * labels inside `switch` bodies terminate with `:` — so a line-based match
+     * cannot confuse the two.
      *
      * @return list<string>
      */
     protected function enumCaseNames(string $code): array
     {
-        $tokens = @token_get_all($code);
-        $names = [];
-        $depth = 0;
-        $pendingEnum = false;
-        $enumBodyDepths = [];
+        preg_match_all('/^\s*case\s+(\w+)\s*[;=]/m', $code, $matches);
 
-        for ($i = 0, $count = count($tokens); $i < $count; $i++) {
-            $token = $tokens[$i];
-
-            if (is_array($token)) {
-                // String interpolation openers count as `{` — their closing
-                // brace arrives as a plain `}` token and must stay balanced.
-                if ($token[0] === T_CURLY_OPEN || $token[0] === T_DOLLAR_OPEN_CURLY_BRACES) {
-                    $depth++;
-                } elseif ($token[0] === T_ENUM) {
-                    $pendingEnum = true;
-                } elseif ($token[0] === T_CASE && $enumBodyDepths !== [] && end($enumBodyDepths) === $depth) {
-                    $name = $this->nextIdentifier($tokens, $i);
-
-                    if ($name !== null) {
-                        $names[] = $name;
-                    }
-                }
-
-                continue;
-            }
-
-            if ($token === '{') {
-                $depth++;
-
-                if ($pendingEnum) {
-                    $enumBodyDepths[] = $depth;
-                    $pendingEnum = false;
-                }
-            } elseif ($token === '}') {
-                if ($enumBodyDepths !== [] && end($enumBodyDepths) === $depth) {
-                    array_pop($enumBodyDepths);
-                }
-
-                $depth--;
-            }
-        }
-
-        return $names;
-    }
-
-    /**
-     * @param  array<int, array{0: int, 1: string, 2: int}|string>  $tokens
-     */
-    protected function nextIdentifier(array $tokens, int $from): ?string
-    {
-        for ($i = $from + 1, $count = count($tokens); $i < $count; $i++) {
-            $token = $tokens[$i];
-
-            if (is_array($token)) {
-                if (in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
-                    continue;
-                }
-
-                return $token[0] === T_STRING ? $token[1] : null;
-            }
-
-            return null;
-        }
-
-        return null;
+        return $matches[1];
     }
 
     protected function classifyCase(string $name): ?Approach

@@ -11,7 +11,7 @@ use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 use UnexpectedValueException;
 
-abstract class Ecosystem
+class Ecosystem
 {
     public function __construct(protected PackageCollection $packages) {}
 
@@ -74,7 +74,7 @@ abstract class Ecosystem
 
     public function package(string $name): ?Package
     {
-        return $this->packages->first(fn (Package $package): bool => $package->matches($name));
+        return $this->packages->first(fn (Package $package): bool => $package->name() === $name);
     }
 
     public function packages(): PackageCollection
