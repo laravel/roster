@@ -5,48 +5,37 @@ use Tests\TestCase;
 
 uses(TestCase::class);
 
-it('outputs JSON for directory with packages', function () {
+it('outputs JSON for directory with packages', function (): void {
     $path = __DIR__.'/../fixtures/fog';
 
-    Artisan::call('roster:scan', ['directory' => $path]);
+    Artisan::call('roster:scan', ['directory' => $path, '--no-system' => true]);
 
     $output = Artisan::output();
     $decoded = json_decode($output, true);
 
     expect($decoded)->toBeArray();
-    expect($decoded)->toHaveKey('packages');
-    expect($decoded['packages'])->toBeArray();
-    expect(count($decoded['packages']))->toBeGreaterThan(0);
+    expect($decoded)->toHaveKey('php');
+    expect($decoded)->toHaveKey('js');
+    expect(count($decoded['php']))->toBeGreaterThan(0);
 });
 
-it('outputs empty JSON for empty directory', function () {
+it('outputs empty JSON for empty directory', function (): void {
     $emptyDir = sys_get_temp_dir().'/roster_test_empty_'.uniqid();
     mkdir($emptyDir);
 
-    Artisan::call('roster:scan', ['directory' => $emptyDir]);
+    Artisan::call('roster:scan', ['directory' => $emptyDir, '--no-system' => true]);
 
     $output = Artisan::output();
     $decoded = json_decode($output, true);
 
     expect($decoded)->toBeArray();
-    expect($decoded)->toHaveKey('packages');
-    expect($decoded['packages'])->toBeEmpty();
+    expect($decoded['php'])->toBe([]);
+    expect($decoded['js'])->toBe([]);
 
     rmdir($emptyDir);
 });
 
-it('returns failure for non-existent directory', function () {
-    $nonExistentDir = '/non/existent/directory';
-
-    $exitCode = Artisan::call('roster:scan', ['directory' => $nonExistentDir]);
-
-    expect($exitCode)->toBe(1);
-});
-
-it('returns failure for unreadable directory', function () {
-    $invalidArg = 123;
-
-    $exitCode = Artisan::call('roster:scan', ['directory' => $invalidArg]);
-
+it('returns failure for non-existent directory', function (): void {
+    $exitCode = Artisan::call('roster:scan', ['directory' => '/non/existent/directory']);
     expect($exitCode)->toBe(1);
 });

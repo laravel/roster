@@ -2,10 +2,8 @@
 
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 
 class BunPackageLock extends BasePackageScanner
 {
@@ -14,34 +12,31 @@ class BunPackageLock extends BasePackageScanner
         return 'bun.lock';
     }
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    public function scan(): Collection
+    public function scan(): PackageCollection
     {
-        $mappedItems = collect();
+        $packages = new PackageCollection;
         $lockFilePath = $this->lockFilePath();
 
-        $contents = $this->validateFile($lockFilePath);
+        $contents = $this->readContents($lockFilePath);
         if ($contents === null) {
-            return $mappedItems;
+            return $packages;
         }
 
-        // Remove trailing commas before decoding
-        /** @var string $contents */
-        $contents = preg_replace('/,\s*([]}])/m', '$1', $contents);
-        $json = json_decode($contents, true);
+        // Bun's lock format is JSON-like but permits trailing commas.
+        $sanitized = preg_replace('/,\s*([]}])/m', '$1', $contents) ?? $contents;
+
+        $json = json_decode($sanitized, true);
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            Log::warning('Failed to decode Package: '.$lockFilePath.'. '.json_last_error_msg());
+            Log::warning('Failed to decode bun.lock: '.$lockFilePath);
 
-            return $mappedItems;
+            return $packages;
         }
 
-        /** @var array<string, array<string, mixed>> $json */
-        if (! isset($json['workspaces']['']) || ! isset($json['packages'])) {
+        if (! isset($json['workspaces']) || ! is_array($json['workspaces'])
+            || ! isset($json['workspaces'][''], $json['packages'])) {
             Log::warning('Malformed bun.lock');
 
-            return $mappedItems;
+            return $packages;
         }
 
         /** @var array<string, mixed> $workspace */
@@ -52,9 +47,9 @@ class BunPackageLock extends BasePackageScanner
         /** @var array<string, string> $devDependencies */
         $devDependencies = $workspace['devDependencies'] ?? [];
 
-        $this->processDependencies($dependencies, $mappedItems, false);
-        $this->processDependencies($devDependencies, $mappedItems, true);
+        $this->processDependencies($dependencies, $packages, false);
+        $this->processDependencies($devDependencies, $packages, true);
 
-        return $mappedItems;
+        return $packages;
     }
 }

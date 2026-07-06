@@ -2,165 +2,168 @@
 
 namespace Laravel\Roster;
 
-use Illuminate\Support\Collection;
-use InvalidArgumentException;
-use Laravel\Roster\Enums\Approaches;
-use Laravel\Roster\Enums\NodePackageManager;
-use Laravel\Roster\Enums\Packages;
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Support\Str;
+use Laravel\Roster\Detectors\AgentsDetection;
+use Laravel\Roster\Detectors\AgentsDetector;
+use Laravel\Roster\Detectors\ApproachDetector;
+use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
+use Laravel\Roster\Detectors\FrontendDetector;
+use Laravel\Roster\Detectors\PackageManagersDetector;
+use Laravel\Roster\Detectors\StackDetector;
+use Laravel\Roster\Detectors\StarterKitDetector;
+use Laravel\Roster\Detectors\TestFrameworkDetector;
+use Laravel\Roster\Ecosystems\JsEcosystem;
+use Laravel\Roster\Ecosystems\PhpEcosystem;
+use Laravel\Roster\Enums\Approach;
+use Laravel\Roster\Enums\BrowserTestFramework;
+use Laravel\Roster\Enums\Frontend;
+use Laravel\Roster\Enums\Stack;
+use Laravel\Roster\Enums\StarterKit;
+use Laravel\Roster\Enums\TestFramework;
 use Laravel\Roster\Scanners\Composer;
-use Laravel\Roster\Scanners\DirectoryStructure;
-use Laravel\Roster\Scanners\PackageLock;
+use Laravel\Roster\Scanners\JsLockfile;
+use Laravel\Roster\Support\EnumSet;
 
-/**
- * Package and approach detection service for Laravel projects.
- *
- * Scans composer.lock, package-lock.json, and directory structure to identify
- * packages and development approaches in use.
- */
 class Roster
 {
     /**
-     * @var Collection<int, Approach>
+     * @param  EnumSet<Stack>  $stack
+     * @param  EnumSet<BrowserTestFramework>  $browserTestFrameworks
+     * @param  EnumSet<Frontend>  $frontend
+     * @param  EnumSet<StarterKit>  $starterKit
+     * @param  EnumSet<Approach>  $approach
      */
-    protected Collection $approaches;
+    public function __construct(
+        protected PhpEcosystem $php,
+        protected JsEcosystem $js,
+        protected EnumSet $stack,
+        protected ?TestFramework $testFramework,
+        protected EnumSet $browserTestFrameworks,
+        protected EnumSet $frontend,
+        protected EnumSet $starterKit,
+        protected AgentsDetection $agents,
+        protected EnumSet $approach,
+    ) {}
 
-    protected PackageCollection $packages;
-
-    protected ?NodePackageManager $nodePackageManager = null;
-
-    public function __construct()
+    public function php(): PhpEcosystem
     {
-        $this->approaches = collect();
-        $this->packages = new PackageCollection;
+        return $this->php;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function add(Package|Approach $item): self
+    public function js(): JsEcosystem
     {
-        return match (get_class($item)) {
-            Package::class => $this->addPackage($item),
-            Approach::class => $this->addApproach($item),
-            default => throw new InvalidArgumentException('Unexpected match value'),
-        };
+        return $this->js;
     }
 
-    public function uses(Packages|Approaches $item): bool
+    /** @return EnumSet<Stack> */
+    public function stack(): EnumSet
     {
-        return $this->findItem($item) !== null;
+        return $this->stack;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function usesVersion(Packages $package, string $version, string $operator = '='): bool
+    public function testFramework(): ?TestFramework
     {
-        if (! preg_match('/[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}/', $version)) {
-            throw new InvalidArgumentException('SEMVER required');
+        return $this->testFramework;
+    }
+
+    /** @return EnumSet<BrowserTestFramework> */
+    public function browserTestFrameworks(): EnumSet
+    {
+        return $this->browserTestFrameworks;
+    }
+
+    /** @return EnumSet<Frontend> */
+    public function frontend(): EnumSet
+    {
+        return $this->frontend;
+    }
+
+    /** @return EnumSet<StarterKit> */
+    public function starterKit(): EnumSet
+    {
+        return $this->starterKit;
+    }
+
+    public function agents(): AgentsDetection
+    {
+        return $this->agents;
+    }
+
+    /** @return EnumSet<Approach> */
+    public function approach(): EnumSet
+    {
+        return $this->approach;
+    }
+
+    public static function scan(?string $basePath = null, bool $detectSystem = true, ?Registry $registry = null): self
+    {
+        $registry ??= self::resolveRegistry();
+        $basePath = self::normalizeBasePath($basePath);
+
+        $phpPackages = (new Composer($basePath.'composer.lock', $registry))->scan();
+
+        $jsLockfile = new JsLockfile($basePath, $registry);
+        $jsPackages = $jsLockfile->scan();
+
+        $packageManagers = (new PackageManagersDetector($basePath, $detectSystem))
+            ->detect($jsLockfile->committedManager());
+
+        $php = new PhpEcosystem($phpPackages);
+        $js = new JsEcosystem($jsPackages, $packageManagers);
+
+        return new self(
+            $php,
+            $js,
+            (new StackDetector)->detect($php, $js),
+            (new TestFrameworkDetector)->detect($php),
+            (new BrowserTestFrameworkDetector)->detect($php, $js),
+            (new FrontendDetector)->detect($js),
+            (new StarterKitDetector($basePath))->detect($php),
+            (new AgentsDetector($basePath, $detectSystem))->detect(),
+            (new ApproachDetector($basePath))->detect(),
+        );
+    }
+
+    private static function resolveRegistry(): Registry
+    {
+        try {
+            /** @var Registry */
+            return Container::getInstance()->make(Registry::class);
+        } catch (BindingResolutionException) {
+            return new Registry;
         }
-
-        $validOperators = ['<', '<=', '>', '>=', '==', '=', '!=', '<>'];
-        if (! in_array($operator, $validOperators, true)) {
-            throw new InvalidArgumentException('Invalid operator');
-        }
-
-        $package = $this->findItem($package);
-        if (is_null($package)) {
-            return false;
-        }
-
-        /** @var Package $package */
-        return version_compare($package->version(), $version, $operator);
     }
 
-    protected function findItem(Packages|Approaches $item): Package|Approach|null
+    public static function normalizeBasePath(?string $basePath): string
     {
-        return match (get_class($item)) {
-            Packages::class => $this->package($item),
-            Approaches::class => $this->approach($item),
-            default => null,
-        };
-    }
+        $resolved = $basePath ?? (function_exists('base_path') ? base_path() : (getcwd() ?: '.'));
 
-    protected function addPackage(Package $package): self
-    {
-        $this->packages->push($package);
-
-        return $this;
-    }
-
-    protected function addApproach(Approach $approach): self
-    {
-        $this->approaches->push($approach);
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Approach>
-     */
-    public function approaches(): Collection
-    {
-        return $this->approaches;
-    }
-
-    public function packages(): PackageCollection
-    {
-        return $this->packages;
-    }
-
-    public function package(Packages $package): ?Package
-    {
-        return $this->packages->first(fn (Package $item) => $item->package()->value === $package->value);
-    }
-
-    public function approach(Approaches $approach): ?Approach
-    {
-        return $this->approaches->first(fn (Approach $item) => $item->approach()->value === $approach->value);
-    }
-
-    public function nodePackageManager(): ?NodePackageManager
-    {
-        return $this->nodePackageManager;
+        return Str::finish($resolved, DIRECTORY_SEPARATOR);
     }
 
     public function json(): string
     {
-        return json_encode([
-            'approaches' => $this->approaches->map(fn (Approach $approach) => [
-                'name' => $approach->name(),
-            ])->toArray(),
-            'packages' => $this->packages->map(fn (Package $package) => [
-                'name' => $package->name(),
-                'version' => $package->version(),
-                'source' => $package->source()?->value,
-                'path' => $package->path(),
-            ])->toArray(),
-            'nodePackageManager' => $this->nodePackageManager?->value,
-        ], JSON_PRETTY_PRINT) ?: '{}';
-    }
+        $payload = [
+            'php' => array_map(fn (Package $p): array => $p->toArray(), $this->php->packages()->all()),
+            'js' => array_map(fn (Package $p): array => $p->toArray(), $this->js->packages()->all()),
+            'stack' => $this->stack->values(),
+            'testFramework' => $this->testFramework?->value,
+            'browserTestFrameworks' => $this->browserTestFrameworks->values(),
+            'frontend' => $this->frontend->values(),
+            'starterKit' => $this->starterKit->values(),
+            'approach' => $this->approach->values(),
+            'agents' => [
+                'configured' => $this->agents->configured()->values(),
+                'installed' => $this->agents->installed()->values(),
+            ],
+            'jsPackageManagers' => [
+                'configured' => $this->js->packageManagers()->configured()->values(),
+                'installed' => $this->js->packageManagers()->installed()->values(),
+            ],
+        ];
 
-    public static function scan(?string $basePath = null): self
-    {
-        $roster = new self;
-        $basePath = ($basePath ?? base_path()).DIRECTORY_SEPARATOR;
-
-        (new Composer($basePath.'composer.lock'))
-            ->scan()
-            ->each(fn ($item) => $roster->add($item));
-
-        $packageLock = new PackageLock($basePath);
-
-        $packageLock->scan()
-            ->each(fn ($item) => $roster->add($item));
-
-        (new DirectoryStructure($basePath))
-            ->scan()
-            ->each(fn ($item) => $roster->add($item));
-
-        $roster->nodePackageManager = $packageLock->detect();
-
-        return $roster;
+        return json_encode($payload, JSON_PRETTY_PRINT) ?: '{}';
     }
 }
