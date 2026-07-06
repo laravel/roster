@@ -4,26 +4,27 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Facades\Log;
 use Laravel\Roster\PackageCollection;
 
 class NpmPackageLock extends JsPackageScanner
 {
-    protected function lockFile(): string
-    {
-        return 'package-lock.json';
-    }
-
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection;
-        $lockFilePath = $this->lockFilePath();
+        $lockFilePath = $this->path.'package-lock.json';
 
         $json = self::readJsonFile($lockFilePath);
-        if ($json === null || ! array_key_exists('packages', $json)) {
+
+        if ($json === null) {
             if (file_exists($lockFilePath)) {
-                Log::warning('Failed to decode package-lock: '.$lockFilePath);
+                $this->warn('Failed to decode package-lock.json: '.$lockFilePath);
             }
+
+            return $packages;
+        }
+
+        if (! is_array($json['packages'] ?? null)) {
+            $this->warn('Unsupported package-lock.json (missing "packages" key): '.$lockFilePath);
 
             return $packages;
         }
@@ -31,27 +32,42 @@ class NpmPackageLock extends JsPackageScanner
         /** @var array<string, array<string, mixed>> $jsonPackages */
         $jsonPackages = $json['packages'];
 
-        /** @var array<string, string> $allPackages */
-        $allPackages = [];
+        /** @var array<string, string> $prodPackages */
+        $prodPackages = [];
+
+        /** @var array<string, string> $devPackages */
+        $devPackages = [];
+
         foreach ($jsonPackages as $key => $entry) {
             if ($key === '') {
                 continue;
             }
 
             $name = $this->nameFromNodeModulesPath($key);
+
             if ($name === null) {
                 continue;
             }
 
-            if (isset($allPackages[$name])) {
+            if (isset($prodPackages[$name])) {
+                continue;
+            }
+
+            if (isset($devPackages[$name])) {
                 continue;
             }
 
             $version = isset($entry['version']) && is_scalar($entry['version']) ? (string) $entry['version'] : '';
-            $allPackages[$name] = $version;
+
+            if (($entry['dev'] ?? false) === true) {
+                $devPackages[$name] = $version;
+            } else {
+                $prodPackages[$name] = $version;
+            }
         }
 
-        $this->processDependencies($allPackages, $packages, false);
+        $this->processDependencies($prodPackages, $packages, false);
+        $this->processDependencies($devPackages, $packages, true);
 
         return $packages;
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
 use Laravel\Roster\PackageCollection;
@@ -14,17 +16,13 @@ class YarnPackageLock extends JsPackageScanner
 
     private const YARN_V4_VERSION = '/^version:\s+(.+)$/';
 
-    protected function lockFile(): string
-    {
-        return 'yarn.lock';
-    }
-
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection;
-        $lockFilePath = $this->lockFilePath();
+        $lockFilePath = $this->path.'yarn.lock';
 
-        $contents = $this->readContents($lockFilePath, 'Yarn lock');
+        $contents = $this->readContents($lockFilePath, 'yarn.lock');
+
         if ($contents === null) {
             return $packages;
         }
@@ -35,6 +33,7 @@ class YarnPackageLock extends JsPackageScanner
 
         foreach ($lines as $line) {
             $line = trim($line);
+
             if ($line === '') {
                 continue;
             }
@@ -44,6 +43,7 @@ class YarnPackageLock extends JsPackageScanner
             }
 
             $packageName = $this->parsePackageHeader($line);
+
             if ($packageName !== null) {
                 $currentPackage = $packageName;
 
@@ -51,6 +51,7 @@ class YarnPackageLock extends JsPackageScanner
             }
 
             $version = $this->parseVersion($line);
+
             if ($currentPackage !== null && $version !== null) {
                 $dependencies[$currentPackage] = $version;
                 $currentPackage = null;

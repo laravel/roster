@@ -20,8 +20,8 @@ it('scans the fog fixture end to end', function (): void {
     expect($project->js()->uses('tailwindcss'))->toBeTrue();
     expect($project->js()->uses('@laravel/echo-react'))->toBeTrue();
 
-    expect($project->stack()->uses(Stack::LIVEWIRE))->toBeTrue();
-    expect($project->frontend()->uses(Frontend::VUE))->toBeFalse();
+    expect($project->stacks()->uses(Stack::LIVEWIRE))->toBeTrue();
+    expect($project->frontends()->uses(Frontend::VUE))->toBeFalse();
 
     expect($project->js()->packageManager())->toBe(JsPackageManager::NPM);
 });
@@ -34,5 +34,5 @@ it('renders json without error', function (): void {
     expect($payload)->toBeArray();
     expect($payload)->toHaveKey('php');
     expect($payload)->toHaveKey('js');
-    expect($payload)->toHaveKey('stack');
+    expect($payload)->toHaveKey('stacks');
 });

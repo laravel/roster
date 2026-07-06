@@ -18,7 +18,7 @@ use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Editor;
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
-use Laravel\Roster\Scanners\Composer;
+use Laravel\Roster\Scanners\ComposerLock;
 use Laravel\Roster\Scanners\JsLockfile;
 use Laravel\Roster\Support\ApproachSet;
 use Laravel\Roster\Support\EnumSet;
@@ -28,9 +28,9 @@ class Project
     protected ?ApproachSet $approaches = null;
 
     /**
-     * @param  EnumSet<Stack>  $stack
+     * @param  EnumSet<Stack>  $stacks
      * @param  EnumSet<BrowserTestFramework>  $browserTestFrameworks
-     * @param  EnumSet<Frontend>  $frontend
+     * @param  EnumSet<Frontend>  $frontends
      * @param  EnumSet<Agent>  $agents
      * @param  EnumSet<Editor>  $editors
      */
@@ -38,12 +38,14 @@ class Project
         protected string $basePath,
         protected Ecosystem $php,
         protected JsEcosystem $js,
-        protected EnumSet $stack,
+        protected EnumSet $stacks,
         protected EnumSet $browserTestFrameworks,
-        protected EnumSet $frontend,
+        protected EnumSet $frontends,
         protected EnumSet $agents,
         protected EnumSet $editors,
-    ) {}
+    ) {
+        //
+    }
 
     public function php(): Ecosystem
     {
@@ -56,9 +58,9 @@ class Project
     }
 
     /** @return EnumSet<Stack> */
-    public function stack(): EnumSet
+    public function stacks(): EnumSet
     {
-        return $this->stack;
+        return $this->stacks;
     }
 
     /** @return EnumSet<BrowserTestFramework> */
@@ -68,9 +70,9 @@ class Project
     }
 
     /** @return EnumSet<Frontend> */
-    public function frontend(): EnumSet
+    public function frontends(): EnumSet
     {
-        return $this->frontend;
+        return $this->frontends;
     }
 
     /** @return EnumSet<Agent> */
@@ -94,7 +96,7 @@ class Project
     {
         $basePath = self::normalizeBasePath($basePath);
 
-        $phpPackages = (new Composer($basePath.'composer.lock'))->scan();
+        $phpPackages = (new ComposerLock($basePath))->scan();
 
         $jsLockfile = new JsLockfile($basePath);
         $jsPackages = $jsLockfile->scan();
@@ -109,11 +111,14 @@ class Project
             new EnumSet(StackDetector::detect($php, $js)),
             new EnumSet(BrowserTestFrameworkDetector::detect($php, $js, $basePath)),
             new EnumSet(FrontendDetector::detect($js)),
-            new EnumSet(AgentsDetector::configured($basePath)),
-            new EnumSet(EditorsDetector::configured($basePath)),
+            new EnumSet(AgentsDetector::detect($basePath)),
+            new EnumSet(EditorsDetector::detect($basePath)),
         );
     }
 
+    /**
+     * @internal
+     */
     public static function normalizeBasePath(?string $basePath): string
     {
         $resolved = $basePath ?? (function_exists('base_path') ? base_path() : (getcwd() ?: '.'));
@@ -129,9 +134,9 @@ class Project
         return [
             'php' => array_map(fn (Package $p): array => $p->toArray(), $this->php->packages()->all()),
             'js' => array_map(fn (Package $p): array => $p->toArray(), $this->js->packages()->all()),
-            'stack' => $this->stack->values(),
+            'stacks' => $this->stacks->values(),
             'browserTestFrameworks' => $this->browserTestFrameworks->values(),
-            'frontend' => $this->frontend->values(),
+            'frontends' => $this->frontends->values(),
             'agents' => $this->agents->values(),
             'editors' => $this->editors->values(),
             'jsPackageManager' => $this->js->packageManager()?->value,
@@ -155,18 +160,14 @@ class Project
     }
 
     /**
-     * @param  array{basePath: string, php: Ecosystem, js: JsEcosystem, stack: EnumSet<Stack>, browserTestFrameworks: EnumSet<BrowserTestFramework>, frontend: EnumSet<Frontend>, agents: EnumSet<Agent>, editors: EnumSet<Editor>}  $properties
+     * @param  array{basePath: string, php: Ecosystem, js: JsEcosystem, stacks: EnumSet<Stack>, browserTestFrameworks: EnumSet<BrowserTestFramework>, frontends: EnumSet<Frontend>, agents: EnumSet<Agent>, editors: EnumSet<Editor>}  $properties
      */
     public function __unserialize(array $properties): void
     {
-        $this->basePath = $properties['basePath'];
-        $this->php = $properties['php'];
-        $this->js = $properties['js'];
-        $this->stack = $properties['stack'];
-        $this->browserTestFrameworks = $properties['browserTestFrameworks'];
-        $this->frontend = $properties['frontend'];
-        $this->agents = $properties['agents'];
-        $this->editors = $properties['editors'];
+        foreach (['basePath', 'php', 'js', 'stacks', 'browserTestFrameworks', 'frontends', 'agents', 'editors'] as $property) {
+            $this->{$property} = $properties[$property];
+        }
+
         $this->approaches = null;
     }
 }

@@ -16,11 +16,13 @@ trait ParsesManifests
         }
 
         $contents = file_get_contents($path);
+
         if ($contents === false) {
             return null;
         }
 
         $json = json_decode($contents, true);
+
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
             return null;
         }
@@ -56,6 +58,7 @@ trait ParsesManifests
         }
 
         $collected = [];
+
         foreach ($deps as $name => $constraint) {
             if (! is_string($name)) {
                 continue;

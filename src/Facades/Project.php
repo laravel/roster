@@ -9,15 +9,17 @@ use Laravel\Roster\ProjectManager;
 
 /**
  * @method static \Laravel\Roster\Project scan(?string $basePath = null)
+ * @method static \Laravel\Roster\Project fresh(?string $basePath = null)
  * @method static \Laravel\Roster\Project instance()
  * @method static \Laravel\Roster\Ecosystems\Ecosystem php()
  * @method static \Laravel\Roster\Ecosystems\JsEcosystem js()
- * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Stack> stack()
+ * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Stack> stacks()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\BrowserTestFramework> browserTestFrameworks()
- * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Frontend> frontend()
+ * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Frontend> frontends()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Agent> agents()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Editor> editors()
  * @method static \Laravel\Roster\Support\ApproachSet approaches()
+ * @method static array<string, mixed> toArray()
  * @method static string json()
  *
  * @see ProjectManager

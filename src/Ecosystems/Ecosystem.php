@@ -6,6 +6,7 @@ namespace Laravel\Roster\Ecosystems;
 
 use Composer\Semver\Semver;
 use Composer\Semver\VersionParser;
+use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
@@ -13,7 +14,10 @@ use UnexpectedValueException;
 
 class Ecosystem
 {
-    public function __construct(protected PackageCollection $packages) {}
+    public function __construct(protected PackageCollection $packages)
+    {
+        //
+    }
 
     /**
      * @param  string|array<int|string, string>  $packages
@@ -55,9 +59,18 @@ class Ecosystem
         return true;
     }
 
-    public function usesDirect(string $name): bool
+    /**
+     * @param  string|array<int, string>  $packages
+     */
+    public function usesDirect(string|array $packages): bool
     {
-        return $this->package($name)?->isDirect() ?? false;
+        foreach (Arr::wrap($packages) as $name) {
+            if ($this->package($name)?->isDirect() ?? false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function package(string $name): ?Package
@@ -81,6 +94,7 @@ class Ecosystem
         }
 
         $package = $this->package($name);
+
         if (! $package instanceof Package) {
             return false;
         }
@@ -113,6 +127,7 @@ class Ecosystem
         }
 
         $pairs = [];
+
         foreach ($packages as $name => $constraint) {
             if (! is_string($name)) {
                 throw new InvalidArgumentException('Array must be either all-indexed (list of names) or all-assoc (name => constraint), not mixed.');

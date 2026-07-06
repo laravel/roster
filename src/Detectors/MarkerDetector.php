@@ -24,21 +24,21 @@ abstract class MarkerDetector
     /**
      * @return list<TEnum>
      */
-    public static function configured(string $basePath): array
+    public static function detect(string $basePath): array
     {
-        $configured = [];
+        $detected = [];
 
         foreach (static::projectMarkers() as $value => $markers) {
             foreach ($markers as $marker) {
                 if (self::markerMatches($basePath, $marker)) {
-                    $configured[] = static::fromValue((string) $value);
+                    $detected[] = static::fromValue((string) $value);
 
                     break;
                 }
             }
         }
 
-        return $configured;
+        return $detected;
     }
 
     /**

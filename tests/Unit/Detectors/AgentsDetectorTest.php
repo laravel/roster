@@ -11,10 +11,10 @@ it('detects configured agents from filesystem markers', function (): void {
     mkdir($base.'.claude');
     mkdir($base.'.cursor');
 
-    $configured = AgentsDetector::configured($base);
-    expect($configured)->toContain(Agent::CLAUDE_CODE);
-    expect($configured)->toContain(Agent::CURSOR);
-    expect($configured)->not->toContain(Agent::CODEX);
+    $detected = AgentsDetector::detect($base);
+    expect($detected)->toContain(Agent::CLAUDE_CODE);
+    expect($detected)->toContain(Agent::CURSOR);
+    expect($detected)->not->toContain(Agent::CODEX);
 
     rmdir($base.'.claude');
     rmdir($base.'.cursor');

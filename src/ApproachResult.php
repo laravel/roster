@@ -20,7 +20,9 @@ class ApproachResult
         public readonly int $matched,
         public readonly int $total,
         public readonly array $paths,
-    ) {}
+    ) {
+        //
+    }
 
     /**
      * @return array{approach: string, confidence: float, matched: int, total: int, paths: list<string>}

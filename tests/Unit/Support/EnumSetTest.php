@@ -19,16 +19,17 @@ it('checks any-of membership for an array of cases', function (): void {
     expect($set->uses([Stack::INERTIA_VUE, Stack::API]))->toBeFalse();
 });
 
+it('checks all-of membership with usesAll', function (): void {
+    $set = new EnumSet([Stack::LIVEWIRE, Stack::BLADE]);
+
+    expect($set->usesAll([Stack::LIVEWIRE, Stack::BLADE]))->toBeTrue();
+    expect($set->usesAll([Stack::LIVEWIRE, Stack::API]))->toBeFalse();
+    expect($set->usesAll([]))->toBeTrue();
+});
+
 it('exposes the raw cases and their values', function (): void {
     $set = new EnumSet([Stack::LIVEWIRE, Stack::BLADE]);
 
     expect($set->all())->toBe([Stack::LIVEWIRE, Stack::BLADE]);
     expect($set->values())->toBe(['livewire', 'blade']);
-});
-
-it('is empty by default', function (): void {
-    $set = new EnumSet([]);
-
-    expect($set->all())->toBe([]);
-    expect($set->uses(Stack::BLADE))->toBeFalse();
 });

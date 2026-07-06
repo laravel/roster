@@ -103,12 +103,27 @@ it('usesAll applies per-package constraints', function (): void {
     expect($php->usesAll(['pestphp/pest' => '^4.0', 'laravel/framework' => '^11.0']))->toBeFalse();
 });
 
-it('exposes dev / production filters', function (): void {
+it('exposes dev / production / direct filters', function (): void {
     $php = phpEcosystem([
         ['name' => 'laravel/framework'],
         ['name' => 'pestphp/pest', 'dev' => true],
+        ['name' => 'laravel/prompts', 'direct' => false],
     ]);
 
-    expect($php->packages()->production()->count())->toBe(1);
+    expect($php->packages()->production()->count())->toBe(2);
     expect($php->packages()->dev()->count())->toBe(1);
+    expect($php->packages()->direct()->count())->toBe(2);
+});
+
+it('usesDirect checks direct dependencies including any-of arrays', function (): void {
+    $php = phpEcosystem([
+        ['name' => 'livewire/livewire'],
+        ['name' => 'laravel/prompts', 'direct' => false],
+    ]);
+
+    expect($php->usesDirect('livewire/livewire'))->toBeTrue();
+    expect($php->usesDirect('laravel/prompts'))->toBeFalse();
+    expect($php->usesDirect('unknown/package'))->toBeFalse();
+    expect($php->usesDirect(['laravel/prompts', 'livewire/livewire']))->toBeTrue();
+    expect($php->usesDirect(['laravel/prompts', 'unknown/package']))->toBeFalse();
 });
