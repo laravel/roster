@@ -9,13 +9,16 @@ use Laravel\Roster\PackageCollection;
 
 class JsLockfile
 {
-    public function __construct(protected string $path) {}
+    public function __construct(protected string $path)
+    {
+        //
+    }
 
     public function scan(): PackageCollection
     {
         $manager = $this->committedManager();
 
-        if (! $manager instanceof JsPackageManager) {
+        if (! $manager instanceof JsPackageManager || ! file_exists($this->path.$manager->lockFile())) {
             return (new PackageJson($this->path))->scan();
         }
 

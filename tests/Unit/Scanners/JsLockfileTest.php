@@ -1,25 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Scanners\JsLockfile;
 
-$fogDir = __DIR__.'/../../fixtures/fog/';
-$packageLock = $fogDir.'package-lock.json';
-$pnpmLock = $fogDir.'pnpm-lock.yaml';
-$yarnLock = $fogDir.'yarn.lock';
-$yarnV1 = $fogDir.'yarn-v1.lock';
-$bunLock = $fogDir.'bun.lock';
+it('scans package-lock.json when present', function (): void {
+    $base = fixtureCopy([
+        'fog/package.json' => 'package.json',
+        'fog/package-lock.json' => 'package-lock.json',
+    ]);
 
-afterEach(function () use ($packageLock, $pnpmLock, $yarnLock, $yarnV1, $bunLock): void {
-    foreach ([$packageLock, $pnpmLock, $yarnLock, $yarnV1, $bunLock] as $file) {
-        if (file_exists($file.'.bac')) {
-            rename($file.'.bac', $file);
-        }
-    }
-});
-
-it('scans package-lock.json when present', function () use ($fogDir): void {
-    $packages = (new JsLockfile($fogDir))->scan();
+    $packages = (new JsLockfile($base))->scan();
 
     $tailwind = $packages->first(fn ($p): bool => $p->name() === 'tailwindcss');
     expect($tailwind->version())->toEqual('3.4.16');
@@ -27,31 +19,126 @@ it('scans package-lock.json when present', function () use ($fogDir): void {
 
     $echoReact = $packages->first(fn ($p): bool => $p->name() === '@laravel/echo-react');
     expect($echoReact)->not->toBeNull();
+
+    cleanup($base);
 });
 
-it('falls back to pnpm-lock when package-lock missing', function () use ($fogDir, $packageLock): void {
-    rename($packageLock, $packageLock.'.bac');
+it('marks transitive dev-only npm packages as dev', function (): void {
+    $base = fixtureCopy([
+        'fog/package.json' => 'package.json',
+        'fog/package-lock.json' => 'package-lock.json',
+    ]);
 
-    $packages = (new JsLockfile($fogDir))->scan();
-    $tailwind = $packages->first(fn ($p): bool => $p->name() === 'tailwindcss');
+    $packages = (new JsLockfile($base))->scan();
+
+    $quickLru = $packages->first(fn ($p): bool => $p->name() === '@alloc/quick-lru');
+    expect($quickLru->isDev())->toBeTrue();
+    expect($quickLru->isDirect())->toBeFalse();
+
+    $codeFrame = $packages->first(fn ($p): bool => $p->name() === '@babel/code-frame');
+    expect($codeFrame->isDev())->toBeFalse();
+    expect($codeFrame->isDirect())->toBeFalse();
+
+    cleanup($base);
+});
+
+it('prefers package-lock.json when multiple lockfiles are committed', function (): void {
+    $base = fixtureCopy([
+        'fog/package.json' => 'package.json',
+        'fog/package-lock.json' => 'package-lock.json',
+        'fog/pnpm-lock.yaml' => 'pnpm-lock.yaml',
+    ]);
+
+    $lockfile = new JsLockfile($base);
+
+    expect($lockfile->committedManager())->toBe(JsPackageManager::NPM);
+
+    $tailwind = $lockfile->scan()->first(fn ($p): bool => $p->name() === 'tailwindcss');
+    expect($tailwind->version())->toEqual('3.4.16');
+
+    cleanup($base);
+});
+
+it('scans pnpm-lock.yaml when it is the committed lockfile', function (): void {
+    $base = fixtureCopy([
+        'fog/package.json' => 'package.json',
+        'fog/pnpm-lock.yaml' => 'pnpm-lock.yaml',
+    ]);
+
+    $lockfile = new JsLockfile($base);
+
+    expect($lockfile->committedManager())->toBe(JsPackageManager::PNPM);
+
+    $tailwind = $lockfile->scan()->first(fn ($p): bool => $p->name() === 'tailwindcss');
     expect($tailwind->version())->toEqual('3.4.3');
+
+    cleanup($base);
 });
 
-it('reports the committed manager from lockfile presence', function () use ($fogDir): void {
-    $manager = (new JsLockfile($fogDir))->committedManager();
+it('scans yarn.lock when it is the committed lockfile', function (): void {
+    $base = fixtureCopy([
+        'fog/package.json' => 'package.json',
+        'fog/yarn.lock' => 'yarn.lock',
+    ]);
+
+    $lockfile = new JsLockfile($base);
+
+    expect($lockfile->committedManager())->toBe(JsPackageManager::YARN);
+
+    $parser = $lockfile->scan()->first(fn ($p): bool => $p->name() === '@babel/parser');
+    expect($parser->version())->toEqual('7.28.5');
+
+    cleanup($base);
+});
+
+it('scans bun.lock when it is the committed lockfile', function (): void {
+    $base = fixtureCopy([
+        'fog/package.json' => 'package.json',
+        'fog/bun.lock' => 'bun.lock',
+    ]);
+
+    $lockfile = new JsLockfile($base);
+
+    expect($lockfile->committedManager())->toBe(JsPackageManager::BUN);
+
+    $alpine = $lockfile->scan()->first(fn ($p): bool => $p->name() === 'alpinejs');
+    expect($alpine->version())->toEqual('3.14.8');
+
+    cleanup($base);
+});
+
+it('falls back to package.json when only bun.lockb is committed', function (): void {
+    $tempDir = tempBase();
+    file_put_contents($tempDir.'bun.lockb', "\x00binary");
+    file_put_contents($tempDir.'package.json', json_encode([
+        'dependencies' => ['vue' => '^3.4.0'],
+    ]));
+
+    $lockfile = new JsLockfile($tempDir);
+
+    expect($lockfile->committedManager())->toBe(JsPackageManager::BUN);
+
+    $vue = $lockfile->scan()->first(fn ($p): bool => $p->name() === 'vue');
+    expect($vue)->not->toBeNull();
+    expect($vue->version())->toEqual('3.4.0');
+
+    cleanup($tempDir);
+});
+
+it('reports the committed manager from lockfile presence', function (): void {
+    $manager = (new JsLockfile(__DIR__.'/../../fixtures/fog/'))->committedManager();
     expect($manager)->toBe(JsPackageManager::NPM);
 });
 
 it('falls back to package.json when no lockfile is committed', function (): void {
-    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_pkgjson_'.uniqid();
-    mkdir($tempDir);
+    $tempDir = tempBase();
 
-    file_put_contents($tempDir.DIRECTORY_SEPARATOR.'package.json', json_encode([
+    file_put_contents($tempDir.'package.json', json_encode([
         'dependencies' => ['vue' => '^3.4.0'],
         'devDependencies' => ['@inertiajs/react' => '^2.0.0'],
     ]));
 
-    $packages = (new JsLockfile($tempDir.DIRECTORY_SEPARATOR))->scan();
+    $packages = (new JsLockfile($tempDir))->scan();
 
     $vue = $packages->first(fn ($p): bool => $p->name() === 'vue');
     expect($vue)->not->toBeNull();
@@ -62,16 +149,14 @@ it('falls back to package.json when no lockfile is committed', function (): void
     expect($inertia)->not->toBeNull();
     expect($inertia->isDev())->toBeTrue();
 
-    unlink($tempDir.DIRECTORY_SEPARATOR.'package.json');
-    rmdir($tempDir);
+    cleanup($tempDir);
 });
 
 it('returns null committedManager when no lockfile present', function (): void {
-    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_pkgjson_only_'.uniqid();
-    mkdir($tempDir);
+    $tempDir = tempBase();
 
-    $manager = (new JsLockfile($tempDir.DIRECTORY_SEPARATOR))->committedManager();
+    $manager = (new JsLockfile($tempDir))->committedManager();
     expect($manager)->toBeNull();
 
-    rmdir($tempDir);
+    cleanup($tempDir);
 });

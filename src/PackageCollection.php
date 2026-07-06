@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster;
 
 use Illuminate\Support\Collection;
@@ -17,5 +19,10 @@ class PackageCollection extends Collection
     public function production(): static
     {
         return $this->filter(fn (Package $package): bool => ! $package->isDev())->values();
+    }
+
+    public function direct(): static
+    {
+        return $this->filter(fn (Package $package): bool => $package->isDirect())->values();
     }
 }

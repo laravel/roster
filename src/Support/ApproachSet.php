@@ -41,6 +41,25 @@ class ApproachSet
     }
 
     /**
+     * @param  array<int, Approach>  $approaches
+     */
+    public function usesAll(array $approaches): bool
+    {
+        foreach ($approaches as $needle) {
+            if (! $this->results->has($needle->value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function result(Approach $approach): ?ApproachResult
+    {
+        return $this->results->get($approach->value);
+    }
+
+    /**
      * @return Collection<string, ApproachResult>
      */
     public function all(): Collection

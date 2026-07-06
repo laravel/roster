@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 use Laravel\Roster\Enums\PackageSource;
-use Laravel\Roster\Scanners\Composer;
+use Laravel\Roster\Scanners\ComposerLock;
 
 it('parses installed packages with raw names', function (): void {
-    $path = __DIR__.'/../../fixtures/fog/composer.lock';
-    $packages = (new Composer($path))->scan();
+    $packages = (new ComposerLock(__DIR__.'/../../fixtures/fog/'))->scan();
 
     $laravel = $packages->first(fn ($p): bool => $p->name() === 'laravel/framework');
     expect($laravel)->not->toBeNull();
@@ -23,50 +24,46 @@ it('parses installed packages with raw names', function (): void {
 });
 
 it('strips composer version prefixes', function (): void {
-    $composerLockContent = '{
-        "packages": [
-            {"name": "inertiajs/inertia-laravel", "version": "v2.0.5"}
+    $base = tempBase();
+
+    file_put_contents($base.'composer.lock', json_encode([
+        'packages' => [
+            ['name' => 'inertiajs/inertia-laravel', 'version' => 'v2.0.5'],
         ],
-        "packages-dev": []
-    }';
+        'packages-dev' => [],
+    ]));
 
-    $tempFile = tempnam(sys_get_temp_dir(), 'composer_lock_test');
-    file_put_contents($tempFile, $composerLockContent);
-
-    $packages = (new Composer($tempFile))->scan();
-    unlink($tempFile);
+    $packages = (new ComposerLock($base))->scan();
 
     $inertia = $packages->first(fn ($p): bool => $p->name() === 'inertiajs/inertia-laravel');
     expect($inertia)->not->toBeNull();
     expect($inertia->version())->toEqual('2.0.5');
+
+    cleanup($base);
 });
 
 it('respects composer vendor-dir config', function (): void {
-    $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_vendor_dir_test_'.uniqid();
-    mkdir($tempDir, 0755, true);
+    $base = tempBase();
 
-    file_put_contents($tempDir.DIRECTORY_SEPARATOR.'composer.json', json_encode([
+    file_put_contents($base.'composer.json', json_encode([
         'require' => ['laravel/framework' => '^11.0'],
         'config' => ['vendor-dir' => 'lib/packages'],
     ]));
-    file_put_contents($tempDir.DIRECTORY_SEPARATOR.'composer.lock', json_encode([
+    file_put_contents($base.'composer.lock', json_encode([
         'packages' => [['name' => 'laravel/framework', 'version' => 'v11.0.0']],
         'packages-dev' => [],
     ]));
 
-    $packages = (new Composer($tempDir.DIRECTORY_SEPARATOR.'composer.lock'))->scan();
+    $packages = (new ComposerLock($base))->scan();
     $laravel = $packages->first(fn ($p): bool => $p->name() === 'laravel/framework');
 
     expect($laravel->path())->toEndWith('lib'.DIRECTORY_SEPARATOR.'packages'.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework');
 
-    unlink($tempDir.DIRECTORY_SEPARATOR.'composer.json');
-    unlink($tempDir.DIRECTORY_SEPARATOR.'composer.lock');
-    rmdir($tempDir);
+    cleanup($base);
 });
 
 it('marks transitive dependencies as indirect', function (): void {
-    $path = __DIR__.'/../../fixtures/fog/composer.lock';
-    $packages = (new Composer($path))->scan();
+    $packages = (new ComposerLock(__DIR__.'/../../fixtures/fog/'))->scan();
 
     $livewire = $packages->first(fn ($p): bool => $p->name() === 'livewire/livewire');
     expect($livewire->isDirect())->toBeTrue();
@@ -74,4 +71,13 @@ it('marks transitive dependencies as indirect', function (): void {
     $prompts = $packages->first(fn ($p): bool => $p->name() === 'laravel/prompts');
     expect($prompts)->not->toBeNull();
     expect($prompts->isDirect())->toBeFalse();
+});
+
+it('returns an empty collection for a malformed composer.lock', function (): void {
+    $base = tempBase();
+    file_put_contents($base.'composer.lock', '{truncated');
+
+    expect((new ComposerLock($base))->scan())->toHaveCount(0);
+
+    cleanup($base);
 });

@@ -10,13 +10,13 @@ use Laravel\Roster\Project;
 
 class ScanCommand extends Command
 {
-    protected $signature = 'roster:scan {directory} {--approaches : Detect source-code approaches (scans every PHP source file)}';
+    protected $signature = 'roster:scan {directory? : The directory to scan (defaults to the application base path)} {--approaches : Detect source-code approaches (scans every PHP source file)}';
 
     protected $description = 'Detect packages, stacks, frameworks, agents, and approaches in use and output as JSON';
 
     public function handle(): int
     {
-        $directory = $this->argument('directory');
+        $directory = $this->argument('directory') ?? Project::normalizeBasePath(null);
 
         if (! is_string($directory)) {
             $this->error('Pass a directory.');

@@ -15,12 +15,15 @@ class EnumSet
     /**
      * @param  array<int, T>  $cases
      */
-    public function __construct(protected array $cases) {}
+    public function __construct(protected array $cases)
+    {
+        //
+    }
 
     /**
      * @param  T|array<int, T>  $value
      */
-    public function uses(mixed $value): bool
+    public function uses(BackedEnum|array $value): bool
     {
         foreach (Arr::wrap($value) as $needle) {
             if (in_array($needle, $this->cases, true)) {
@@ -29,6 +32,20 @@ class EnumSet
         }
 
         return false;
+    }
+
+    /**
+     * @param  array<int, T>  $values
+     */
+    public function usesAll(array $values): bool
+    {
+        foreach ($values as $needle) {
+            if (! in_array($needle, $this->cases, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

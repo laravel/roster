@@ -58,25 +58,9 @@ class SourceFiles
         return $files;
     }
 
-    public function contains(string $path, string $needle): bool
-    {
-        if (array_key_exists($path, $this->contents)) {
-            return stripos($this->contents[$path], $needle) !== false;
-        }
-
-        $contents = $this->read($path);
-
-        return $contents !== false && stripos($contents, $needle) !== false;
-    }
-
     public function contents(string $path): string
     {
-        if (! array_key_exists($path, $this->contents)) {
-            $contents = $this->read($path);
-            $this->contents[$path] = $contents === false ? '' : $contents;
-        }
-
-        return $this->contents[$path];
+        return $this->contents[$path] ??= (is_file($path) ? ((string) @file_get_contents($path)) : '');
     }
 
     /**
@@ -85,11 +69,6 @@ class SourceFiles
     public function roots(): array
     {
         return $this->roots ??= $this->resolveRoots();
-    }
-
-    protected function read(string $path): string|false
-    {
-        return is_file($path) ? @file_get_contents($path) : false;
     }
 
     /**
@@ -101,6 +80,7 @@ class SourceFiles
 
         foreach ([...$this->psr4Roots(), $this->basePath.'app'] as $root) {
             $real = realpath(rtrim($root, '/\\'));
+
             if ($real === false) {
                 continue;
             }
@@ -167,10 +147,8 @@ class SourceFiles
             $iterator = new RecursiveIteratorIterator(
                 new RecursiveCallbackFilterIterator(
                     new RecursiveDirectoryIterator($root, RecursiveDirectoryIterator::SKIP_DOTS),
-                    fn (SplFileInfo $file): bool => ! ($file->isDir() && (
-                        str_starts_with($file->getFilename(), '.')
-                        || in_array($file->getFilename(), ['vendor', 'node_modules'], true)
-                    )),
+                    fn (SplFileInfo $file): bool => ! $file->isDir()
+                        || (! str_starts_with($file->getFilename(), '.') && ! in_array($file->getFilename(), ['vendor', 'node_modules'], true)),
                 ),
             );
 

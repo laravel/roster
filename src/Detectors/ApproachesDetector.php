@@ -11,9 +11,9 @@ use Laravel\Roster\Support\SourceFiles;
 
 class ApproachesDetector
 {
-    protected const MIN_SAMPLE = 5;
+    private const MIN_SAMPLE = 5;
 
-    protected const CONFIDENCE_FLOOR = 0.8;
+    private const CONFIDENCE_FLOOR = 0.8;
 
     /** @var list<array{approach: Approach, paths: list<string>}> */
     private const DIRECTORY_RULES = [
@@ -108,11 +108,13 @@ class ApproachesDetector
         $paths = [];
 
         foreach ($this->files->php() as $path) {
-            if (! $this->files->contains($path, 'enum')) {
+            $contents = $this->files->contents($path);
+
+            if (stripos($contents, 'enum') === false) {
                 continue;
             }
 
-            $names = $this->enumCaseNames($this->files->contents($path));
+            $names = $this->enumCaseNames($contents);
 
             if ($names === []) {
                 continue;
@@ -227,6 +229,9 @@ class ApproachesDetector
         return $matches[1];
     }
 
+    /**
+     * @return Approach::ENUM_CASE_SCREAMING_SNAKE|Approach::ENUM_CASE_PASCAL|Approach::ENUM_CASE_CAMEL|null
+     */
     protected function classifyCase(string $name): ?Approach
     {
         if (preg_match('/^[A-Z0-9]+(_[A-Z0-9]+)*$/', $name) === 1 && preg_match('/[A-Z]/', $name) === 1) {

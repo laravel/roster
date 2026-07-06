@@ -34,18 +34,18 @@ class StackDetector
             }
         }
 
-        if ($php->usesDirect('livewire/livewire')) {
+        if ($php->usesDirect(['livewire/livewire', 'livewire/volt'])) {
             $stacks[] = Stack::LIVEWIRE;
         }
 
-        $hasApi = $php->usesDirect('laravel/sanctum') || $php->usesDirect('laravel/passport');
-        $hasViewLayer = $stacks !== [] || $php->usesDirect('laravel/folio') || $php->usesDirect('livewire/volt');
+        $hasApi = $php->usesDirect(['laravel/sanctum', 'laravel/passport']);
+        $hasViewLayer = $stacks !== [] || $php->usesDirect('laravel/folio');
 
         if ($hasApi && ! $hasViewLayer) {
             $stacks[] = Stack::API;
         }
 
-        if ($stacks === []) {
+        if ($stacks === [] && $php->uses('laravel/framework')) {
             $stacks[] = Stack::BLADE;
         }
 

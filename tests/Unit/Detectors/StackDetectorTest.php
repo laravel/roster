@@ -14,9 +14,29 @@ it('detects inertia stack variants from JS adapter', function (): void {
     expect($stacks)->toContain(Stack::INERTIA_REACT);
 });
 
+it('detects inertia vue including the legacy adapter', function (): void {
+    expect(StackDetector::detect(phpEcosystem([]), jsEcosystem(['@inertiajs/vue3'])))
+        ->toContain(Stack::INERTIA_VUE);
+
+    expect(StackDetector::detect(phpEcosystem([]), jsEcosystem(['@inertiajs/vue'])))
+        ->toContain(Stack::INERTIA_VUE);
+});
+
+it('detects inertia svelte', function (): void {
+    expect(StackDetector::detect(phpEcosystem([]), jsEcosystem(['@inertiajs/svelte'])))
+        ->toContain(Stack::INERTIA_SVELTE);
+});
+
 it('detects livewire stack', function (): void {
     $stacks = StackDetector::detect(phpEcosystem(['livewire/livewire']), jsEcosystem([]));
     expect($stacks)->toContain(Stack::LIVEWIRE);
+});
+
+it('detects livewire stack for volt-only projects', function (): void {
+    $stacks = StackDetector::detect(phpEcosystem(['livewire/volt', 'laravel/framework']), jsEcosystem([]));
+
+    expect($stacks)->toContain(Stack::LIVEWIRE);
+    expect($stacks)->not->toContain(Stack::BLADE);
 });
 
 it('detects api stack when sanctum present and no view layer', function (): void {
@@ -24,7 +44,30 @@ it('detects api stack when sanctum present and no view layer', function (): void
     expect($stacks)->toContain(Stack::API);
 });
 
+it('detects api stack when passport present and no view layer', function (): void {
+    $stacks = StackDetector::detect(phpEcosystem(['laravel/passport']), jsEcosystem([]));
+    expect($stacks)->toContain(Stack::API);
+});
+
+it('suppresses api stack when a view layer is present', function (): void {
+    expect(StackDetector::detect(phpEcosystem(['laravel/sanctum', 'livewire/livewire']), jsEcosystem([])))
+        ->not->toContain(Stack::API);
+
+    expect(StackDetector::detect(phpEcosystem(['laravel/sanctum', 'laravel/folio']), jsEcosystem([])))
+        ->not->toContain(Stack::API);
+});
+
 it('falls back to blade by default', function (): void {
     $stacks = StackDetector::detect(phpEcosystem(['laravel/framework']), jsEcosystem([]));
     expect($stacks)->toContain(Stack::BLADE);
+});
+
+it('does not add blade when another stack is detected', function (): void {
+    $stacks = StackDetector::detect(phpEcosystem(['livewire/livewire', 'laravel/framework']), jsEcosystem([]));
+    expect($stacks)->not->toContain(Stack::BLADE);
+});
+
+it('detects no stack for non-laravel projects', function (): void {
+    $stacks = StackDetector::detect(phpEcosystem([]), jsEcosystem([]));
+    expect($stacks)->toBe([]);
 });

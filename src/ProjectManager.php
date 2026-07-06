@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Laravel\Roster;
 
+use Closure;
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\EditorsDetector;
@@ -14,25 +17,15 @@ use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Editor;
 use Laravel\Roster\Enums\Frontend;
+use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Support\ApproachSet;
-use Laravel\Roster\Support\CachesScan;
 use Laravel\Roster\Support\EnumSet;
+use Throwable;
 
 class ProjectManager
 {
-    use CachesScan;
-
-    protected const LOCKFILES = [
-        'composer.lock',
-        'composer.json',
-        'package-lock.json',
-        'pnpm-lock.yaml',
-        'yarn.lock',
-        'bun.lockb',
-        'bun.lock',
-        'package.json',
-    ];
+    protected const CACHE_TTL = 3600;
 
     protected ?Project $cached = null;
 
@@ -40,11 +33,19 @@ class ProjectManager
     {
         $resolvedBase = Project::normalizeBasePath($basePath);
 
-        return $this->cached = $this->rememberScan(
+        $project = $this->rememberScan(
             $this->cacheKey($resolvedBase),
             fn (): Project => Project::scan($resolvedBase),
-            Project::class,
         );
+
+        return $basePath === null ? ($this->cached = $project) : $project;
+    }
+
+    public function fresh(?string $basePath = null): Project
+    {
+        $project = Project::scan(Project::normalizeBasePath($basePath));
+
+        return $basePath === null ? ($this->cached = $project) : $project;
     }
 
     public function instance(): Project
@@ -63,9 +64,9 @@ class ProjectManager
     }
 
     /** @return EnumSet<Stack> */
-    public function stack(): EnumSet
+    public function stacks(): EnumSet
     {
-        return $this->instance()->stack();
+        return $this->instance()->stacks();
     }
 
     /** @return EnumSet<BrowserTestFramework> */
@@ -75,9 +76,9 @@ class ProjectManager
     }
 
     /** @return EnumSet<Frontend> */
-    public function frontend(): EnumSet
+    public function frontends(): EnumSet
     {
-        return $this->instance()->frontend();
+        return $this->instance()->frontends();
     }
 
     /** @return EnumSet<Agent> */
@@ -97,23 +98,72 @@ class ProjectManager
         return $this->instance()->approaches();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return $this->instance()->toArray();
+    }
+
     public function json(): string
     {
         return $this->instance()->json();
     }
 
+    /**
+     * @param  Closure(): Project  $scan
+     */
+    private function rememberScan(string $key, Closure $scan): Project
+    {
+        try {
+            $manager = Container::getInstance()->make('cache');
+
+            if (! $manager instanceof CacheFactory) {
+                return $scan();
+            }
+
+            $cached = $manager->store()->get($key);
+
+            if ($cached instanceof Project) {
+                return $cached;
+            }
+
+            $project = $scan();
+
+            $manager->store()->put($key, $project, self::CACHE_TTL);
+
+            return $project;
+        } catch (Throwable) {
+            return $scan();
+        }
+    }
+
     private function cacheKey(string $basePath): string
     {
-        return 'roster:project:'.md5(
+        return 'roster:project:v2:'.md5(
             $basePath.'|'.$this->lockfileHash($basePath).'|'.$this->markerHash($basePath)
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function lockfiles(): array
+    {
+        $jsLockfiles = array_merge(...array_map(
+            fn (JsPackageManager $manager): array => $manager->lockFiles(),
+            JsPackageManager::cases(),
+        ));
+
+        return ['composer.lock', 'composer.json', ...$jsLockfiles, 'package.json'];
     }
 
     private function lockfileHash(string $basePath): string
     {
         $hash = hash_init('md5');
 
-        foreach (self::LOCKFILES as $file) {
+        foreach ($this->lockfiles() as $file) {
             $path = $basePath.$file;
             $fileHash = is_file($path) ? @md5_file($path) : null;
             hash_update($hash, $file.':'.($fileHash ?: '0').'|');

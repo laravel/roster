@@ -102,7 +102,7 @@ Several methods on the `Laravel\Roster\Package` class have been renamed:
 
 | 0.x | 1.0 |
 | --- | --- |
-| `$package->majorVersion()` | `$package->major()` (returns `int`) |
+| `$package->majorVersion()` | `$package->major()` (returns `?int`, `null` when the version is unknown) |
 | `$package->direct()` / `$package->indirect()` | `$package->isDirect()` |
 
 Package collections are now retrieved per ecosystem via `Project::php()->packages()` and `Project::js()->packages()` instead of a single `$roster->packages()` call.
@@ -111,14 +111,14 @@ Package collections are now retrieved per ecosystem via `Project::php()->package
 
 **Likelihood Of Impact: Medium**
 
-The `stack` method now lives on the `Project` facade and returns an `EnumSet` containing every detected stack. Membership is checked via the `uses` method:
+The `stack` method has been renamed to `stacks`, now lives on the `Project` facade, and returns an `EnumSet` containing every detected stack. Membership is checked via the `uses` method:
 
 ```php
 // 0.x...
 $roster->stack();
 
 // 1.0...
-Project::stack()->uses(Stack::INERTIA_REACT);
+Project::stacks()->uses(Stack::INERTIA_REACT);
 ```
 
 ### The `Ides` Enum
@@ -146,7 +146,7 @@ $roster->nodePackageManager();
 Project::js()->packageManager(); // ?JsPackageManager
 ```
 
-Bun is detected via either `bun.lock` or `bun.lockb`.
+Bun is detected via either `bun.lock` or `bun.lockb`. Since `bun.lockb` is a binary format, package scanning falls back to the direct dependencies declared in `package.json` when only `bun.lockb` is committed.
 
 ### Removed Detections
 

@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+use Laravel\Roster\Scanners\Concerns\ParsesManifests;
+
+it('pins normalizeVersion behavior for common constraint shapes', function (): void {
+    $subject = new class
+    {
+        use ParsesManifests;
+
+        public static function normalize(string $version): string
+        {
+            return self::normalizeVersion($version);
+        }
+    };
+
+    expect($subject::normalize('1.2.3'))->toBe('1.2.3')
+        ->and($subject::normalize('v2.0.5'))->toBe('2.0.5')
+        ->and($subject::normalize('^3.4.0'))->toBe('3.4.0')
+        ->and($subject::normalize('~1.2'))->toBe('1.2')
+        ->and($subject::normalize('1.0.0-beta.1'))->toBe('1.0.0.1')
+        ->and($subject::normalize('workspace:*'))->toBe('')
+        ->and($subject::normalize('*'))->toBe('');
+});

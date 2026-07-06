@@ -1,18 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
-use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 
 class PackageJson extends JsPackageScanner
 {
-    protected function lockFile(): string
-    {
-        return 'package.json';
-    }
-
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection;
@@ -23,7 +19,7 @@ class PackageJson extends JsPackageScanner
             $packages->push(new Package(
                 name: $name,
                 version: self::normalizeVersion($constraint),
-                source: PackageSource::NPM,
+                source: $this->source(),
                 dev: $meta['isDev'],
                 direct: true,
                 constraint: $constraint,

@@ -6,8 +6,6 @@ use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Package;
 use Laravel\Roster\PackageCollection;
 
-expect()->extend('toBeOne', fn () => $this->toBe(1));
-
 /**
  * @param  array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool}>  $specs
  */
@@ -35,9 +33,24 @@ function tempBase(): string
     return $base;
 }
 
+/**
+ * @param  array<string, string>  $files
+ */
+function fixtureCopy(array $files): string
+{
+    $base = tempBase();
+
+    foreach ($files as $source => $destination) {
+        copy(__DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $source), $base.$destination);
+    }
+
+    return $base;
+}
+
 function touchFile(string $path): void
 {
     $dir = dirname($path);
+
     if (! is_dir($dir)) {
         mkdir($dir, 0777, true);
     }
@@ -55,6 +68,7 @@ function cleanup(string $base): void
         new RecursiveDirectoryIterator($base, RecursiveDirectoryIterator::SKIP_DOTS),
         RecursiveIteratorIterator::CHILD_FIRST,
     );
+
     foreach ($iter as $f) {
         $f->isDir() ? rmdir($f->getPathname()) : unlink($f->getPathname());
     }
@@ -68,6 +82,7 @@ function cleanup(string $base): void
 function packagesFromSpecs(array $specs, PackageSource $source): PackageCollection
 {
     $packages = new PackageCollection;
+
     foreach ($specs as $spec) {
         if (is_string($spec)) {
             $spec = ['name' => $spec];

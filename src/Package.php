@@ -16,7 +16,9 @@ class Package
         protected bool $direct = false,
         protected string $constraint = '',
         protected ?string $path = null,
-    ) {}
+    ) {
+        //
+    }
 
     public function name(): string
     {
@@ -28,11 +30,13 @@ class Package
         return $this->version;
     }
 
-    public function major(): int
+    public function major(): ?int
     {
-        $parts = explode('.', $this->version);
+        if ($this->version === '') {
+            return null;
+        }
 
-        return (int) $parts[0];
+        return (int) explode('.', $this->version)[0];
     }
 
     public function isDev(): bool

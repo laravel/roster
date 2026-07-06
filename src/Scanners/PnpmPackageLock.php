@@ -5,23 +5,18 @@ declare(strict_types=1);
 namespace Laravel\Roster\Scanners;
 
 use Exception;
-use Illuminate\Support\Facades\Log;
 use Laravel\Roster\PackageCollection;
 use Symfony\Component\Yaml\Yaml;
 
 class PnpmPackageLock extends JsPackageScanner
 {
-    protected function lockFile(): string
-    {
-        return 'pnpm-lock.yaml';
-    }
-
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection;
-        $lockFilePath = $this->lockFilePath();
+        $lockFilePath = $this->path.'pnpm-lock.yaml';
 
-        $contents = $this->readContents($lockFilePath, 'PNPM lock');
+        $contents = $this->readContents($lockFilePath, 'pnpm-lock.yaml');
+
         if ($contents === null) {
             return $packages;
         }
@@ -29,8 +24,8 @@ class PnpmPackageLock extends JsPackageScanner
         try {
             /** @var array<string, mixed> $parsed */
             $parsed = Yaml::parse($contents);
-        } catch (Exception $exception) {
-            Log::error('Failed to parse YAML: '.$exception->getMessage());
+        } catch (Exception) {
+            $this->warn('Failed to parse pnpm-lock.yaml: '.$lockFilePath);
 
             return $packages;
         }
@@ -40,13 +35,16 @@ class PnpmPackageLock extends JsPackageScanner
 
         /** @var array<string, mixed> $packagesMap */
         $packagesMap = is_array($parsed['packages'] ?? null) ? $parsed['packages'] : [];
+
         foreach ($packagesMap as $key => $_) {
             $pair = $this->splitNameAndVersion((string) $key);
+
             if ($pair === null) {
                 continue;
             }
 
             [$name, $version] = $pair;
+
             if (isset($allPackages[$name])) {
                 continue;
             }
@@ -60,6 +58,7 @@ class PnpmPackageLock extends JsPackageScanner
 
         /** @var array<string, array<string, mixed>> $rootDeps */
         $rootDeps = $root['dependencies'] ?? [];
+
         /** @var array<string, array<string, mixed>> $rootDevDeps */
         $rootDevDeps = $root['devDependencies'] ?? [];
 
@@ -97,6 +96,7 @@ class PnpmPackageLock extends JsPackageScanner
 
         // pnpm v9: `lodash@4.17.21`, `@babel/core@7.0.0`.
         $position = strrpos($key, '@');
+
         if ($position === false || $position === 0) {
             return null;
         }

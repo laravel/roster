@@ -126,36 +126,46 @@ $project->js()->usesAll(['vue', '@inertiajs/vue3']);
 
 ### Retrieving Packages
 
-You may also retrieve the underlying `Package` instance or collection:
+You may also retrieve the underlying `Package` instance or collection. The `usesDirect` method checks that a package is a *direct* dependency (declared in your manifest rather than pulled in transitively), and the collection exposes `dev`, `production`, and `direct` filters:
 
 ```php
 $project->php()->package('pestphp/pest')?->version();
 $project->js()->package('vue')?->major();
+$project->php()->usesDirect('livewire/livewire');
+$project->php()->usesDirect(['livewire/livewire', 'livewire/volt']);
 $project->php()->packages()->dev();
+$project->php()->packages()->direct();
 ```
+
+> [!NOTE]
+> The dev classification of *transitive* packages is only available for Composer and npm lockfiles. Yarn, pnpm, and bun lockfiles report transitive packages as production dependencies; direct dependencies are always classified from your manifest.
 
 ## Detecting Stacks and Frontends
 
-The `stack`, `frontend`, and `browserTestFrameworks` methods on the `Project` surface return an `EnumSet` containing every detected case. You may invoke the `uses` method to check for membership, and the `all` method to retrieve every detected case:
+The `stacks`, `frontends`, and `browserTestFrameworks` methods on the `Project` surface return an `EnumSet` containing every detected case. You may invoke the `uses` method to check for membership, the `usesAll` method to require every given case, and the `all` method to retrieve every detected case:
 
 ```php
 use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
 
-$project->stack()->uses(Stack::INERTIA_REACT);
-$project->stack()->all();                              // Stack[]
+$project->stacks()->uses(Stack::INERTIA_REACT);
+$project->stacks()->all();                             // Stack[]
 
 $project->browserTestFrameworks()->uses(BrowserTestFramework::PLAYWRIGHT);
 $project->browserTestFrameworks()->uses([
     BrowserTestFramework::PLAYWRIGHT,
     BrowserTestFramework::CYPRESS,
 ]);
+$project->browserTestFrameworks()->usesAll([
+    BrowserTestFramework::PLAYWRIGHT,
+    BrowserTestFramework::CYPRESS,
+]);
 
-$project->frontend()->uses(Frontend::REACT);
+$project->frontends()->uses(Frontend::REACT);
 ```
 
-The `uses` method accepts either a single case or an array of cases.
+The `uses` method accepts either a single case or an array of cases and returns `true` when **any** is present, while the `usesAll` method returns `true` only when **every** case is present.
 
 ## Detecting Agents and Editors
 
@@ -172,7 +182,7 @@ $project->editors()->uses(Editor::PHPSTORM);
 
 ## Detecting JS Package Managers
 
-The `$project->js()->packageManager` method reports the package manager *committed* to the project as a single nullable enum, based on which lockfile is present (`package-lock.json`, `pnpm-lock.yaml`, and so on):
+The `$project->js()->packageManager()` method reports the package manager *committed* to the project as a single nullable enum, based on which lockfile is present (`package-lock.json`, `pnpm-lock.yaml`, and so on):
 
 ```php
 use Laravel\Roster\Enums\JsPackageManager;
@@ -212,10 +222,10 @@ $project->approaches()->all();                                    // Collection<
 
 A stylistic approach is only reported when it is backed by enough evidence: at least 5 votes (one per model, enum case, form request, or scope), with more than 80% of them for the winning style — so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent.
 
-Each `ApproachResult` exposes the winning `approach`, its raw `confidence` ratio, the `matched` and `total` vote counts, and the `paths` of the files that voted:
+Each `ApproachResult` exposes the winning `approach`, its raw `confidence` ratio, the `matched` and `total` vote counts, and the `paths` of the files that voted. You may retrieve a result via the `result` method:
 
 ```php
-$result = $project->approaches()->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+$result = $project->approaches()->result(Approach::MASS_ASSIGNMENT_FILLABLE);
 
 $result->confidence; // 0.9
 $result->matched;    // 9
@@ -229,15 +239,16 @@ Because source files change without touching any lockfile, approaches are never 
 
 ## Caching
 
-The `Project` facade caches its scans using your application's configured cache driver, and gracefully falls back to a direct scan when no driver is configured or the driver fails.
+The first call to the `Project` facade scans once and memoizes the result for the remainder of the process. Across processes, scans are cached using your application's configured cache driver, keyed on a hash of your lockfile contents and detector marker directories — so edits to `composer.lock` or a newly added `.claude` directory invalidate the persisted cache automatically. Roster gracefully falls back to a direct scan when no cache driver is configured or the driver fails.
 
-The cache is keyed on a hash of your lockfile contents and detector marker directories, so edits to `composer.lock` or a newly added `.claude` directory invalidate automatically.
+In long-running processes such as Octane or queue workers, the memoized instance is kept until the worker restarts. You may call `Project::fresh()` to bypass both the memo and the persisted cache and force a re-read at any time.
 
 ## The `roster:scan` Command
 
-The `roster:scan` Artisan command scans a directory and emits the project surface as a JSON document:
+The `roster:scan` Artisan command scans a directory and emits the project surface as a JSON document. When the directory is omitted, the application's base path is scanned:
 
 ```bash
+php artisan roster:scan
 php artisan roster:scan /path/to/project
 ```
 

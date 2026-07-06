@@ -24,11 +24,30 @@ it('reports membership and exposes results keyed by approach value', function ()
         ->and($set->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value))->toBe($result);
 });
 
-it('is empty when nothing was detected', function (): void {
-    $set = new ApproachSet([]);
+it('retrieves a typed result per approach', function (): void {
+    $result = new ApproachResult(
+        approach: Approach::MASS_ASSIGNMENT_FILLABLE,
+        confidence: 0.9,
+        matched: 9,
+        total: 10,
+        paths: ['/app/Models/User.php'],
+    );
 
-    expect($set->all())->toBeEmpty()
-        ->and($set->uses(Approach::ENUM_CASE_SCREAMING_SNAKE))->toBeFalse();
+    $set = new ApproachSet([$result]);
+
+    expect($set->result(Approach::MASS_ASSIGNMENT_FILLABLE))->toBe($result)
+        ->and($set->result(Approach::MASS_ASSIGNMENT_GUARDED))->toBeNull();
+});
+
+it('checks all-of membership with usesAll', function (): void {
+    $fillable = new ApproachResult(Approach::MASS_ASSIGNMENT_FILLABLE, 1.0, 5, 5, []);
+    $ddd = new ApproachResult(Approach::DDD, 1.0, 1, 1, []);
+
+    $set = new ApproachSet([$fillable, $ddd]);
+
+    expect($set->usesAll([Approach::MASS_ASSIGNMENT_FILLABLE, Approach::DDD]))->toBeTrue()
+        ->and($set->usesAll([Approach::MASS_ASSIGNMENT_FILLABLE, Approach::ACTION]))->toBeFalse()
+        ->and($set->usesAll([]))->toBeTrue();
 });
 
 it('serializes results to an array shape', function (): void {

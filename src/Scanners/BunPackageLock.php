@@ -4,22 +4,17 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Facades\Log;
 use Laravel\Roster\PackageCollection;
 
 class BunPackageLock extends JsPackageScanner
 {
-    protected function lockFile(): string
-    {
-        return 'bun.lock';
-    }
-
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection;
-        $lockFilePath = $this->lockFilePath();
+        $lockFilePath = $this->path.'bun.lock';
 
-        $contents = $this->readContents($lockFilePath);
+        $contents = $this->readContents($lockFilePath, 'bun.lock');
+
         if ($contents === null) {
             return $packages;
         }
@@ -27,20 +22,22 @@ class BunPackageLock extends JsPackageScanner
         $sanitized = preg_replace('/,\s*([]}])/m', '$1', $contents) ?? $contents;
 
         $json = json_decode($sanitized, true);
+
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
-            Log::warning('Failed to decode bun.lock: '.$lockFilePath);
+            $this->warn('Failed to decode bun.lock: '.$lockFilePath);
 
             return $packages;
         }
 
-        if (! isset($json['packages']) || ! is_array($json['packages'])) {
-            Log::warning('Malformed bun.lock');
+        if (! is_array($json['packages'] ?? null)) {
+            $this->warn('Malformed bun.lock (missing "packages" key): '.$lockFilePath);
 
             return $packages;
         }
 
         /** @var array<string, string> $allPackages */
         $allPackages = [];
+
         foreach ($json['packages'] as $name => $entry) {
             if (! is_string($name)) {
                 continue;
