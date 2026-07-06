@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Detectors\ApproachesDetector;
 use Laravel\Roster\Enums\Approach;
+use Laravel\Roster\Project;
 use Laravel\Roster\Support\ApproachSet;
 
 enum CustomConvention: string
@@ -402,4 +403,23 @@ it('dedupes files reachable through overlapping source roots', function (): void
     expect($result->total)->toBe(5);
 
     cleanup($base);
+});
+
+it('recomputes memoized approaches when a convention is registered later', function (): void {
+    $project = Project::scan(
+        dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'approaches'.DIRECTORY_SEPARATOR.'fillable-models-app',
+    );
+
+    expect($project->approaches()->uses(CustomConvention::THIN_MODELS))->toBeFalse();
+
+    ApproachesDetector::extend(
+        fn (string $contents): ?CustomConvention => str_contains($contents, '$fillable')
+            ? CustomConvention::THIN_MODELS
+            : null,
+        in: 'Models',
+    );
+
+    expect($project->approaches()->uses(CustomConvention::THIN_MODELS))->toBeTrue();
+
+    ApproachesDetector::flushExtensions();
 });

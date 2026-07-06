@@ -36,8 +36,11 @@ class PnpmPackageLock extends JsPackageScanner
         /** @var array<string, mixed> $packagesMap */
         $packagesMap = is_array($parsed['packages'] ?? null) ? $parsed['packages'] : [];
 
+        $lockfileVersion = $parsed['lockfileVersion'] ?? '';
+        $slashStyle = is_scalar($lockfileVersion) && str_starts_with((string) $lockfileVersion, '5');
+
         foreach ($packagesMap as $key => $_) {
-            $pair = $this->splitNameAndVersion((string) $key);
+            $pair = $this->splitNameAndVersion((string) $key, $slashStyle);
 
             if ($pair === null) {
                 continue;
@@ -54,18 +57,22 @@ class PnpmPackageLock extends JsPackageScanner
 
         /** @var array<string, array<string, mixed>> $importers */
         $importers = $parsed['importers'] ?? [];
-        $root = $importers['.'] ?? [];
 
-        /** @var array<string, array<string, mixed>> $rootDeps */
-        $rootDeps = $root['dependencies'] ?? [];
+        /** @var array<string, mixed> $root */
+        $root = $importers['.'] ?? $parsed;
 
-        /** @var array<string, array<string, mixed>> $rootDevDeps */
-        $rootDevDeps = $root['devDependencies'] ?? [];
+        /** @var array<string, mixed> $rootDeps */
+        $rootDeps = is_array($root['dependencies'] ?? null) ? $root['dependencies'] : [];
+
+        /** @var array<string, mixed> $rootDevDeps */
+        $rootDevDeps = is_array($root['devDependencies'] ?? null) ? $root['devDependencies'] : [];
 
         foreach ([$rootDeps, $rootDevDeps] as $entries) {
             foreach ($entries as $name => $data) {
-                if (isset($data['version']) && is_scalar($data['version'])) {
-                    $allPackages[$name] = $this->stripPeerSuffix((string) $data['version']);
+                $version = is_array($data) ? ($data['version'] ?? null) : $data;
+
+                if (is_scalar($version)) {
+                    $allPackages[(string) $name] = $this->stripPeerSuffix((string) $version);
                 }
             }
         }
@@ -78,24 +85,32 @@ class PnpmPackageLock extends JsPackageScanner
     /**
      * @return array{0: string, 1: string}|null
      */
-    private function splitNameAndVersion(string $key): ?array
+    private function splitNameAndVersion(string $key, bool $slashStyle): ?array
     {
-        $key = $this->stripPeerSuffix($key);
+        $key = ltrim($this->stripPeerSuffix($key), '/');
 
-        // pnpm v5/v6: `/lodash/4.17.21`, `/@babel/core/7.0.0`.
-        if (str_starts_with($key, '/')) {
-            $key = substr($key, 1);
+        // pnpm v5: `lodash/4.17.21`, `@babel/core/7.0.0_react@16.8.0`.
+        if ($slashStyle) {
             $position = strrpos($key, '/');
 
             if ($position === false || $position === 0) {
                 return null;
             }
 
+            $version = substr($key, $position + 1);
+            $peer = strpos($version, '_');
+
+            return [substr($key, 0, $position), $peer === false ? $version : substr($version, 0, $peer)];
+        }
+
+        // pnpm v6: `lodash@4.17.21`, v9: `@babel/core@7.0.0`.
+        $position = strrpos($key, '@');
+
+        if ($position !== false && $position > 0) {
             return [substr($key, 0, $position), substr($key, $position + 1)];
         }
 
-        // pnpm v9: `lodash@4.17.21`, `@babel/core@7.0.0`.
-        $position = strrpos($key, '@');
+        $position = strrpos($key, '/');
 
         if ($position === false || $position === 0) {
             return null;

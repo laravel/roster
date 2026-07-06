@@ -109,7 +109,11 @@ class Ecosystem
             return false;
         }
 
-        return Semver::satisfies($version, $constraint);
+        try {
+            return Semver::satisfies($version, $constraint);
+        } catch (UnexpectedValueException) {
+            return false;
+        }
     }
 
     /**

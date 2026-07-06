@@ -81,3 +81,50 @@ it('returns an empty collection when the lockfile is missing', function (): void
 
     cleanup($base);
 });
+
+it('parses quoted multi-range v1 headers', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'yarn.lock', <<<'LOCK'
+# yarn lockfile v1
+
+"@inertiajs/vue3@^2.0.0", "@inertiajs/vue3@^2.1.0":
+  version "2.1.4"
+
+lodash@^4.0.0, lodash@^4.1.0:
+  version "4.17.21"
+LOCK);
+
+    $packages = (new YarnPackageLock($base))->scan();
+
+    $inertia = $packages->first(fn ($p): bool => $p->name() === '@inertiajs/vue3');
+    expect($inertia)->not->toBeNull()
+        ->and($inertia->version())->toEqual('2.1.4');
+
+    $lodash = $packages->first(fn ($p): bool => $p->name() === 'lodash');
+    expect($lodash)->not->toBeNull()
+        ->and($lodash->version())->toEqual('4.17.21');
+
+    cleanup($base);
+});
+
+it('scans numeric package names without crashing', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'yarn.lock', <<<'LOCK'
+# yarn lockfile v1
+
+"101@^1.0.0":
+  version "1.6.3"
+LOCK);
+    file_put_contents($base.'package.json', json_encode(['dependencies' => ['101' => '^1.0.0']]));
+
+    $packages = (new YarnPackageLock($base))->scan();
+
+    $numeric = $packages->first(fn ($p): bool => $p->name() === '101');
+    expect($numeric)->not->toBeNull()
+        ->and($numeric->version())->toEqual('1.6.3')
+        ->and($numeric->isDirect())->toBeTrue();
+
+    cleanup($base);
+});

@@ -39,7 +39,7 @@ class ScanCommand extends Command
                 ->all();
         }
 
-        $this->line(json_encode($payload, JSON_PRETTY_PRINT) ?: '{}');
+        $this->line(json_encode($payload, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}');
 
         return self::SUCCESS;
     }

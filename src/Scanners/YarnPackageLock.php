@@ -8,8 +8,6 @@ use Laravel\Roster\PackageCollection;
 
 class YarnPackageLock extends JsPackageScanner
 {
-    private const YARN_V1_HEADER = '/^("?)(@[^@"\/]+\/[^@"]+|[^@"]+)(@[^:"]+)?\1:$/';
-
     private const YARN_V4_HEADER = '/^"(@?[^@"]+(?:\/[^@"]+)?)@npm:[^"]*":\s*$/';
 
     private const YARN_V1_VERSION = '/^version\s+"([^"]+)"$/';
@@ -65,15 +63,24 @@ class YarnPackageLock extends JsPackageScanner
 
     private function parsePackageHeader(string $line): ?string
     {
-        if (preg_match(self::YARN_V1_HEADER, $line, $matches)) {
-            return $matches[2];
-        }
-
         if (preg_match(self::YARN_V4_HEADER, $line, $matches)) {
             return $matches[1];
         }
 
-        return null;
+        if (! str_ends_with($line, ':')) {
+            return null;
+        }
+
+        // yarn v1: `lodash@^4.0.0:`, `"@babel/core@^7.0.0", "@babel/core@^7.2.0":`.
+        $selector = trim((string) strtok(substr($line, 0, -1), ','), " \t\"");
+
+        $position = strrpos($selector, '@');
+
+        if ($position === false || $position === 0) {
+            return null;
+        }
+
+        return substr($selector, 0, $position);
     }
 
     private function parseVersion(string $line): ?string

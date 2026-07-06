@@ -66,8 +66,8 @@ class NpmPackageLock extends JsPackageScanner
             }
         }
 
-        $this->processDependencies($prodPackages, $packages, false);
-        $this->processDependencies($devPackages, $packages, true);
+        $this->processDependencies($prodPackages, $packages, false, authoritative: true);
+        $this->processDependencies($devPackages, $packages, true, authoritative: true);
 
         return $packages;
     }

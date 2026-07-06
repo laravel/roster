@@ -24,8 +24,8 @@ class ComposerLock extends PackageScanner
             return $packages;
         }
 
-        $this->processDependencies($this->versions($json['packages'] ?? null), $packages, false);
-        $this->processDependencies($this->versions($json['packages-dev'] ?? null), $packages, true);
+        $this->processDependencies($this->versions($json['packages'] ?? null), $packages, false, authoritative: true);
+        $this->processDependencies($this->versions($json['packages-dev'] ?? null), $packages, true, authoritative: true);
 
         return $packages;
     }

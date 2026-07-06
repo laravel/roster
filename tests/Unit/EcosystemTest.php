@@ -127,3 +127,12 @@ it('usesDirect checks direct dependencies including any-of arrays', function ():
     expect($php->usesDirect(['laravel/prompts', 'livewire/livewire']))->toBeTrue();
     expect($php->usesDirect(['laravel/prompts', 'unknown/package']))->toBeFalse();
 });
+
+it('returns false instead of throwing when the stored version is invalid', function (): void {
+    $php = phpEcosystem([
+        ['name' => 'vendor/weird', 'version' => '1.2.02.0.0'],
+    ]);
+
+    expect($php->uses('vendor/weird'))->toBeTrue()
+        ->and($php->uses('vendor/weird', '^1.2'))->toBeFalse();
+});

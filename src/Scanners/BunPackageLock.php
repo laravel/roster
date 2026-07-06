@@ -38,21 +38,34 @@ class BunPackageLock extends JsPackageScanner
         /** @var array<string, string> $allPackages */
         $allPackages = [];
 
-        foreach ($json['packages'] as $name => $entry) {
-            if (! is_string($name)) {
-                continue;
-            }
+        /** @var array<string, string> $nestedPackages */
+        $nestedPackages = [];
 
-            if (isset($allPackages[$name])) {
-                continue;
-            }
+        foreach ($json['packages'] as $key => $entry) {
+            $key = (string) $key;
+            $name = $this->extractName($entry) ?? $key;
 
-            $allPackages[$name] = $this->extractVersion($entry);
+            if ($name === $key) {
+                $allPackages[$name] = $this->extractVersion($entry);
+            } elseif (! isset($nestedPackages[$name])) {
+                $nestedPackages[$name] = $this->extractVersion($entry);
+            }
         }
 
-        $this->processDependencies($allPackages, $packages, false);
+        $this->processDependencies($allPackages + $nestedPackages, $packages, false);
 
         return $packages;
+    }
+
+    private function extractName(mixed $entry): ?string
+    {
+        if (! is_array($entry) || ! isset($entry[0]) || ! is_string($entry[0])) {
+            return null;
+        }
+
+        $position = strrpos($entry[0], '@');
+
+        return $position === false || $position === 0 ? null : substr($entry[0], 0, $position);
     }
 
     private function extractVersion(mixed $entry): string

@@ -160,3 +160,21 @@ it('returns null committedManager when no lockfile present', function (): void {
 
     cleanup($tempDir);
 });
+
+it('falls back to package.json when the committed lockfile is unsupported', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'package-lock.json', json_encode([
+        'lockfileVersion' => 1,
+        'dependencies' => ['vue' => ['version' => '3.4.0']],
+    ]));
+    file_put_contents($base.'package.json', json_encode(['dependencies' => ['vue' => '^3.4.0']]));
+
+    $packages = (new JsLockfile($base))->scan();
+
+    $vue = $packages->first(fn ($p): bool => $p->name() === 'vue');
+    expect($vue)->not->toBeNull()
+        ->and($vue->isDirect())->toBeTrue();
+
+    cleanup($base);
+});

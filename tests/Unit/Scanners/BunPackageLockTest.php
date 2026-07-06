@@ -40,3 +40,25 @@ it('returns an empty collection when the packages key is missing', function (): 
 
     cleanup($base);
 });
+
+it('resolves nested keys to the real package name and prefers the top-level entry', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'bun.lock', json_encode([
+        'lockfileVersion' => 1,
+        'packages' => [
+            'jest/pretty-format' => ['pretty-format@29.7.0', '', [], 'sha512-b'],
+            'pretty-format' => ['pretty-format@30.0.0', '', [], 'sha512-a'],
+        ],
+    ]));
+
+    $packages = (new BunPackageLock($base))->scan();
+
+    expect($packages)->toHaveCount(1);
+
+    $prettyFormat = $packages->first(fn ($p): bool => $p->name() === 'pretty-format');
+    expect($prettyFormat)->not->toBeNull()
+        ->and($prettyFormat->version())->toEqual('30.0.0');
+
+    cleanup($base);
+});

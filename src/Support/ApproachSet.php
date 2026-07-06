@@ -11,19 +11,15 @@ use Laravel\Roster\ApproachResult;
 
 class ApproachSet
 {
-    /** @var Collection<string, ApproachResult> */
-    protected Collection $results;
+    /** @var list<ApproachResult> */
+    protected array $results;
 
     /**
      * @param  array<int, ApproachResult>  $results
      */
     public function __construct(array $results)
     {
-        /** @var Collection<string, ApproachResult> $keyed */
-        $keyed = (new Collection($results))
-            ->keyBy(fn (ApproachResult $result): string => (string) $result->approach->value);
-
-        $this->results = $keyed;
+        $this->results = array_values($results);
     }
 
     /**
@@ -32,7 +28,7 @@ class ApproachSet
     public function uses(BackedEnum|array $approach): bool
     {
         foreach (Arr::wrap($approach) as $needle) {
-            if ($this->results->has((string) $needle->value)) {
+            if ($this->result($needle) instanceof ApproachResult) {
                 return true;
             }
         }
@@ -46,7 +42,7 @@ class ApproachSet
     public function usesAll(array $approaches): bool
     {
         foreach ($approaches as $needle) {
-            if (! $this->results->has((string) $needle->value)) {
+            if (! $this->result($needle) instanceof ApproachResult) {
                 return false;
             }
         }
@@ -56,7 +52,13 @@ class ApproachSet
 
     public function result(BackedEnum $approach): ?ApproachResult
     {
-        return $this->results->get((string) $approach->value);
+        foreach ($this->results as $result) {
+            if ($result->approach === $approach) {
+                return $result;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -64,6 +66,7 @@ class ApproachSet
      */
     public function all(): Collection
     {
-        return $this->results;
+        return (new Collection($this->results))
+            ->keyBy(fn (ApproachResult $result): string => (string) $result->approach->value);
     }
 }

@@ -67,3 +67,24 @@ it('serializes results to an array shape', function (): void {
         'paths' => ['/app/Http/Requests/StorePostRequest.php'],
     ]);
 });
+
+enum SetStyleA: string
+{
+    case STRICT = 'strict';
+}
+
+enum SetStyleB: string
+{
+    case STRICT = 'strict';
+}
+
+it('does not match a different enum sharing the same backing value', function (): void {
+    $set = new ApproachSet([
+        new ApproachResult(SetStyleB::STRICT, 1.0, 5, 5, []),
+    ]);
+
+    expect($set->uses(SetStyleB::STRICT))->toBeTrue()
+        ->and($set->uses(SetStyleA::STRICT))->toBeFalse()
+        ->and($set->result(SetStyleA::STRICT))->toBeNull()
+        ->and($set->result(SetStyleB::STRICT)?->approach)->toBe(SetStyleB::STRICT);
+});

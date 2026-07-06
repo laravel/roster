@@ -26,6 +26,8 @@ class ApproachesDetector
     /** @var list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}> */
     protected static array $extensions = [];
 
+    protected static int $generation = 0;
+
     protected string $basePath;
 
     public function __construct(string $basePath, protected SourceFiles $files)
@@ -39,11 +41,18 @@ class ApproachesDetector
     public static function extend(callable $vote, ?string $in = null): void
     {
         static::$extensions[] = ['vote' => $vote, 'in' => $in];
+        static::$generation++;
     }
 
     public static function flushExtensions(): void
     {
         static::$extensions = [];
+        static::$generation++;
+    }
+
+    public static function generation(): int
+    {
+        return static::$generation;
     }
 
     /**

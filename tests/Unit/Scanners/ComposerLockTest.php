@@ -81,3 +81,27 @@ it('returns an empty collection for a malformed composer.lock', function (): voi
 
     cleanup($base);
 });
+
+it('classifies dev from the lockfile section even when require-dev disagrees', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'composer.lock', json_encode([
+        'packages' => [
+            ['name' => 'symfony/var-dumper', 'version' => 'v7.2.0'],
+        ],
+        'packages-dev' => [],
+    ]));
+    file_put_contents($base.'composer.json', json_encode([
+        'require-dev' => ['symfony/var-dumper' => '^7.0'],
+    ]));
+
+    $packages = (new ComposerLock($base))->scan();
+
+    $dumper = $packages->first(fn ($p): bool => $p->name() === 'symfony/var-dumper');
+    expect($dumper)->not->toBeNull()
+        ->and($dumper->isDev())->toBeFalse()
+        ->and($dumper->isDirect())->toBeTrue()
+        ->and($dumper->constraint())->toEqual('^7.0');
+
+    cleanup($base);
+});

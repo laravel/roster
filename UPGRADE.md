@@ -85,11 +85,14 @@ Project::php()->uses('pestphp/pest', '3.0.0');
 
 **Likelihood Of Impact: High**
 
-A bare version string such as `1.2.3` now means an exact match. In 0.x, a bare version defaulted to a `>=` comparison. To preserve the previous behavior, you should write the operator explicitly:
+A bare version string such as `1.2.3` means an exact match, mirroring the `usesVersion` method's default `=` operator in 0.x. Calls that passed an explicit operator should fold it into the constraint string:
 
 ```php
-// 0.x behavior of uses('...', '1.2.3')...
-Project::php()->uses('pestphp/pest', '>=1.2.3');
+// 0.x...
+$roster->usesVersion(Packages::PEST, '3.0.0', '>=');
+
+// 1.0...
+Project::php()->uses('pestphp/pest', '>=3.0.0');
 ```
 
 The constraint argument accepts any composer-semver expression, such as `^1.2.3`, `~1.2`, `>=11 <14`, or `1.0 || ^2.0`.
@@ -175,7 +178,7 @@ Project::approaches()->uses([Approach::ACTION, Approach::DDD]);
 
 **Likelihood Of Impact: Low**
 
-The `roster:scan` Artisan command now requires a directory argument and emits the project surface as a JSON document. You may pass `--approaches` to include source-code approach detection:
+The `roster:scan` Artisan command's directory argument is now optional and defaults to the application's base path. The command emits the project surface as a JSON document, and you may pass `--approaches` to include source-code approach detection:
 
 ```bash
 php artisan roster:scan /path/to/project --approaches

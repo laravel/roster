@@ -80,3 +80,70 @@ it('parses v6 slash-delimited keys', function (): void {
         ->and($babel)->not->toBeNull()
         ->and($babel->version())->toEqual('7.0.0');
 });
+
+it('parses v6 at-delimited keys and top-level root dependencies', function (): void {
+    $lock = <<<'YAML'
+    lockfileVersion: '6.0'
+
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+    packages:
+
+      /lodash@4.17.21:
+        resolution: {integrity: sha512-abc==}
+
+      /@babel/core@7.0.0:
+        resolution: {integrity: sha512-def==}
+
+      /react-dom@18.2.0(react@18.2.0):
+        resolution: {integrity: sha512-ghi==}
+    YAML;
+
+    $base = writePnpmProject($lock, json_encode(['dependencies' => ['lodash' => '^4.17.21']]));
+
+    $packages = (new PnpmPackageLock($base))->scan();
+
+    $lodash = $packages->first(fn ($p): bool => $p->name() === 'lodash');
+    $babel = $packages->first(fn ($p): bool => $p->name() === '@babel/core');
+    $reactDom = $packages->first(fn ($p): bool => $p->name() === 'react-dom');
+
+    expect($lodash)->not->toBeNull()
+        ->and($lodash->version())->toEqual('4.17.21')
+        ->and($lodash->isDirect())->toBeTrue()
+        ->and($babel)->not->toBeNull()
+        ->and($babel->version())->toEqual('7.0.0')
+        ->and($reactDom)->not->toBeNull()
+        ->and($reactDom->version())->toEqual('18.2.0');
+});
+
+it('parses v5 keys with underscore peer suffixes', function (): void {
+    $lock = <<<'YAML'
+    lockfileVersion: 5.4
+
+    dependencies:
+      react-dom: 18.2.0_react@18.2.0
+
+    packages:
+
+      /react-dom/18.2.0_react@18.2.0:
+        resolution: {integrity: sha512-abc==}
+
+      /@babel/core/7.0.0:
+        resolution: {integrity: sha512-def==}
+    YAML;
+
+    $base = writePnpmProject($lock, json_encode(['dependencies' => ['react-dom' => '^18.0.0']]));
+
+    $packages = (new PnpmPackageLock($base))->scan();
+
+    $reactDom = $packages->first(fn ($p): bool => $p->name() === 'react-dom');
+    $babel = $packages->first(fn ($p): bool => $p->name() === '@babel/core');
+
+    expect($reactDom)->not->toBeNull()
+        ->and($reactDom->version())->toEqual('18.2.0')
+        ->and($babel)->not->toBeNull()
+        ->and($babel->version())->toEqual('7.0.0');
+});

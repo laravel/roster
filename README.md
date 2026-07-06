@@ -52,7 +52,7 @@ use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Facades\Project;
 
 Project::php()->uses('pestphp/pest');
-Project::stack()->uses(Stack::INERTIA_REACT);
+Project::stacks()->uses(Stack::INERTIA_REACT);
 ```
 
 Outside of a Laravel container, or when you would like an explicit handle, you may use the static `scan` method:
@@ -269,7 +269,7 @@ Project::approaches()->uses(Persistence::REPOSITORY);
 Project::approaches()->result(Persistence::REPOSITORY)?->confidence;
 ```
 
-Because the first call to the `approaches` method computes and memoizes the results, you should register custom conventions before anything queries approaches — a service provider's `boot` method is always safe.
+Registrations take effect immediately: if approaches were already computed, the next call to the `approaches` method re-detects with the new convention included.
 
 ## Caching
 

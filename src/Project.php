@@ -27,6 +27,8 @@ class Project
 {
     protected ?ApproachSet $approaches = null;
 
+    protected int $approachesGeneration = 0;
+
     /**
      * @param  EnumSet<Stack>  $stacks
      * @param  EnumSet<BrowserTestFramework>  $browserTestFrameworks
@@ -89,7 +91,14 @@ class Project
 
     public function approaches(): ApproachSet
     {
-        return $this->approaches ??= new ApproachSet(ApproachesDetector::detect($this->basePath));
+        $generation = ApproachesDetector::generation();
+
+        if (! $this->approaches instanceof ApproachSet || $this->approachesGeneration !== $generation) {
+            $this->approaches = new ApproachSet(ApproachesDetector::detect($this->basePath));
+            $this->approachesGeneration = $generation;
+        }
+
+        return $this->approaches;
     }
 
     public static function scan(?string $basePath = null): self
@@ -145,7 +154,7 @@ class Project
 
     public function json(): string
     {
-        return json_encode($this->toArray(), JSON_PRETTY_PRINT) ?: '{}';
+        return json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}';
     }
 
     /**
@@ -154,7 +163,7 @@ class Project
     public function __serialize(): array
     {
         $properties = get_object_vars($this);
-        unset($properties['approaches']);
+        unset($properties['approaches'], $properties['approachesGeneration']);
 
         return $properties;
     }

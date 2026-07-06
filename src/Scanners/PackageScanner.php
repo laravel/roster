@@ -47,11 +47,13 @@ abstract class PackageScanner
     /**
      * @param  array<string, string>  $dependencies
      */
-    protected function processDependencies(array $dependencies, PackageCollection $packages, bool $isDev): void
+    protected function processDependencies(array $dependencies, PackageCollection $packages, bool $isDev, bool $authoritative = false): void
     {
         $direct = $this->directDependencies();
 
         foreach ($dependencies as $packageName => $version) {
+            $packageName = (string) $packageName;
+
             if ($packageName === '') {
                 continue;
             }
@@ -62,7 +64,7 @@ abstract class PackageScanner
                 name: $packageName,
                 version: self::normalizeVersion($version),
                 source: $this->source(),
-                dev: $isDirect ? $direct[$packageName]['isDev'] : $isDev,
+                dev: $isDirect && ! $authoritative ? $direct[$packageName]['isDev'] : $isDev,
                 direct: $isDirect,
                 constraint: $isDirect ? $direct[$packageName]['constraint'] : $version,
                 path: $this->computePath($packageName),

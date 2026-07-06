@@ -22,7 +22,9 @@ class JsLockfile
             return (new PackageJson($this->path))->scan();
         }
 
-        return $this->scannerFor($manager)->scan();
+        $packages = $this->scannerFor($manager)->scan();
+
+        return $packages->isEmpty() ? (new PackageJson($this->path))->scan() : $packages;
     }
 
     public function committedManager(): ?JsPackageManager

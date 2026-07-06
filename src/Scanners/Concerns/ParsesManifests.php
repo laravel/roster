@@ -37,15 +37,15 @@ trait ParsesManifests
      */
     protected static function collectManifestDeps(array $manifest, string $prodKey, string $devKey): array
     {
-        return [
-            ...self::collectDeps($manifest[$prodKey] ?? null, false),
-            ...self::collectDeps($manifest[$devKey] ?? null, true),
-        ];
+        return array_replace(
+            self::collectDeps($manifest[$prodKey] ?? null, false),
+            self::collectDeps($manifest[$devKey] ?? null, true),
+        );
     }
 
     protected static function normalizeVersion(string $version): string
     {
-        return preg_replace('/[^0-9.]/', '', $version) ?? '';
+        return preg_match('/\d+(?:\.\d+)*/', $version, $matches) === 1 ? $matches[0] : '';
     }
 
     /**
@@ -60,15 +60,11 @@ trait ParsesManifests
         $collected = [];
 
         foreach ($deps as $name => $constraint) {
-            if (! is_string($name)) {
-                continue;
-            }
-
             if (! is_scalar($constraint)) {
                 continue;
             }
 
-            $collected[$name] = ['constraint' => (string) $constraint, 'isDev' => $isDev];
+            $collected[(string) $name] = ['constraint' => (string) $constraint, 'isDev' => $isDev];
         }
 
         return $collected;
