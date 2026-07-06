@@ -164,8 +164,8 @@ class Project
      */
     public function __unserialize(array $properties): void
     {
-        foreach (['basePath', 'php', 'js', 'stacks', 'browserTestFrameworks', 'frontends', 'agents', 'editors'] as $property) {
-            $this->{$property} = $properties[$property];
+        foreach ($properties as $property => $value) {
+            $this->{$property} = $value;
         }
 
         $this->approaches = null;
