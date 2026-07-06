@@ -951,3 +951,46 @@ it('detects ulid model keys', function (): void {
 
     cleanup($base);
 });
+
+it('does not let a call-heavy inline file or form request internals dilute the validation style', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel', 'India'] as $name) {
+        $extra = $name === 'Alpha' ? "\n        \$v = Validator::make([], []);\n        \$w = Validator::make([], []);" : '';
+        writeSource($base, "app/Http/Requests/{$name}Request.php", <<<PHP
+        class {$name}Request
+        {
+            public function rules(): array
+            {{$extra}
+                return [];
+            }
+        }
+        PHP);
+    }
+
+    writeSource($base, 'app/Http/Controllers/BusyController.php', <<<'PHP'
+    class BusyController
+    {
+        public function store($request): void
+        {
+            $request->validate(['a' => 'required']);
+            $request->validate(['b' => 'required']);
+            $request->validate(['c' => 'required']);
+        }
+    }
+    PHP);
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::VALIDATION_FORM_REQUEST))->toBeTrue()
+        ->and($approaches->uses(Approach::VALIDATION_INLINE))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::VALIDATION_FORM_REQUEST->value);
+
+    expect($result->matched)->toBe(6)
+        ->and($result->total)->toBe(7)
+        ->and(count($result->paths))->toBe(count(array_unique($result->paths)));
+
+    cleanup($base);
+});

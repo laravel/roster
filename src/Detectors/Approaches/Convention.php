@@ -18,7 +18,17 @@ abstract class Convention
     /**
      * @return list<ApproachResult>
      */
-    abstract public function detect(string $basePath, SourceFiles $files): array;
+    public function detect(string $basePath, SourceFiles $files): array
+    {
+        $result = $this->result($basePath, $files);
+
+        return $result instanceof ApproachResult ? [$result] : [];
+    }
+
+    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
+    {
+        return null;
+    }
 
     /**
      * @param  array<string, int>  $tally  approach value => votes

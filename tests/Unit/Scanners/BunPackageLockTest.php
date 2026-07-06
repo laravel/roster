@@ -62,3 +62,27 @@ it('resolves nested keys to the real package name and prefers the top-level entr
 
     cleanup($base);
 });
+
+it('keeps npm-aliased top-level entries under their alias name', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'bun.lock', json_encode([
+        'lockfileVersion' => 1,
+        'packages' => [
+            'my-lodash' => ['lodash@4.17.21', '', [], 'sha512-a'],
+        ],
+    ]));
+    file_put_contents($base.'package.json', json_encode([
+        'dependencies' => ['my-lodash' => 'npm:lodash@^4.17.0'],
+    ]));
+
+    $packages = (new BunPackageLock($base))->scan();
+
+    $aliased = $packages->first(fn ($p): bool => $p->name() === 'my-lodash');
+    expect($aliased)->not->toBeNull()
+        ->and($aliased->version())->toEqual('4.17.21')
+        ->and($aliased->isDirect())->toBeTrue()
+        ->and($packages->first(fn ($p): bool => $p->name() === 'lodash'))->toBeNull();
+
+    cleanup($base);
+});

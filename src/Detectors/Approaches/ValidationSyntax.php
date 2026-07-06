@@ -10,10 +10,7 @@ use Laravel\Roster\Support\SourceFiles;
 
 class ValidationSyntax extends Convention
 {
-    /**
-     * @return list<ApproachResult>
-     */
-    public function detect(string $basePath, SourceFiles $files): array
+    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
             Approach::VALIDATION_PIPE_SYNTAX->value => 0,
@@ -40,8 +37,6 @@ class ValidationSyntax extends Convention
             $paths[] = $path;
         }
 
-        $result = $this->dominant($tally, $paths);
-
-        return $result instanceof ApproachResult ? [$result] : [];
+        return $this->dominant($tally, $paths);
     }
 }

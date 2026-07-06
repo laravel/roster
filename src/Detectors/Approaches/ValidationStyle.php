@@ -10,10 +10,7 @@ use Laravel\Roster\Support\SourceFiles;
 
 class ValidationStyle extends Convention
 {
-    /**
-     * @return list<ApproachResult>
-     */
-    public function detect(string $basePath, SourceFiles $files): array
+    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
             Approach::VALIDATION_INLINE->value => 0,
@@ -21,30 +18,34 @@ class ValidationStyle extends Convention
         ];
 
         $paths = [];
+        $formRequests = [];
 
         foreach ($files->php('Http/Requests') as $path) {
             if (str_contains($files->contents($path), 'function rules')) {
+                $formRequests[$path] = true;
                 $tally[Approach::VALIDATION_FORM_REQUEST->value]++;
                 $paths[] = $path;
             }
         }
 
         foreach ($files->php() as $path) {
-            $contents = $files->contents($path);
-
-            $inline = (int) preg_match_all('/(?:\$request|\$this)->validate(?:WithBag)?\s*\(/', $contents)
-                + (int) preg_match_all('/Validator::make\s*\(/', $contents);
-
-            if ($inline === 0) {
+            if (isset($formRequests[$path])) {
                 continue;
             }
 
-            $tally[Approach::VALIDATION_INLINE->value] += $inline;
+            $contents = $files->contents($path);
+
+            $inline = preg_match('/(?:\$request|\$this)->validate(?:WithBag)?\s*\(/', $contents) === 1
+                || preg_match('/Validator::make\s*\(/', $contents) === 1;
+
+            if (! $inline) {
+                continue;
+            }
+
+            $tally[Approach::VALIDATION_INLINE->value]++;
             $paths[] = $path;
         }
 
-        $result = $this->dominant($tally, $paths);
-
-        return $result instanceof ApproachResult ? [$result] : [];
+        return $this->dominant($tally, $paths);
     }
 }

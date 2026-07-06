@@ -24,6 +24,9 @@ class SourceFiles
     /** @var array<string, list<string>> */
     protected array $filesByRoot = [];
 
+    /** @var array<string, list<string>> */
+    protected array $filesBySubpath = [];
+
     public function __construct(string $basePath)
     {
         $this->basePath = Str::finish($basePath, DIRECTORY_SEPARATOR);
@@ -33,6 +36,14 @@ class SourceFiles
      * @return list<string>
      */
     public function php(?string $subpath = null): array
+    {
+        return $this->filesBySubpath[$subpath ?? ''] ??= $this->resolvePhp($subpath);
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function resolvePhp(?string $subpath): array
     {
         $pattern = $subpath === null
             ? null

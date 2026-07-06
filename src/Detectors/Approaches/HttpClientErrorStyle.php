@@ -10,10 +10,7 @@ use Laravel\Roster\Support\SourceFiles;
 
 class HttpClientErrorStyle extends Convention
 {
-    /**
-     * @return list<ApproachResult>
-     */
-    public function detect(string $basePath, SourceFiles $files): array
+    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
             Approach::HTTP_CLIENT_THROW->value => 0,
@@ -41,8 +38,6 @@ class HttpClientErrorStyle extends Convention
             $paths[] = $path;
         }
 
-        $result = $this->dominant($tally, $paths);
-
-        return $result instanceof ApproachResult ? [$result] : [];
+        return $this->dominant($tally, $paths);
     }
 }

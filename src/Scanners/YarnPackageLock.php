@@ -22,6 +22,8 @@ class YarnPackageLock extends JsPackageScanner
         $contents = $this->readContents($lockFilePath, 'yarn.lock');
 
         if ($contents === null) {
+            $this->markFailed();
+
             return $packages;
         }
 
@@ -74,7 +76,9 @@ class YarnPackageLock extends JsPackageScanner
         // yarn v1: `lodash@^4.0.0:`, `"@babel/core@^7.0.0", "@babel/core@^7.2.0":`.
         $selector = trim((string) strtok(substr($line, 0, -1), ','), " \t\"");
 
-        $position = strrpos($selector, '@');
+        // Split at the first `@` past the leading scope marker: package names
+        // cannot contain `@`, while ranges may (patch:, git+ssh:// selectors).
+        $position = strpos($selector, '@', 1);
 
         if ($position === false || $position === 0) {
             return null;

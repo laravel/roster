@@ -16,6 +16,8 @@ class BunPackageLock extends JsPackageScanner
         $contents = $this->readContents($lockFilePath, 'bun.lock');
 
         if ($contents === null) {
+            $this->markFailed();
+
             return $packages;
         }
 
@@ -26,11 +28,15 @@ class BunPackageLock extends JsPackageScanner
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
             $this->warn('Failed to decode bun.lock: '.$lockFilePath);
 
+            $this->markFailed();
+
             return $packages;
         }
 
         if (! is_array($json['packages'] ?? null)) {
             $this->warn('Malformed bun.lock (missing "packages" key): '.$lockFilePath);
+
+            $this->markFailed();
 
             return $packages;
         }
@@ -43,11 +49,19 @@ class BunPackageLock extends JsPackageScanner
 
         foreach ($json['packages'] as $key => $entry) {
             $key = (string) $key;
+
+            $topLevel = ! str_contains($key, '/')
+                || (str_starts_with($key, '@') && substr_count($key, '/') === 1);
+
+            if ($topLevel) {
+                $allPackages[$key] = $this->extractVersion($entry);
+
+                continue;
+            }
+
             $name = $this->extractName($entry) ?? $key;
 
-            if ($name === $key) {
-                $allPackages[$name] = $this->extractVersion($entry);
-            } elseif (! isset($nestedPackages[$name])) {
+            if (! isset($nestedPackages[$name])) {
                 $nestedPackages[$name] = $this->extractVersion($entry);
             }
         }

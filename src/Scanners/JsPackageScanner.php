@@ -8,6 +8,18 @@ use Laravel\Roster\Enums\PackageSource;
 
 abstract class JsPackageScanner extends PackageScanner
 {
+    protected bool $failed = false;
+
+    public function failed(): bool
+    {
+        return $this->failed;
+    }
+
+    protected function markFailed(): void
+    {
+        $this->failed = true;
+    }
+
     protected function source(): PackageSource
     {
         return PackageSource::NPM;

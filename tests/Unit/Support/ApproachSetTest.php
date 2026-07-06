@@ -88,3 +88,14 @@ it('does not match a different enum sharing the same backing value', function ()
         ->and($set->result(SetStyleA::STRICT))->toBeNull()
         ->and($set->result(SetStyleB::STRICT)?->approach)->toBe(SetStyleB::STRICT);
 });
+
+it('keeps both results in all() when enums share a backing value', function (): void {
+    $set = new ApproachSet([
+        new ApproachResult(SetStyleA::STRICT, 1.0, 5, 5, []),
+        new ApproachResult(SetStyleB::STRICT, 0.9, 9, 10, []),
+    ]);
+
+    expect($set->all())->toHaveCount(2)
+        ->and($set->all()->get('strict')?->approach)->toBe(SetStyleA::STRICT)
+        ->and($set->all()->get(SetStyleB::class.':strict')?->approach)->toBe(SetStyleB::STRICT);
+});

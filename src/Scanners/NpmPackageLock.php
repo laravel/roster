@@ -20,11 +20,15 @@ class NpmPackageLock extends JsPackageScanner
                 $this->warn('Failed to decode package-lock.json: '.$lockFilePath);
             }
 
+            $this->markFailed();
+
             return $packages;
         }
 
         if (! is_array($json['packages'] ?? null)) {
             $this->warn('Unsupported package-lock.json (missing "packages" key): '.$lockFilePath);
+
+            $this->markFailed();
 
             return $packages;
         }

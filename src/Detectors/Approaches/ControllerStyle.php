@@ -10,10 +10,7 @@ use Laravel\Roster\Support\SourceFiles;
 
 class ControllerStyle extends Convention
 {
-    /**
-     * @return list<ApproachResult>
-     */
-    public function detect(string $basePath, SourceFiles $files): array
+    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
             Approach::CONTROLLER_INVOKABLE->value => 0,
@@ -36,8 +33,6 @@ class ControllerStyle extends Convention
             $paths[] = $path;
         }
 
-        $result = $this->dominant($tally, $paths);
-
-        return $result instanceof ApproachResult ? [$result] : [];
+        return $this->dominant($tally, $paths);
     }
 }

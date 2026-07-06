@@ -66,7 +66,19 @@ class ApproachSet
      */
     public function all(): Collection
     {
-        return (new Collection($this->results))
-            ->keyBy(fn (ApproachResult $result): string => (string) $result->approach->value);
+        /** @var Collection<string, ApproachResult> $keyed */
+        $keyed = new Collection;
+
+        foreach ($this->results as $result) {
+            $key = (string) $result->approach->value;
+
+            if ($keyed->has($key)) {
+                $key = $result->approach::class.':'.$key;
+            }
+
+            $keyed->put($key, $result);
+        }
+
+        return $keyed;
     }
 }

@@ -18,6 +18,8 @@ class PnpmPackageLock extends JsPackageScanner
         $contents = $this->readContents($lockFilePath, 'pnpm-lock.yaml');
 
         if ($contents === null) {
+            $this->markFailed();
+
             return $packages;
         }
 
@@ -26,6 +28,8 @@ class PnpmPackageLock extends JsPackageScanner
             $parsed = Yaml::parse($contents);
         } catch (Exception) {
             $this->warn('Failed to parse pnpm-lock.yaml: '.$lockFilePath);
+
+            $this->markFailed();
 
             return $packages;
         }

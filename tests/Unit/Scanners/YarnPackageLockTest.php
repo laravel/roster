@@ -128,3 +128,26 @@ LOCK);
 
     cleanup($base);
 });
+
+it('does not emit phantom packages for selectors whose range contains @', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'yarn.lock', <<<'LOCK'
+# yarn lockfile v1
+
+"foo@git+ssh://git@github.com/user/foo.git#v1.0.0":
+  version "1.0.0"
+
+"resolve@patch:resolve@npm%3A1.22.8#optional!builtin<compat/resolve>":
+  version "1.22.8"
+LOCK);
+
+    $packages = (new YarnPackageLock($base))->scan();
+
+    expect($packages->first(fn ($p): bool => $p->name() === 'foo'))->not->toBeNull()
+        ->and($packages->first(fn ($p): bool => $p->name() === 'resolve'))->not->toBeNull()
+        ->and($packages->first(fn ($p): bool => str_contains($p->name(), 'git+ssh')))->toBeNull()
+        ->and($packages->first(fn ($p): bool => str_contains($p->name(), 'patch:')))->toBeNull();
+
+    cleanup($base);
+});

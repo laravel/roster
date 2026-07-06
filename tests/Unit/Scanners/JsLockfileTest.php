@@ -178,3 +178,17 @@ it('falls back to package.json when the committed lockfile is unsupported', func
 
     cleanup($base);
 });
+
+it('does not substitute manifest data when the lockfile is valid but empty', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'package-lock.json', json_encode([
+        'lockfileVersion' => 3,
+        'packages' => [],
+    ]));
+    file_put_contents($base.'package.json', json_encode(['dependencies' => ['vue' => '^3.4.0']]));
+
+    expect((new JsLockfile($base))->scan())->toHaveCount(0);
+
+    cleanup($base);
+});

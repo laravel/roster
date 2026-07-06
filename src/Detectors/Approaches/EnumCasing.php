@@ -10,10 +10,7 @@ use Laravel\Roster\Support\SourceFiles;
 
 class EnumCasing extends Convention
 {
-    /**
-     * @return list<ApproachResult>
-     */
-    public function detect(string $basePath, SourceFiles $files): array
+    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
             Approach::ENUM_CASE_SCREAMING_SNAKE->value => 0,
@@ -47,9 +44,7 @@ class EnumCasing extends Convention
             }
         }
 
-        $result = $this->dominant($tally, $paths);
-
-        return $result instanceof ApproachResult ? [$result] : [];
+        return $this->dominant($tally, $paths);
     }
 
     /**
