@@ -4,6 +4,7 @@ namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\Packages;
@@ -99,7 +100,7 @@ abstract class BasePackageScanner
             $mappedItems->push(match (get_class($mappedPackage)) {
                 Packages::class => (new Package($mappedPackage, $packageName, $niceVersion, $packageIsDev))->setDirect($direct)->setConstraint($constraint)->setSource(PackageSource::NPM)->setPath($this->computePath($packageName)),
                 Approaches::class => new Approach($mappedPackage),
-                default => throw new \InvalidArgumentException('Unsupported mapping')
+                default => throw new InvalidArgumentException('Unsupported mapping')
             });
         }
     }
@@ -163,20 +164,20 @@ abstract class BasePackageScanner
     protected function validateFile(string $path, string $type = 'Package'): ?string
     {
         if (! file_exists($path)) {
-            Log::warning("Failed to scan $type: $path");
+            Log::warning("Failed to scan {$type}: {$path}");
 
             return null;
         }
 
         if (! is_readable($path)) {
-            Log::warning("File not readable: $path");
+            Log::warning("File not readable: {$path}");
 
             return null;
         }
 
         $contents = file_get_contents($path);
         if ($contents === false) {
-            Log::warning("Failed to read $type: $path");
+            Log::warning("Failed to read {$type}: {$path}");
 
             return null;
         }

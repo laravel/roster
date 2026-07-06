@@ -2,6 +2,7 @@
 
 namespace Laravel\Roster\Scanners;
 
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Laravel\Roster\Approach;
@@ -31,7 +32,7 @@ class PnpmPackageLock extends BasePackageScanner
         try {
             /** @var array<string, mixed> $parsed */
             $parsed = Yaml::parse($contents);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to parse YAML: '.$e->getMessage());
 
             return $mappedItems;

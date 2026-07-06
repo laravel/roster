@@ -4,6 +4,7 @@ namespace Laravel\Roster\Scanners;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use Laravel\Roster\Approach;
 use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\Packages;
@@ -192,7 +193,7 @@ class Composer
             $mappedItems->push(match (get_class($mappedPackage)) {
                 Packages::class => (new Package($mappedPackage, $packageName, $niceVersion, $isDev))->setDirect($direct)->setConstraint($constraint)->setSource(PackageSource::COMPOSER)->setPath($this->computePath($packageName)),
                 Approaches::class => new Approach($mappedPackage),
-                default => throw new \InvalidArgumentException('Unsupported mapping')
+                default => throw new InvalidArgumentException('Unsupported mapping')
             });
         }
 

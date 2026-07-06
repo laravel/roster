@@ -3,6 +3,7 @@
 namespace Laravel\Roster;
 
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
 use Laravel\Roster\Enums\Approaches;
 use Laravel\Roster\Enums\NodePackageManager;
 use Laravel\Roster\Enums\Packages;
@@ -34,14 +35,14 @@ class Roster
     }
 
     /**
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function add(Package|Approach $item): self
     {
         return match (get_class($item)) {
             Package::class => $this->addPackage($item),
             Approach::class => $this->addApproach($item),
-            default => throw new \InvalidArgumentException('Unexpected match value'),
+            default => throw new InvalidArgumentException('Unexpected match value'),
         };
     }
 
@@ -51,17 +52,17 @@ class Roster
     }
 
     /**
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function usesVersion(Packages $package, string $version, string $operator = '='): bool
     {
         if (! preg_match('/[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}/', $version)) {
-            throw new \InvalidArgumentException('SEMVER required');
+            throw new InvalidArgumentException('SEMVER required');
         }
 
         $validOperators = ['<', '<=', '>', '>=', '==', '=', '!=', '<>'];
-        if (! in_array($operator, $validOperators)) {
-            throw new \InvalidArgumentException('Invalid operator');
+        if (! in_array($operator, $validOperators, true)) {
+            throw new InvalidArgumentException('Invalid operator');
         }
 
         $package = $this->findItem($package);
