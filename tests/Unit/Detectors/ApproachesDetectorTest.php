@@ -7,6 +7,12 @@ use Laravel\Roster\Detectors\ApproachesDetector;
 use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Support\ApproachSet;
 
+enum CustomConvention: string
+{
+    case THIN_MODELS = 'custom.thin-models';
+    case FAT_MODELS = 'custom.fat-models';
+}
+
 function detectApproaches(string $app): ApproachSet
 {
     return new ApproachSet(ApproachesDetector::detect(
@@ -321,6 +327,60 @@ it('accepts an array of approaches with any-of semantics', function (): void {
 
     expect($approaches->uses([Approach::MASS_ASSIGNMENT_FILLABLE, Approach::MASS_ASSIGNMENT_GUARDED]))->toBeTrue()
         ->and($approaches->uses([Approach::MASS_ASSIGNMENT_GUARDED, Approach::ENUM_CASE_CAMEL]))->toBeFalse();
+});
+
+it('detects a registered custom convention with its own enum', function (): void {
+    ApproachesDetector::extend(
+        fn (string $contents, string $path): ?CustomConvention => str_contains($contents, '$fillable')
+            ? CustomConvention::THIN_MODELS
+            : null,
+        in: 'Models',
+    );
+
+    $approaches = detectApproaches('fillable-models-app');
+
+    expect($approaches->uses(CustomConvention::THIN_MODELS))->toBeTrue()
+        ->and($approaches->uses(CustomConvention::FAT_MODELS))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->result(CustomConvention::THIN_MODELS);
+
+    expect($result->approach)->toBe(CustomConvention::THIN_MODELS)
+        ->and($result->matched)->toBe(6)
+        ->and($result->total)->toBe(6)
+        ->and($result->confidence)->toBe(1.0)
+        ->and($result->paths[0])->toContain('Models');
+
+    ApproachesDetector::flushExtensions();
+});
+
+it('applies the evidence thresholds to custom conventions', function (): void {
+    ApproachesDetector::extend(
+        fn (string $contents): ?CustomConvention => match (true) {
+            str_contains($contents, '$fillable') => CustomConvention::THIN_MODELS,
+            str_contains($contents, '$guarded') => CustomConvention::FAT_MODELS,
+            default => null,
+        },
+        in: 'Models',
+    );
+
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeModel($base, $name, 'fillable');
+    }
+
+    foreach (['Delta', 'Hotel'] as $name) {
+        writeModel($base, $name, 'guarded');
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(CustomConvention::THIN_MODELS))->toBeFalse()
+        ->and($approaches->uses(CustomConvention::FAT_MODELS))->toBeFalse();
+
+    ApproachesDetector::flushExtensions();
+    cleanup($base);
 });
 
 it('dedupes files reachable through overlapping source roots', function (): void {

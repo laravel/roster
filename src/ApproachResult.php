@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Roster;
 
-use Laravel\Roster\Enums\Approach;
+use BackedEnum;
 
 class ApproachResult
 {
@@ -15,7 +15,7 @@ class ApproachResult
      * @param  list<string>  $paths  Absolute paths of the files that voted.
      */
     public function __construct(
-        public readonly Approach $approach,
+        public readonly BackedEnum $approach,
         public readonly float $confidence,
         public readonly int $matched,
         public readonly int $total,
@@ -30,7 +30,7 @@ class ApproachResult
     public function toArray(): array
     {
         return [
-            'approach' => $this->approach->value,
+            'approach' => (string) $this->approach->value,
             'confidence' => $this->confidence,
             'matched' => $this->matched,
             'total' => $this->total,

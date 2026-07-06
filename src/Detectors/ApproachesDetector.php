@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Detectors;
 
+use BackedEnum;
 use Illuminate\Support\Str;
 use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Enums\Approach;
@@ -22,11 +23,27 @@ class ApproachesDetector
         ['approach' => Approach::MODULAR, 'paths' => ['modules', 'Modules', 'app-modules']],
     ];
 
+    /** @var list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}> */
+    protected static array $extensions = [];
+
     protected string $basePath;
 
     public function __construct(string $basePath, protected SourceFiles $files)
     {
         $this->basePath = Str::finish($basePath, DIRECTORY_SEPARATOR);
+    }
+
+    /**
+     * @param  callable(string, string): (BackedEnum|null)  $vote
+     */
+    public static function extend(callable $vote, ?string $in = null): void
+    {
+        static::$extensions[] = ['vote' => $vote, 'in' => $in];
+    }
+
+    public static function flushExtensions(): void
+    {
+        static::$extensions = [];
     }
 
     /**
@@ -48,7 +65,39 @@ class ApproachesDetector
             $this->enumCasing(),
             $this->validationSyntax(),
             $this->queryScopes(),
+            ...$this->customConventions(),
         ]));
+    }
+
+    /**
+     * @return list<ApproachResult>
+     */
+    protected function customConventions(): array
+    {
+        $results = [];
+
+        foreach (static::$extensions as $extension) {
+            $tally = [];
+            $cases = [];
+            $paths = [];
+
+            foreach ($this->files->php($extension['in']) as $path) {
+                $style = ($extension['vote'])($this->files->contents($path), $path);
+
+                if (! $style instanceof BackedEnum) {
+                    continue;
+                }
+
+                $key = (string) $style->value;
+                $tally[$key] = ($tally[$key] ?? 0) + 1;
+                $cases[$key] = $style;
+                $paths[] = $path;
+            }
+
+            $results[] = $this->dominant($tally, $paths, $cases);
+        }
+
+        return array_values(array_filter($results));
     }
 
     /**
@@ -192,8 +241,9 @@ class ApproachesDetector
     /**
      * @param  array<string, int>  $tally  approach value => votes
      * @param  list<string>  $paths
+     * @param  array<string, BackedEnum>  $cases  approach value => case, for non-built-in enums
      */
-    protected function dominant(array $tally, array $paths): ?ApproachResult
+    protected function dominant(array $tally, array $paths, array $cases = []): ?ApproachResult
     {
         $tally = array_filter($tally, fn (int $votes): bool => $votes > 0);
         $total = array_sum($tally);
@@ -211,7 +261,7 @@ class ApproachesDetector
         }
 
         return new ApproachResult(
-            approach: Approach::from($winner),
+            approach: $cases[$winner] ?? Approach::from($winner),
             confidence: $votes / $total,
             matched: $votes,
             total: $total,

@@ -20,6 +20,7 @@
 - [Detecting Approaches](#detecting-approaches)
     - [Directory Conventions](#directory-conventions)
     - [Source Conventions](#source-conventions)
+    - [Custom Conventions](#custom-conventions)
 - [Caching](#caching)
 - [The `roster:scan` Command](#the-rosterscan-command)
 - [Upgrading](#upgrading)
@@ -236,6 +237,39 @@ $result->paths;      // ['/app/Models/User.php', ...]
 Source files are discovered from the `composer.json` PSR-4 autoload roots unioned with `app/`, and subdirectories such as `Models/` are matched anywhere beneath a root, so modular layouts like `src/Domain/Orders/Models/` are sampled too. `vendor/`, `node_modules/`, and hidden directories are always excluded.
 
 Because source files change without touching any lockfile, approaches are never persisted with the cached scan — they are computed lazily per process, and only when you ask for them: `toArray()` and `json()` stay cheap and omit them, while the `roster:scan` command accepts an `--approaches` flag to include them in its output.
+
+### Custom Conventions
+
+You may teach Roster your own source conventions using the `extendApproaches` method, typically within the `boot` method of a service provider. Define the competing styles as your own backed enum, then register a callback that receives each source file's contents and path and returns the style the file votes for — or `null` to abstain:
+
+```php
+use Laravel\Roster\Facades\Project;
+
+enum Persistence: string
+{
+    case REPOSITORY = 'acme.repository';
+    case DIRECT_ELOQUENT = 'acme.direct-eloquent';
+}
+
+// In a service provider's boot method...
+Project::extendApproaches(
+    fn (string $contents, string $path): ?Persistence => match (true) {
+        str_contains($contents, 'RepositoryInterface') => Persistence::REPOSITORY,
+        str_contains($contents, '::query()') => Persistence::DIRECT_ELOQUENT,
+        default => null,
+    },
+    in: 'Models',
+);
+```
+
+The `in` argument restricts voting to files beneath the given subdirectory of any source root, just like the built-in conventions; omit it to sample every source file. Custom conventions then flow through the same election as the built-ins — the vote and confidence thresholds apply, and results are queried the same way:
+
+```php
+Project::approaches()->uses(Persistence::REPOSITORY);
+Project::approaches()->result(Persistence::REPOSITORY)?->confidence;
+```
+
+Because the first call to the `approaches` method computes and memoizes the results, you should register custom conventions before anything queries approaches — a service provider's `boot` method is always safe.
 
 ## Caching
 

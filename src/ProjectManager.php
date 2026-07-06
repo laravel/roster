@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Laravel\Roster;
 
+use BackedEnum;
 use Closure;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Laravel\Roster\Detectors\AgentsDetector;
+use Laravel\Roster\Detectors\ApproachesDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\EditorsDetector;
 use Laravel\Roster\Detectors\MarkerDetector;
@@ -96,6 +98,15 @@ class ProjectManager
     public function approaches(): ApproachSet
     {
         return $this->instance()->approaches();
+    }
+
+    /**
+     * @param  callable(string, string): (BackedEnum|null)  $vote
+     * @param  string|null  $in  Restrict voting to files beneath this subdirectory of any source root.
+     */
+    public function extendApproaches(callable $vote, ?string $in = null): void
+    {
+        ApproachesDetector::extend($vote, $in);
     }
 
     /**

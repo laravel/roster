@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Support;
 
+use BackedEnum;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Laravel\Roster\ApproachResult;
-use Laravel\Roster\Enums\Approach;
 
 class ApproachSet
 {
@@ -21,18 +21,18 @@ class ApproachSet
     {
         /** @var Collection<string, ApproachResult> $keyed */
         $keyed = (new Collection($results))
-            ->keyBy(fn (ApproachResult $result): string => $result->approach->value);
+            ->keyBy(fn (ApproachResult $result): string => (string) $result->approach->value);
 
         $this->results = $keyed;
     }
 
     /**
-     * @param  Approach|array<int, Approach>  $approach
+     * @param  BackedEnum|array<int, BackedEnum>  $approach
      */
-    public function uses(Approach|array $approach): bool
+    public function uses(BackedEnum|array $approach): bool
     {
         foreach (Arr::wrap($approach) as $needle) {
-            if ($this->results->has($needle->value)) {
+            if ($this->results->has((string) $needle->value)) {
                 return true;
             }
         }
@@ -41,12 +41,12 @@ class ApproachSet
     }
 
     /**
-     * @param  array<int, Approach>  $approaches
+     * @param  array<int, BackedEnum>  $approaches
      */
     public function usesAll(array $approaches): bool
     {
         foreach ($approaches as $needle) {
-            if (! $this->results->has($needle->value)) {
+            if (! $this->results->has((string) $needle->value)) {
                 return false;
             }
         }
@@ -54,9 +54,9 @@ class ApproachSet
         return true;
     }
 
-    public function result(Approach $approach): ?ApproachResult
+    public function result(BackedEnum $approach): ?ApproachResult
     {
-        return $this->results->get($approach->value);
+        return $this->results->get((string) $approach->value);
     }
 
     /**
