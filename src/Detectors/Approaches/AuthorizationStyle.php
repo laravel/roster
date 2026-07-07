@@ -13,10 +13,10 @@ class AuthorizationStyle extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::AUTHORIZATION_GATE->value => 0,
-            Approach::AUTHORIZATION_USER_CAN->value => 0,
-            Approach::AUTHORIZATION_ATTRIBUTE->value => 0,
-            Approach::AUTHORIZATION_TRAIT->value => 0,
+            Approach::AuthorizationGate->value => 0,
+            Approach::AuthorizationUserCan->value => 0,
+            Approach::AuthorizationAttribute->value => 0,
+            Approach::AuthorizationTrait->value => 0,
         ];
 
         $paths = [];
@@ -24,19 +24,18 @@ class AuthorizationStyle extends Convention
         foreach ($files->php('Http/Controllers') as $path) {
             $contents = $files->contents($path);
 
-            $gate = (int) preg_match_all('/\bGate::(?:authorize|allows|denies|any|none|check|inspect)\s*\(/', $contents);
-            $userCan = (int) preg_match_all('/->user\(\)->(?:can|cannot)\s*\(/', $contents);
-            $attribute = (int) preg_match_all('/#\[\s*Authorize\b/', $contents);
-            $trait = (int) preg_match_all('/\$this->authorize\s*\(/', $contents);
+            $winner = $this->fileVote([
+                Approach::AuthorizationGate->value => (int) preg_match_all('/\bGate::(?:authorize|allows|denies|any|none|check|inspect)\s*\(/', $contents),
+                Approach::AuthorizationUserCan->value => (int) preg_match_all('/->user\(\)->(?:can|cannot)\s*\(/', $contents),
+                Approach::AuthorizationAttribute->value => (int) preg_match_all('/#\[\s*Authorize\b/', $contents),
+                Approach::AuthorizationTrait->value => (int) preg_match_all('/\$this->authorize\s*\(/', $contents),
+            ]);
 
-            if ($gate === 0 && $userCan === 0 && $attribute === 0 && $trait === 0) {
+            if ($winner === null) {
                 continue;
             }
 
-            $tally[Approach::AUTHORIZATION_GATE->value] += $gate;
-            $tally[Approach::AUTHORIZATION_USER_CAN->value] += $userCan;
-            $tally[Approach::AUTHORIZATION_ATTRIBUTE->value] += $attribute;
-            $tally[Approach::AUTHORIZATION_TRAIT->value] += $trait;
+            $tally[$winner]++;
             $paths[] = $path;
         }
 

@@ -12,9 +12,9 @@ class StackDetector
 {
     /** @var list<array{stack: Stack, packages: list<string>}> */
     private const INERTIA_RULES = [
-        ['stack' => Stack::INERTIA_REACT, 'packages' => ['@inertiajs/react']],
-        ['stack' => Stack::INERTIA_VUE, 'packages' => ['@inertiajs/vue3', '@inertiajs/vue']],
-        ['stack' => Stack::INERTIA_SVELTE, 'packages' => ['@inertiajs/svelte']],
+        ['stack' => Stack::InertiaReact, 'packages' => ['@inertiajs/react']],
+        ['stack' => Stack::InertiaVue, 'packages' => ['@inertiajs/vue3', '@inertiajs/vue']],
+        ['stack' => Stack::InertiaSvelte, 'packages' => ['@inertiajs/svelte']],
     ];
 
     /**
@@ -35,18 +35,18 @@ class StackDetector
         }
 
         if ($php->usesDirect(['livewire/livewire', 'livewire/volt'])) {
-            $stacks[] = Stack::LIVEWIRE;
+            $stacks[] = Stack::Livewire;
         }
 
         $hasApi = $php->usesDirect(['laravel/sanctum', 'laravel/passport']);
         $hasViewLayer = $stacks !== [] || $php->usesDirect('laravel/folio');
 
         if ($hasApi && ! $hasViewLayer) {
-            $stacks[] = Stack::API;
+            $stacks[] = Stack::Api;
         }
 
-        if ($stacks === [] && $php->uses('laravel/framework')) {
-            $stacks[] = Stack::BLADE;
+        if ($stacks === [] && $php->usesDirect('laravel/framework')) {
+            $stacks[] = Stack::Blade;
         }
 
         return $stacks;

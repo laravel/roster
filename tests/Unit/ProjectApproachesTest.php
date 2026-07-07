@@ -13,8 +13,8 @@ function approachesFixturePath(string $app): string
 it('exposes approaches from a full project scan', function (): void {
     $project = Project::scan(approachesFixturePath('fillable-models-app'));
 
-    expect($project->approaches()->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue()
-        ->and($project->approaches()->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse();
+    expect($project->approaches()->uses(Approach::MassAssignmentFillable))->toBeTrue()
+        ->and($project->approaches()->uses(Approach::MassAssignmentGuarded))->toBeFalse();
 });
 
 it('keeps the array payload cheap by omitting approaches', function (): void {
@@ -32,5 +32,5 @@ it('drops approaches on serialization and recomputes them lazily', function (): 
 
     expect($project->__serialize())->not->toHaveKey('approaches')
         ->and($restored)->toBeInstanceOf(Project::class)
-        ->and($restored->approaches()->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue();
+        ->and($restored->approaches()->uses(Approach::MassAssignmentFillable))->toBeTrue();
 });

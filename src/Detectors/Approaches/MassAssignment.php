@@ -13,8 +13,8 @@ class MassAssignment extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::MASS_ASSIGNMENT_FILLABLE->value => 0,
-            Approach::MASS_ASSIGNMENT_GUARDED->value => 0,
+            Approach::MassAssignmentFillable->value => 0,
+            Approach::MassAssignmentGuarded->value => 0,
         ];
 
         $paths = [];
@@ -31,7 +31,7 @@ class MassAssignment extends Convention
                 continue;
             }
 
-            $tally[$fillable ? Approach::MASS_ASSIGNMENT_FILLABLE->value : Approach::MASS_ASSIGNMENT_GUARDED->value]++;
+            $tally[$fillable ? Approach::MassAssignmentFillable->value : Approach::MassAssignmentGuarded->value]++;
             $paths[] = $path;
         }
 

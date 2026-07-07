@@ -13,8 +13,8 @@ class HttpClientErrorStyle extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::HTTP_CLIENT_THROW->value => 0,
-            Approach::HTTP_CLIENT_STATUS_CHECK->value => 0,
+            Approach::HttpClientThrow->value => 0,
+            Approach::HttpClientStatusCheck->value => 0,
         ];
 
         $paths = [];
@@ -26,15 +26,16 @@ class HttpClientErrorStyle extends Convention
                 continue;
             }
 
-            $throw = (int) preg_match_all('/->throw(?:If|Unless|IfStatus|UnlessStatus|IfServerError|IfClientError)?\s*\(/', $contents);
-            $check = (int) preg_match_all('/->(?:successful|failed|clientError|serverError)\s*\(\s*\)/', $contents);
+            $winner = $this->fileVote([
+                Approach::HttpClientThrow->value => (int) preg_match_all('/->throw(?:If|Unless|IfStatus|UnlessStatus|IfServerError|IfClientError)?\s*\(/', $contents),
+                Approach::HttpClientStatusCheck->value => (int) preg_match_all('/->(?:successful|failed|clientError|serverError)\s*\(\s*\)/', $contents),
+            ]);
 
-            if ($throw === 0 && $check === 0) {
+            if ($winner === null) {
                 continue;
             }
 
-            $tally[Approach::HTTP_CLIENT_THROW->value] += $throw;
-            $tally[Approach::HTTP_CLIENT_STATUS_CHECK->value] += $check;
+            $tally[$winner]++;
             $paths[] = $path;
         }
 

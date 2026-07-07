@@ -13,8 +13,8 @@ class NotificationSendStyle extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::NOTIFICATION_NOTIFY->value => 0,
-            Approach::NOTIFICATION_FACADE->value => 0,
+            Approach::NotificationNotify->value => 0,
+            Approach::NotificationFacade->value => 0,
         ];
 
         $paths = [];
@@ -22,15 +22,16 @@ class NotificationSendStyle extends Convention
         foreach ($files->php() as $path) {
             $contents = $files->contents($path);
 
-            $notify = (int) preg_match_all('/->notify\(\s*new\s/', $contents);
-            $facade = (int) preg_match_all('/\bNotification::send(?:Now)?\s*\(/', $contents);
+            $winner = $this->fileVote([
+                Approach::NotificationNotify->value => (int) preg_match_all('/->notify\(\s*new\s/', $contents),
+                Approach::NotificationFacade->value => (int) preg_match_all('/\bNotification::send(?:Now)?\s*\(/', $contents),
+            ]);
 
-            if ($notify === 0 && $facade === 0) {
+            if ($winner === null) {
                 continue;
             }
 
-            $tally[Approach::NOTIFICATION_NOTIFY->value] += $notify;
-            $tally[Approach::NOTIFICATION_FACADE->value] += $facade;
+            $tally[$winner]++;
             $paths[] = $path;
         }
 

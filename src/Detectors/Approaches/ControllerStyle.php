@@ -13,8 +13,8 @@ class ControllerStyle extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::CONTROLLER_INVOKABLE->value => 0,
-            Approach::CONTROLLER_MULTI_ACTION->value => 0,
+            Approach::ControllerInvokable->value => 0,
+            Approach::ControllerMultiAction->value => 0,
         ];
 
         $paths = [];
@@ -29,7 +29,7 @@ class ControllerStyle extends Convention
                 continue;
             }
 
-            $tally[$invokable ? Approach::CONTROLLER_INVOKABLE->value : Approach::CONTROLLER_MULTI_ACTION->value]++;
+            $tally[$invokable ? Approach::ControllerInvokable->value : Approach::ControllerMultiAction->value]++;
             $paths[] = $path;
         }
 

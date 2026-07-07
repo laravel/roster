@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 
@@ -20,8 +22,7 @@ it('outputs JSON for directory with packages', function (): void {
 });
 
 it('outputs empty JSON for empty directory', function (): void {
-    $emptyDir = sys_get_temp_dir().'/roster_test_empty_'.uniqid();
-    mkdir($emptyDir);
+    $emptyDir = tempBase();
 
     Artisan::call('roster:scan', ['directory' => $emptyDir]);
 
@@ -32,7 +33,7 @@ it('outputs empty JSON for empty directory', function (): void {
     expect($decoded['php'])->toBe([]);
     expect($decoded['js'])->toBe([]);
 
-    rmdir($emptyDir);
+    cleanup($emptyDir);
 });
 
 it('includes approaches only when requested', function (): void {

@@ -8,6 +8,7 @@ use BackedEnum;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Laravel\Roster\ApproachResult;
+use Laravel\Roster\Enums\Approach;
 
 class ApproachSet
 {
@@ -70,11 +71,9 @@ class ApproachSet
         $keyed = new Collection;
 
         foreach ($this->results as $result) {
-            $key = (string) $result->approach->value;
-
-            if ($keyed->has($key)) {
-                $key = $result->approach::class.':'.$key;
-            }
+            $key = $result->approach instanceof Approach
+                ? (string) $result->approach->value
+                : $result->approach::class.':'.$result->approach->value;
 
             $keyed->put($key, $result);
         }

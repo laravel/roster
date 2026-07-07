@@ -31,6 +31,27 @@ abstract class Convention
     }
 
     /**
+     * @param  array<string, int>  $counts  approach value => occurrences within one file
+     */
+    protected function fileVote(array $counts): ?string
+    {
+        $counts = array_filter($counts, fn (int $count): bool => $count > 0);
+
+        if ($counts === []) {
+            return null;
+        }
+
+        arsort($counts);
+        $ranked = array_values($counts);
+
+        if (isset($ranked[1]) && $ranked[1] === $ranked[0]) {
+            return null;
+        }
+
+        return array_key_first($counts);
+    }
+
+    /**
      * @param  array<string, int>  $tally  approach value => votes
      * @param  list<string>  $paths
      * @param  array<string, BackedEnum>  $cases  approach value => case, for non-built-in enums

@@ -6,8 +6,8 @@ namespace Laravel\Roster\Enums;
 
 enum BrowserTestFramework: string
 {
-    case DUSK = 'dusk';
-    case PEST_BROWSER = 'pest-browser';
-    case PLAYWRIGHT = 'playwright';
-    case CYPRESS = 'cypress';
+    case Dusk = 'dusk';
+    case PestBrowser = 'pest-browser';
+    case Playwright = 'playwright';
+    case Cypress = 'cypress';
 }

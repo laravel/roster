@@ -121,7 +121,7 @@ The `stack` method has been renamed to `stacks`, now lives on the `Project` faca
 $roster->stack();
 
 // 1.0...
-Project::stacks()->uses(Stack::INERTIA_REACT);
+Project::stacks()->uses(Stack::InertiaReact);
 ```
 
 ### The `Ides` Enum
@@ -131,8 +131,8 @@ Project::stacks()->uses(Stack::INERTIA_REACT);
 The `Ides` enum has been removed and split into two enums: `Laravel\Roster\Enums\Agent` for AI coding tools (Claude Code, Cursor, Codex, etc.) and `Laravel\Roster\Enums\Editor` for IDEs (PHPStorm, VSCode, Zed, Sublime Text). Each is detected through the project's filesystem markers:
 
 ```php
-Project::agents()->uses(Agent::CLAUDE_CODE);
-Project::editors()->uses(Editor::PHPSTORM);
+Project::agents()->uses(Agent::ClaudeCode);
+Project::editors()->uses(Editor::PhpStorm);
 ```
 
 ### JS Package Managers
@@ -170,8 +170,8 @@ Detection of binaries installed on the host machine has also been removed — Ro
 The `Approaches` enum has been renamed to `Approach` (singular), and its wrapping value class has been removed. Detected approaches are reported through the `approaches` method on the `Project` facade, which covers both directory conventions and source-code conventions:
 
 ```php
-Project::approaches()->uses(Approach::ACTION);
-Project::approaches()->uses([Approach::ACTION, Approach::DDD]);
+Project::approaches()->uses(Approach::Action);
+Project::approaches()->uses([Approach::Action, Approach::Ddd]);
 ```
 
 ### The `roster:scan` Command

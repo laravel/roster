@@ -12,9 +12,9 @@ class DirectoryConventions extends Convention
 {
     /** @var list<array{approach: Approach, paths: list<string>}> */
     private const DIRECTORY_RULES = [
-        ['approach' => Approach::ACTION, 'paths' => ['app/Actions']],
-        ['approach' => Approach::DDD, 'paths' => ['app/Domains']],
-        ['approach' => Approach::MODULAR, 'paths' => ['modules', 'Modules', 'app-modules']],
+        ['approach' => Approach::Action, 'paths' => ['app/Actions']],
+        ['approach' => Approach::Ddd, 'paths' => ['app/Domains']],
+        ['approach' => Approach::Modular, 'paths' => ['modules', 'Modules', 'app-modules']],
     ];
 
     /**

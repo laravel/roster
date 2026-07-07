@@ -8,9 +8,9 @@ use Laravel\Roster\Enums\Frontend;
 it('detects frontends from npm packages', function (): void {
     $frontends = FrontendDetector::detect(jsEcosystem(['vue', 'react']));
 
-    expect($frontends)->toContain(Frontend::VUE);
-    expect($frontends)->toContain(Frontend::REACT);
-    expect($frontends)->not->toContain(Frontend::SVELTE);
+    expect($frontends)->toContain(Frontend::Vue);
+    expect($frontends)->toContain(Frontend::React);
+    expect($frontends)->not->toContain(Frontend::Svelte);
 });
 
 it('returns empty when nothing present', function (): void {

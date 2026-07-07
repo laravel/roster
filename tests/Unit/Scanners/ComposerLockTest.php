@@ -14,7 +14,7 @@ it('parses installed packages with raw names', function (): void {
     expect($laravel->isDev())->toBeFalse();
     expect($laravel->isDirect())->toBeTrue();
     expect($laravel->constraint())->toEqual('^11.0');
-    expect($laravel->source())->toBe(PackageSource::COMPOSER);
+    expect($laravel->source())->toBe(PackageSource::Composer);
     expect($laravel->path())->toEndWith('vendor'.DIRECTORY_SEPARATOR.'laravel'.DIRECTORY_SEPARATOR.'framework');
 
     $pest = $packages->first(fn ($p): bool => $p->name() === 'pestphp/pest');

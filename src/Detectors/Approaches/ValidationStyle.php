@@ -13,8 +13,8 @@ class ValidationStyle extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::VALIDATION_INLINE->value => 0,
-            Approach::VALIDATION_FORM_REQUEST->value => 0,
+            Approach::ValidationInline->value => 0,
+            Approach::ValidationFormRequest->value => 0,
         ];
 
         $paths = [];
@@ -23,7 +23,7 @@ class ValidationStyle extends Convention
         foreach ($files->php('Http/Requests') as $path) {
             if (str_contains($files->contents($path), 'function rules')) {
                 $formRequests[$path] = true;
-                $tally[Approach::VALIDATION_FORM_REQUEST->value]++;
+                $tally[Approach::ValidationFormRequest->value]++;
                 $paths[] = $path;
             }
         }
@@ -42,7 +42,7 @@ class ValidationStyle extends Convention
                 continue;
             }
 
-            $tally[Approach::VALIDATION_INLINE->value]++;
+            $tally[Approach::ValidationInline->value]++;
             $paths[] = $path;
         }
 

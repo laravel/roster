@@ -127,27 +127,32 @@ class ProjectManager
      */
     private function rememberScan(string $key, Closure $scan): Project
     {
+        $store = null;
+
         try {
             $manager = Container::getInstance()->make('cache');
 
-            if (! $manager instanceof CacheFactory) {
-                return $scan();
+            if ($manager instanceof CacheFactory) {
+                $store = $manager->store();
+                $cached = $store->get($key);
+
+                if ($cached instanceof Project) {
+                    return $cached;
+                }
             }
-
-            $cached = $manager->store()->get($key);
-
-            if ($cached instanceof Project) {
-                return $cached;
-            }
-
-            $project = $scan();
-
-            $manager->store()->put($key, $project, self::CACHE_TTL);
-
-            return $project;
         } catch (Throwable) {
-            return $scan();
+            $store = null;
         }
+
+        $project = $scan();
+
+        try {
+            $store?->put($key, $project, self::CACHE_TTL);
+        } catch (Throwable) {
+            //
+        }
+
+        return $project;
     }
 
     private function cacheKey(string $basePath): string

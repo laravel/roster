@@ -11,9 +11,9 @@ it('detects editors from filesystem markers', function (): void {
     mkdir($base.'.vscode');
 
     $detected = EditorsDetector::detect($base);
-    expect($detected)->toContain(Editor::PHPSTORM);
-    expect($detected)->toContain(Editor::VSCODE);
-    expect($detected)->not->toContain(Editor::ZED);
+    expect($detected)->toContain(Editor::PhpStorm);
+    expect($detected)->toContain(Editor::VsCode);
+    expect($detected)->not->toContain(Editor::Zed);
 
     cleanup($base);
 });
@@ -23,7 +23,7 @@ it('detects glob markers such as sublime project files', function (): void {
     touchFile($base.'app.sublime-project');
 
     $detected = EditorsDetector::detect($base);
-    expect($detected)->toContain(Editor::SUBLIME_TEXT);
+    expect($detected)->toContain(Editor::SublimeText);
 
     cleanup($base);
 });

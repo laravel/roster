@@ -14,6 +14,8 @@ enum CustomConvention: string
     case FAT_MODELS = 'custom.fat-models';
 }
 
+afterEach(fn () => ApproachesDetector::flushExtensions());
+
 function detectApproaches(string $app): ApproachSet
 {
     return new ApproachSet(ApproachesDetector::detect(
@@ -33,11 +35,11 @@ function writeModel(string $base, string $name, string $property): void
 it('detects fillable as the dominant mass-assignment style', function (): void {
     $approaches = detectApproaches('fillable-models-app');
 
-    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue()
-        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse();
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue()
+        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+    $result = $approaches->all()->get(Approach::MassAssignmentFillable->value);
 
     expect($result->matched)->toBe(6)
         ->and($result->total)->toBe(6)
@@ -49,11 +51,11 @@ it('detects fillable as the dominant mass-assignment style', function (): void {
 it('detects guarded as the dominant mass-assignment style', function (): void {
     $approaches = detectApproaches('guarded-models-app');
 
-    expect($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeTrue()
-        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeFalse();
+    expect($approaches->uses(Approach::MassAssignmentGuarded))->toBeTrue()
+        ->and($approaches->uses(Approach::MassAssignmentFillable))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_GUARDED->value);
+    $result = $approaches->all()->get(Approach::MassAssignmentGuarded->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -62,18 +64,18 @@ it('detects guarded as the dominant mass-assignment style', function (): void {
 it('stays silent when models are split between fillable and guarded', function (): void {
     $approaches = detectApproaches('mixed-models-app');
 
-    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeFalse()
-        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse()
-        ->and($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeTrue();
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeFalse()
+        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse()
+        ->and($approaches->uses(Approach::ModelPropertySyntax))->toBeTrue();
 });
 
 it('detects screaming snake enum case naming with one vote per case', function (): void {
     $approaches = detectApproaches('screaming-enums-app');
 
-    expect($approaches->uses(Approach::ENUM_CASE_SCREAMING_SNAKE))->toBeTrue();
+    expect($approaches->uses(Approach::EnumCaseScreamingSnake))->toBeTrue();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::ENUM_CASE_SCREAMING_SNAKE->value);
+    $result = $approaches->all()->get(Approach::EnumCaseScreamingSnake->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5)
@@ -83,10 +85,10 @@ it('detects screaming snake enum case naming with one vote per case', function (
 it('does not count switch case labels as enum cases', function (): void {
     $approaches = detectApproaches('enum-switch-app');
 
-    expect($approaches->uses(Approach::ENUM_CASE_SCREAMING_SNAKE))->toBeTrue();
+    expect($approaches->uses(Approach::EnumCaseScreamingSnake))->toBeTrue();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::ENUM_CASE_SCREAMING_SNAKE->value);
+    $result = $approaches->all()->get(Approach::EnumCaseScreamingSnake->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -95,11 +97,11 @@ it('does not count switch case labels as enum cases', function (): void {
 it('detects pascal enum case naming', function (): void {
     $approaches = detectApproaches('pascal-enums-app');
 
-    expect($approaches->uses(Approach::ENUM_CASE_PASCAL))->toBeTrue()
-        ->and($approaches->uses(Approach::ENUM_CASE_SCREAMING_SNAKE))->toBeFalse();
+    expect($approaches->uses(Approach::EnumCasePascal))->toBeTrue()
+        ->and($approaches->uses(Approach::EnumCaseScreamingSnake))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::ENUM_CASE_PASCAL->value);
+    $result = $approaches->all()->get(Approach::EnumCasePascal->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -108,10 +110,10 @@ it('detects pascal enum case naming', function (): void {
 it('detects camel enum case naming', function (): void {
     $approaches = detectApproaches('camel-enums-app');
 
-    expect($approaches->uses(Approach::ENUM_CASE_CAMEL))->toBeTrue();
+    expect($approaches->uses(Approach::EnumCaseCamel))->toBeTrue();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::ENUM_CASE_CAMEL->value);
+    $result = $approaches->all()->get(Approach::EnumCaseCamel->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -120,10 +122,10 @@ it('detects camel enum case naming', function (): void {
 it('counts enum cases declared after a method with string interpolation', function (): void {
     $approaches = detectApproaches('interpolated-enums-app');
 
-    expect($approaches->uses(Approach::ENUM_CASE_SCREAMING_SNAKE))->toBeTrue();
+    expect($approaches->uses(Approach::EnumCaseScreamingSnake))->toBeTrue();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::ENUM_CASE_SCREAMING_SNAKE->value);
+    $result = $approaches->all()->get(Approach::EnumCaseScreamingSnake->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -132,11 +134,11 @@ it('counts enum cases declared after a method with string interpolation', functi
 it('detects pipe-delimited validation rule syntax', function (): void {
     $approaches = detectApproaches('pipe-validation-app');
 
-    expect($approaches->uses(Approach::VALIDATION_PIPE_SYNTAX))->toBeTrue()
-        ->and($approaches->uses(Approach::VALIDATION_ARRAY_SYNTAX))->toBeFalse();
+    expect($approaches->uses(Approach::ValidationPipeSyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::ValidationArraySyntax))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::VALIDATION_PIPE_SYNTAX->value);
+    $result = $approaches->all()->get(Approach::ValidationPipeSyntax->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5)
@@ -146,11 +148,11 @@ it('detects pipe-delimited validation rule syntax', function (): void {
 it('detects array validation rule syntax', function (): void {
     $approaches = detectApproaches('array-validation-app');
 
-    expect($approaches->uses(Approach::VALIDATION_ARRAY_SYNTAX))->toBeTrue()
-        ->and($approaches->uses(Approach::VALIDATION_PIPE_SYNTAX))->toBeFalse();
+    expect($approaches->uses(Approach::ValidationArraySyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::ValidationPipeSyntax))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::VALIDATION_ARRAY_SYNTAX->value);
+    $result = $approaches->all()->get(Approach::ValidationArraySyntax->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -159,11 +161,11 @@ it('detects array validation rule syntax', function (): void {
 it('counts #[Scope] attributes as attribute-syntax votes', function (): void {
     $approaches = detectApproaches('attribute-scopes-app');
 
-    expect($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeTrue()
-        ->and($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeFalse();
+    expect($approaches->uses(Approach::ModelAttributeSyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::ModelPropertySyntax))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MODEL_ATTRIBUTE_SYNTAX->value);
+    $result = $approaches->all()->get(Approach::ModelAttributeSyntax->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -172,17 +174,17 @@ it('counts #[Scope] attributes as attribute-syntax votes', function (): void {
 it('counts scopeXxx() methods as property-syntax votes', function (): void {
     $approaches = detectApproaches('naming-scopes-app');
 
-    expect($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeTrue()
-        ->and($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeFalse();
+    expect($approaches->uses(Approach::ModelPropertySyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::ModelAttributeSyntax))->toBeFalse();
 });
 
 it('samples Models directories anywhere beneath a PSR-4 root', function (): void {
     $approaches = detectApproaches('nested-models-app');
 
-    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue();
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+    $result = $approaches->all()->get(Approach::MassAssignmentFillable->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->paths[0])->toContain('src/Domain/Orders/Models');
@@ -198,11 +200,11 @@ it('detects directory conventions with full confidence', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect(rtrim($base, DIRECTORY_SEPARATOR)));
 
-    expect($approaches->uses(Approach::ACTION))->toBeTrue()
-        ->and($approaches->uses(Approach::DDD))->toBeFalse();
+    expect($approaches->uses(Approach::Action))->toBeTrue()
+        ->and($approaches->uses(Approach::Ddd))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::ACTION->value);
+    $result = $approaches->all()->get(Approach::Action->value);
 
     expect($result->confidence)->toBe(1.0)
         ->and($result->paths[0])->toContain('Actions');
@@ -217,7 +219,7 @@ it('detects the modular convention from any module directory', function (): void
 
         $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-        expect($approaches->uses(Approach::MODULAR))->toBeTrue();
+        expect($approaches->uses(Approach::Modular))->toBeTrue();
 
         cleanup($base);
     }
@@ -242,8 +244,8 @@ it('rejects a 4/5 majority as insufficient evidence', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeFalse()
-        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse();
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeFalse()
+        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
 
     cleanup($base);
 });
@@ -261,10 +263,10 @@ it('accepts a 90/100 majority', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue();
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+    $result = $approaches->all()->get(Approach::MassAssignmentFillable->value);
 
     expect($result->matched)->toBe(90)
         ->and($result->total)->toBe(100)
@@ -290,7 +292,7 @@ it('skips models declaring both fillable and guarded', function (): void {
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+    $result = $approaches->all()->get(Approach::MassAssignmentFillable->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5)
@@ -326,8 +328,8 @@ it('never lets vendor or node_modules code vote', function (): void {
 it('accepts an array of approaches with any-of semantics', function (): void {
     $approaches = detectApproaches('fillable-models-app');
 
-    expect($approaches->uses([Approach::MASS_ASSIGNMENT_FILLABLE, Approach::MASS_ASSIGNMENT_GUARDED]))->toBeTrue()
-        ->and($approaches->uses([Approach::MASS_ASSIGNMENT_GUARDED, Approach::ENUM_CASE_CAMEL]))->toBeFalse();
+    expect($approaches->uses([Approach::MassAssignmentFillable, Approach::MassAssignmentGuarded]))->toBeTrue()
+        ->and($approaches->uses([Approach::MassAssignmentGuarded, Approach::EnumCaseCamel]))->toBeFalse();
 });
 
 it('detects a registered custom convention with its own enum', function (): void {
@@ -351,8 +353,6 @@ it('detects a registered custom convention with its own enum', function (): void
         ->and($result->total)->toBe(6)
         ->and($result->confidence)->toBe(1.0)
         ->and($result->paths[0])->toContain('Models');
-
-    ApproachesDetector::flushExtensions();
 });
 
 it('applies the evidence thresholds to custom conventions', function (): void {
@@ -380,7 +380,6 @@ it('applies the evidence thresholds to custom conventions', function (): void {
     expect($approaches->uses(CustomConvention::THIN_MODELS))->toBeFalse()
         ->and($approaches->uses(CustomConvention::FAT_MODELS))->toBeFalse();
 
-    ApproachesDetector::flushExtensions();
     cleanup($base);
 });
 
@@ -398,7 +397,7 @@ it('dedupes files reachable through overlapping source roots', function (): void
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+    $result = $approaches->all()->get(Approach::MassAssignmentFillable->value);
 
     expect($result->total)->toBe(5);
 
@@ -420,8 +419,6 @@ it('recomputes memoized approaches when a convention is registered later', funct
     );
 
     expect($project->approaches()->uses(CustomConvention::THIN_MODELS))->toBeTrue();
-
-    ApproachesDetector::flushExtensions();
 });
 
 function writeAttributeModel(string $base, string $name, string $attribute): void
@@ -442,11 +439,11 @@ it('counts #[Fillable] and #[Guarded] attributes as mass-assignment votes', func
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue()
-        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse();
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue()
+        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MASS_ASSIGNMENT_FILLABLE->value);
+    $result = $approaches->all()->get(Approach::MassAssignmentFillable->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -467,8 +464,8 @@ it('lets attribute-style models outvote legacy property-style models', function 
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::MASS_ASSIGNMENT_FILLABLE))->toBeTrue()
-        ->and($approaches->uses(Approach::MASS_ASSIGNMENT_GUARDED))->toBeFalse();
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue()
+        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
 
     cleanup($base);
 });
@@ -486,11 +483,11 @@ it('detects attribute syntax as the dominant model configuration style', functio
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeTrue()
-        ->and($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeFalse();
+    expect($approaches->uses(Approach::ModelAttributeSyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::ModelPropertySyntax))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MODEL_ATTRIBUTE_SYNTAX->value);
+    $result = $approaches->all()->get(Approach::ModelAttributeSyntax->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -509,8 +506,8 @@ it('detects property syntax as the dominant model configuration style', function
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeTrue()
-        ->and($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeFalse();
+    expect($approaches->uses(Approach::ModelPropertySyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::ModelAttributeSyntax))->toBeFalse();
 
     cleanup($base);
 });
@@ -528,8 +525,8 @@ it('stays silent on model config syntax when styles are contested', function ():
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::MODEL_ATTRIBUTE_SYNTAX))->toBeFalse()
-        ->and($approaches->uses(Approach::MODEL_PROPERTY_SYNTAX))->toBeFalse();
+    expect($approaches->uses(Approach::ModelAttributeSyntax))->toBeFalse()
+        ->and($approaches->uses(Approach::ModelPropertySyntax))->toBeFalse();
 
     cleanup($base);
 });
@@ -537,8 +534,8 @@ it('stays silent on model config syntax when styles are contested', function ():
 it('detects form requests as the dominant validation style', function (): void {
     $approaches = detectApproaches('pipe-validation-app');
 
-    expect($approaches->uses(Approach::VALIDATION_FORM_REQUEST))->toBeTrue()
-        ->and($approaches->uses(Approach::VALIDATION_INLINE))->toBeFalse();
+    expect($approaches->uses(Approach::ValidationFormRequest))->toBeTrue()
+        ->and($approaches->uses(Approach::ValidationInline))->toBeFalse();
 });
 
 it('detects inline validation as the dominant validation style', function (): void {
@@ -554,11 +551,11 @@ it('detects inline validation as the dominant validation style', function (): vo
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::VALIDATION_INLINE))->toBeTrue()
-        ->and($approaches->uses(Approach::VALIDATION_FORM_REQUEST))->toBeFalse();
+    expect($approaches->uses(Approach::ValidationInline))->toBeTrue()
+        ->and($approaches->uses(Approach::ValidationFormRequest))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::VALIDATION_INLINE->value);
+    $result = $approaches->all()->get(Approach::ValidationInline->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(5);
@@ -587,8 +584,8 @@ it('stays silent when validation is split between inline and form requests', fun
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::VALIDATION_FORM_REQUEST))->toBeFalse()
-        ->and($approaches->uses(Approach::VALIDATION_INLINE))->toBeFalse();
+    expect($approaches->uses(Approach::ValidationFormRequest))->toBeFalse()
+        ->and($approaches->uses(Approach::ValidationInline))->toBeFalse();
 
     cleanup($base);
 });
@@ -616,8 +613,8 @@ it('detects invokable controllers as the dominant style', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::CONTROLLER_INVOKABLE))->toBeTrue()
-        ->and($approaches->uses(Approach::CONTROLLER_MULTI_ACTION))->toBeFalse();
+    expect($approaches->uses(Approach::ControllerInvokable))->toBeTrue()
+        ->and($approaches->uses(Approach::ControllerMultiAction))->toBeFalse();
 
     cleanup($base);
 });
@@ -654,11 +651,11 @@ it('detects multi-action controllers and lets single-action plain controllers ab
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::CONTROLLER_MULTI_ACTION))->toBeTrue()
-        ->and($approaches->uses(Approach::CONTROLLER_INVOKABLE))->toBeFalse();
+    expect($approaches->uses(Approach::ControllerMultiAction))->toBeTrue()
+        ->and($approaches->uses(Approach::ControllerInvokable))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::CONTROLLER_MULTI_ACTION->value);
+    $result = $approaches->all()->get(Approach::ControllerMultiAction->value);
 
     expect($result->total)->toBe(5);
 
@@ -668,7 +665,7 @@ it('detects multi-action controllers and lets single-action plain controllers ab
 it('detects command signature attribute vs property syntax', function (): void {
     $base = tempBase();
 
-    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
         writeSource($base, "app/Console/Commands/{$name}Command.php", <<<PHP
         #[Signature('{$name}:run')]
         #[Description('Run {$name}')]
@@ -680,8 +677,8 @@ it('detects command signature attribute vs property syntax', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::COMMAND_ATTRIBUTE_SYNTAX))->toBeTrue()
-        ->and($approaches->uses(Approach::COMMAND_PROPERTY_SYNTAX))->toBeFalse();
+    expect($approaches->uses(Approach::CommandAttributeSyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::CommandPropertySyntax))->toBeFalse();
 
     cleanup($base);
 });
@@ -689,7 +686,7 @@ it('detects command signature attribute vs property syntax', function (): void {
 it('detects command signature properties', function (): void {
     $base = tempBase();
 
-    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
         writeSource($base, "app/Console/Commands/{$name}Command.php", <<<PHP
         class {$name}Command
         {
@@ -702,8 +699,8 @@ it('detects command signature properties', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::COMMAND_PROPERTY_SYNTAX))->toBeTrue()
-        ->and($approaches->uses(Approach::COMMAND_ATTRIBUTE_SYNTAX))->toBeFalse();
+    expect($approaches->uses(Approach::CommandPropertySyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::CommandAttributeSyntax))->toBeFalse();
 
     cleanup($base);
 });
@@ -736,8 +733,8 @@ it('detects http client throw style only in files using the Http client', functi
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::HTTP_CLIENT_THROW))->toBeTrue()
-        ->and($approaches->uses(Approach::HTTP_CLIENT_STATUS_CHECK))->toBeFalse();
+    expect($approaches->uses(Approach::HttpClientThrow))->toBeTrue()
+        ->and($approaches->uses(Approach::HttpClientStatusCheck))->toBeFalse();
 
     cleanup($base);
 });
@@ -745,7 +742,7 @@ it('detects http client throw style only in files using the Http client', functi
 it('detects http client status-check style', function (): void {
     $base = tempBase();
 
-    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
         writeSource($base, "app/Services/{$name}.php", <<<PHP
         class {$name}
         {
@@ -761,8 +758,8 @@ it('detects http client status-check style', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::HTTP_CLIENT_STATUS_CHECK))->toBeTrue()
-        ->and($approaches->uses(Approach::HTTP_CLIENT_THROW))->toBeFalse();
+    expect($approaches->uses(Approach::HttpClientStatusCheck))->toBeTrue()
+        ->and($approaches->uses(Approach::HttpClientThrow))->toBeFalse();
 
     cleanup($base);
 });
@@ -784,8 +781,8 @@ it('detects the notify trait style over the Notification facade', function (): v
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::NOTIFICATION_NOTIFY))->toBeTrue()
-        ->and($approaches->uses(Approach::NOTIFICATION_FACADE))->toBeFalse();
+    expect($approaches->uses(Approach::NotificationNotify))->toBeTrue()
+        ->and($approaches->uses(Approach::NotificationFacade))->toBeFalse();
 
     cleanup($base);
 });
@@ -807,8 +804,8 @@ it('detects the Notification facade style', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::NOTIFICATION_FACADE))->toBeTrue()
-        ->and($approaches->uses(Approach::NOTIFICATION_NOTIFY))->toBeFalse();
+    expect($approaches->uses(Approach::NotificationFacade))->toBeTrue()
+        ->and($approaches->uses(Approach::NotificationNotify))->toBeFalse();
 
     cleanup($base);
 });
@@ -840,11 +837,11 @@ it('detects the dominant authorization call style in controllers', function (): 
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::AUTHORIZATION_GATE))->toBeTrue()
-        ->and($approaches->uses(Approach::AUTHORIZATION_TRAIT))->toBeFalse();
+    expect($approaches->uses(Approach::AuthorizationGate))->toBeTrue()
+        ->and($approaches->uses(Approach::AuthorizationTrait))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::AUTHORIZATION_GATE->value);
+    $result = $approaches->all()->get(Approach::AuthorizationGate->value);
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(6);
@@ -869,9 +866,9 @@ it('detects the dominant auth user retrieval style', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::AUTH_REQUEST))->toBeTrue()
-        ->and($approaches->uses(Approach::AUTH_FACADE))->toBeFalse()
-        ->and($approaches->uses(Approach::AUTH_HELPER))->toBeFalse();
+    expect($approaches->uses(Approach::AuthRequest))->toBeTrue()
+        ->and($approaches->uses(Approach::AuthFacade))->toBeFalse()
+        ->and($approaches->uses(Approach::AuthHelper))->toBeFalse();
 
     cleanup($base);
 });
@@ -893,8 +890,8 @@ it('detects the auth facade and helper retrieval styles', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::AUTH_FACADE))->toBeTrue()
-        ->and($approaches->uses(Approach::AUTH_HELPER))->toBeFalse();
+    expect($approaches->uses(Approach::AuthFacade))->toBeTrue()
+        ->and($approaches->uses(Approach::AuthHelper))->toBeFalse();
 
     cleanup($base);
 });
@@ -921,11 +918,11 @@ it('detects uuid model keys and abstains on files mixing both traits', function 
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::MODEL_UUID_KEYS))->toBeTrue()
-        ->and($approaches->uses(Approach::MODEL_ULID_KEYS))->toBeFalse();
+    expect($approaches->uses(Approach::ModelUuidKeys))->toBeTrue()
+        ->and($approaches->uses(Approach::ModelUlidKeys))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::MODEL_UUID_KEYS->value);
+    $result = $approaches->all()->get(Approach::ModelUuidKeys->value);
 
     expect($result->total)->toBe(5);
 
@@ -946,8 +943,8 @@ it('detects ulid model keys', function (): void {
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::MODEL_ULID_KEYS))->toBeTrue()
-        ->and($approaches->uses(Approach::MODEL_UUID_KEYS))->toBeFalse();
+    expect($approaches->uses(Approach::ModelUlidKeys))->toBeTrue()
+        ->and($approaches->uses(Approach::ModelUuidKeys))->toBeFalse();
 
     cleanup($base);
 });
@@ -982,11 +979,11 @@ it('does not let a call-heavy inline file or form request internals dilute the v
 
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::VALIDATION_FORM_REQUEST))->toBeTrue()
-        ->and($approaches->uses(Approach::VALIDATION_INLINE))->toBeFalse();
+    expect($approaches->uses(Approach::ValidationFormRequest))->toBeTrue()
+        ->and($approaches->uses(Approach::ValidationInline))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::VALIDATION_FORM_REQUEST->value);
+    $result = $approaches->all()->get(Approach::ValidationFormRequest->value);
 
     expect($result->matched)->toBe(6)
         ->and($result->total)->toBe(7)

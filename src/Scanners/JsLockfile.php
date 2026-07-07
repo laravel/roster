@@ -44,10 +44,10 @@ class JsLockfile
     private function scannerFor(JsPackageManager $manager): JsPackageScanner
     {
         return match ($manager) {
-            JsPackageManager::NPM => new NpmPackageLock($this->path),
-            JsPackageManager::PNPM => new PnpmPackageLock($this->path),
-            JsPackageManager::YARN => new YarnPackageLock($this->path),
-            JsPackageManager::BUN => new BunPackageLock($this->path),
+            JsPackageManager::Npm => new NpmPackageLock($this->path),
+            JsPackageManager::Pnpm => new PnpmPackageLock($this->path),
+            JsPackageManager::Yarn => new YarnPackageLock($this->path),
+            JsPackageManager::Bun => new BunPackageLock($this->path),
         };
     }
 }

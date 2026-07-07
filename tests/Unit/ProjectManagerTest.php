@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Cache\Factory;
 use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\ProjectManager;
 use Tests\TestCase;
@@ -19,7 +20,7 @@ it('invalidates the cache when a project marker appears', function (): void {
 
     mkdir($base.'.claude');
 
-    expect($manager->scan($base)->agents()->uses(Agent::CLAUDE_CODE))->toBeTrue();
+    expect($manager->scan($base)->agents()->uses(Agent::ClaudeCode))->toBeTrue();
 
     cleanup($base);
 });
@@ -79,6 +80,26 @@ it('scans without a usable cache driver', function (): void {
     cleanup($base);
 });
 
+it('still scans when the cache store throws', function (): void {
+    $broken = new class implements Factory
+    {
+        public function store($name = null): void
+        {
+            throw new RuntimeException('cache is down');
+        }
+    };
+
+    app()->instance('cache', $broken);
+
+    $base = tempBase();
+    file_put_contents($base.'package.json', json_encode(['dependencies' => ['vue' => '^3.0']]));
+
+    expect((new ProjectManager)->scan($base)->js()->uses('vue'))->toBeTrue();
+
+    app()->forgetInstance('cache');
+    cleanup($base);
+});
+
 it('does not repoint the default instance when scanning another directory', function (): void {
     config()->set('cache.default', 'array');
 
@@ -88,10 +109,10 @@ it('does not repoint the default instance when scanning another directory', func
     $manager = new ProjectManager;
     $default = $manager->instance();
 
-    expect($manager->scan($base)->agents()->uses(Agent::CLAUDE_CODE))->toBeTrue();
+    expect($manager->scan($base)->agents()->uses(Agent::ClaudeCode))->toBeTrue();
 
     expect($manager->instance())->toBe($default);
-    expect($manager->agents()->uses(Agent::CLAUDE_CODE))->toBeFalse();
+    expect($manager->agents()->uses(Agent::ClaudeCode))->toBeFalse();
 
     cleanup($base);
 });

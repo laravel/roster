@@ -37,6 +37,10 @@ class SourceFiles
      */
     public function php(?string $subpath = null): array
     {
+        if ($subpath !== null && trim(str_replace('\\', '/', $subpath), '/') === '') {
+            $subpath = null;
+        }
+
         return $this->filesBySubpath[$subpath ?? ''] ??= $this->resolvePhp($subpath);
     }
 

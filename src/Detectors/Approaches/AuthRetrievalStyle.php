@@ -13,9 +13,9 @@ class AuthRetrievalStyle extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::AUTH_FACADE->value => 0,
-            Approach::AUTH_REQUEST->value => 0,
-            Approach::AUTH_HELPER->value => 0,
+            Approach::AuthFacade->value => 0,
+            Approach::AuthRequest->value => 0,
+            Approach::AuthHelper->value => 0,
         ];
 
         $paths = [];
@@ -23,17 +23,17 @@ class AuthRetrievalStyle extends Convention
         foreach ($files->php() as $path) {
             $contents = $files->contents($path);
 
-            $facade = (int) preg_match_all('/\bAuth::(?:user|id|check|guest)\s*\(/', $contents);
-            $request = (int) preg_match_all('/\$request->user\(\)/', $contents);
-            $helper = (int) preg_match_all('/\bauth\(\)->(?:user|id|check|guest)\s*\(/', $contents);
+            $winner = $this->fileVote([
+                Approach::AuthFacade->value => (int) preg_match_all('/\bAuth::(?:user|id|check|guest)\s*\(/', $contents),
+                Approach::AuthRequest->value => (int) preg_match_all('/\$request->user\(\)/', $contents),
+                Approach::AuthHelper->value => (int) preg_match_all('/\bauth\(\)->(?:user|id|check|guest)\s*\(/', $contents),
+            ]);
 
-            if ($facade === 0 && $request === 0 && $helper === 0) {
+            if ($winner === null) {
                 continue;
             }
 
-            $tally[Approach::AUTH_FACADE->value] += $facade;
-            $tally[Approach::AUTH_REQUEST->value] += $request;
-            $tally[Approach::AUTH_HELPER->value] += $helper;
+            $tally[$winner]++;
             $paths[] = $path;
         }
 

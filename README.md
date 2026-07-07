@@ -52,7 +52,7 @@ use Laravel\Roster\Enums\Stack;
 use Laravel\Roster\Facades\Project;
 
 Project::php()->uses('pestphp/pest');
-Project::stacks()->uses(Stack::INERTIA_REACT);
+Project::stacks()->uses(Stack::InertiaReact);
 ```
 
 Outside of a Laravel container, or when you would like an explicit handle, you may use the static `scan` method:
@@ -63,6 +63,8 @@ use Laravel\Roster\Project;
 $project = Project::scan();          // uses base_path() / getcwd()
 $project = Project::scan($basePath);
 ```
+
+Note that `Laravel\Roster\Project::scan()` performs a fresh scan on every call, while the `Laravel\Roster\Facades\Project` facade caches — take care to import the one you intend.
 
 The examples that follow use `$project` for clarity, but every call works on the facade.
 
@@ -150,20 +152,20 @@ use Laravel\Roster\Enums\BrowserTestFramework;
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\Stack;
 
-$project->stacks()->uses(Stack::INERTIA_REACT);
+$project->stacks()->uses(Stack::InertiaReact);
 $project->stacks()->all();                             // Stack[]
 
-$project->browserTestFrameworks()->uses(BrowserTestFramework::PLAYWRIGHT);
+$project->browserTestFrameworks()->uses(BrowserTestFramework::Playwright);
 $project->browserTestFrameworks()->uses([
-    BrowserTestFramework::PLAYWRIGHT,
-    BrowserTestFramework::CYPRESS,
+    BrowserTestFramework::Playwright,
+    BrowserTestFramework::Cypress,
 ]);
 $project->browserTestFrameworks()->usesAll([
-    BrowserTestFramework::PLAYWRIGHT,
-    BrowserTestFramework::CYPRESS,
+    BrowserTestFramework::Playwright,
+    BrowserTestFramework::Cypress,
 ]);
 
-$project->frontends()->uses(Frontend::REACT);
+$project->frontends()->uses(Frontend::React);
 ```
 
 The `uses` method accepts either a single case or an array of cases and returns `true` when **any** is present, while the `usesAll` method returns `true` only when **every** case is present.
@@ -176,9 +178,9 @@ Agents (AI coding tools such as Claude Code, Cursor, and Codex) and editors (IDE
 use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\Editor;
 
-$project->agents()->uses(Agent::CLAUDE_CODE);
-$project->agents()->uses([Agent::CLAUDE_CODE, Agent::CURSOR]);
-$project->editors()->uses(Editor::PHPSTORM);
+$project->agents()->uses(Agent::ClaudeCode);
+$project->agents()->uses([Agent::ClaudeCode, Agent::Cursor]);
+$project->editors()->uses(Editor::PhpStorm);
 ```
 
 ## Detecting JS Package Managers
@@ -188,7 +190,7 @@ The `$project->js()->packageManager()` method reports the package manager *commi
 ```php
 use Laravel\Roster\Enums\JsPackageManager;
 
-$project->js()->packageManager() === JsPackageManager::PNPM;
+$project->js()->packageManager() === JsPackageManager::Pnpm;
 ```
 
 ## Detecting Approaches
@@ -197,13 +199,13 @@ The `approaches` method reports the conventions a project has adopted — both s
 
 ### Directory Conventions
 
-Architectural conventions are detected from the project's directory layout — `app/Actions` (`Approach::ACTION`), `app/Domains` (`Approach::DDD`), and module directories such as `modules` or `app-modules` (`Approach::MODULAR`). Since a directory is either present or not, these always report with a confidence of `1.0`:
+Architectural conventions are detected from the project's directory layout — `app/Actions` (`Approach::Action`), `app/Domains` (`Approach::Ddd`), and module directories such as `modules` or `app-modules` (`Approach::Modular`). Since a directory is either present or not, these always report with a confidence of `1.0`:
 
 ```php
 use Laravel\Roster\Enums\Approach;
 
-$project->approaches()->uses(Approach::ACTION);
-$project->approaches()->uses([Approach::ACTION, Approach::DDD]);
+$project->approaches()->uses(Approach::Action);
+$project->approaches()->uses([Approach::Action, Approach::Ddd]);
 ```
 
 ### Source Conventions
@@ -213,20 +215,20 @@ The `approaches` method also inspects the project's **own source code** — not 
 ```php
 use Laravel\Roster\Enums\Approach;
 
-$project->approaches()->uses(Approach::MASS_ASSIGNMENT_FILLABLE); // is this the dominant style?
+$project->approaches()->uses(Approach::MassAssignmentFillable); // is this the dominant style?
 $project->approaches()->uses([                                    // any-of, like EnumSet
-    Approach::VALIDATION_PIPE_SYNTAX,
-    Approach::VALIDATION_ARRAY_SYNTAX,
+    Approach::ValidationPipeSyntax,
+    Approach::ValidationArraySyntax,
 ]);
 $project->approaches()->all();                                    // Collection<string, ApproachResult>
 ```
 
-A stylistic approach is only reported when it is backed by enough evidence: at least 5 votes (one per model, enum case, form request, or scope), with more than 80% of them for the winning style — so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent.
+A stylistic approach is only reported when it is backed by enough evidence: at least 5 votes (one per voting file — or one per enum case for casing), with more than 80% of them for the winning style — so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent. A file that mixes styles votes for its majority style and abstains on a tie.
 
 Each `ApproachResult` exposes the winning `approach`, its raw `confidence` ratio, the `matched` and `total` vote counts, and the `paths` of the files that voted. You may retrieve a result via the `result` method:
 
 ```php
-$result = $project->approaches()->result(Approach::MASS_ASSIGNMENT_FILLABLE);
+$result = $project->approaches()->result(Approach::MassAssignmentFillable);
 
 $result->confidence; // 0.9
 $result->matched;    // 9
@@ -247,15 +249,15 @@ use Laravel\Roster\Facades\Project;
 
 enum Persistence: string
 {
-    case REPOSITORY = 'acme.repository';
-    case DIRECT_ELOQUENT = 'acme.direct-eloquent';
+    case Repository = 'acme.repository';
+    case DirectEloquent = 'acme.direct-eloquent';
 }
 
 // In a service provider's boot method...
 Project::extendApproaches(
     fn (string $contents, string $path): ?Persistence => match (true) {
-        str_contains($contents, 'RepositoryInterface') => Persistence::REPOSITORY,
-        str_contains($contents, '::query()') => Persistence::DIRECT_ELOQUENT,
+        str_contains($contents, 'RepositoryInterface') => Persistence::Repository,
+        str_contains($contents, '::query()') => Persistence::DirectEloquent,
         default => null,
     },
     in: 'Models',
@@ -265,8 +267,8 @@ Project::extendApproaches(
 The `in` argument restricts voting to files beneath the given subdirectory of any source root, just like the built-in conventions; omit it to sample every source file. Custom conventions then flow through the same election as the built-ins — the vote and confidence thresholds apply, and results are queried the same way:
 
 ```php
-Project::approaches()->uses(Persistence::REPOSITORY);
-Project::approaches()->result(Persistence::REPOSITORY)?->confidence;
+Project::approaches()->uses(Persistence::Repository);
+Project::approaches()->result(Persistence::Repository)?->confidence;
 ```
 
 Registrations take effect immediately: if approaches were already computed, the next call to the `approaches` method re-detects with the new convention included.

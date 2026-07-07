@@ -141,8 +141,8 @@ class Project
     public function toArray(): array
     {
         return [
-            'php' => array_map(fn (Package $p): array => $p->toArray(), $this->php->packages()->all()),
-            'js' => array_map(fn (Package $p): array => $p->toArray(), $this->js->packages()->all()),
+            'php' => array_map(fn (Package $package): array => $package->toArray(), $this->php->packages()->all()),
+            'js' => array_map(fn (Package $package): array => $package->toArray(), $this->js->packages()->all()),
             'stacks' => $this->stacks->values(),
             'browserTestFrameworks' => $this->browserTestFrameworks->values(),
             'frontends' => $this->frontends->values(),

@@ -136,3 +136,14 @@ it('returns false instead of throwing when the stored version is invalid', funct
     expect($php->uses('vendor/weird'))->toBeTrue()
         ->and($php->uses('vendor/weird', '^1.2'))->toBeFalse();
 });
+
+it('keeps prerelease suffixes and evaluates them with composer semver', function (): void {
+    $php = phpEcosystem([
+        ['name' => 'vendor/pkg', 'version' => '1.0.0-beta.1'],
+    ]);
+
+    expect($php->uses('vendor/pkg', '1.0.0'))->toBeFalse()
+        ->and($php->uses('vendor/pkg', '>=1.0.0'))->toBeTrue()
+        ->and($php->uses('vendor/pkg', '>=1.0.0-beta'))->toBeTrue()
+        ->and($php->uses('vendor/pkg', '1.0.0-beta.1'))->toBeTrue();
+});

@@ -6,10 +6,10 @@ namespace Laravel\Roster\Enums;
 
 enum JsPackageManager: string
 {
-    case NPM = 'npm';
-    case PNPM = 'pnpm';
-    case YARN = 'yarn';
-    case BUN = 'bun';
+    case Npm = 'npm';
+    case Pnpm = 'pnpm';
+    case Yarn = 'yarn';
+    case Bun = 'bun';
 
     public function lockFile(): string
     {
@@ -22,10 +22,10 @@ enum JsPackageManager: string
     public function lockFiles(): array
     {
         return match ($this) {
-            self::NPM => ['package-lock.json'],
-            self::PNPM => ['pnpm-lock.yaml'],
-            self::YARN => ['yarn.lock'],
-            self::BUN => ['bun.lock', 'bun.lockb'],
+            self::Npm => ['package-lock.json'],
+            self::Pnpm => ['pnpm-lock.yaml'],
+            self::Yarn => ['yarn.lock'],
+            self::Bun => ['bun.lock', 'bun.lockb'],
         };
     }
 }

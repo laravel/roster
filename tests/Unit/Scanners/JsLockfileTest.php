@@ -51,7 +51,7 @@ it('prefers package-lock.json when multiple lockfiles are committed', function (
 
     $lockfile = new JsLockfile($base);
 
-    expect($lockfile->committedManager())->toBe(JsPackageManager::NPM);
+    expect($lockfile->committedManager())->toBe(JsPackageManager::Npm);
 
     $tailwind = $lockfile->scan()->first(fn ($p): bool => $p->name() === 'tailwindcss');
     expect($tailwind->version())->toEqual('3.4.16');
@@ -67,7 +67,7 @@ it('scans pnpm-lock.yaml when it is the committed lockfile', function (): void {
 
     $lockfile = new JsLockfile($base);
 
-    expect($lockfile->committedManager())->toBe(JsPackageManager::PNPM);
+    expect($lockfile->committedManager())->toBe(JsPackageManager::Pnpm);
 
     $tailwind = $lockfile->scan()->first(fn ($p): bool => $p->name() === 'tailwindcss');
     expect($tailwind->version())->toEqual('3.4.3');
@@ -83,7 +83,7 @@ it('scans yarn.lock when it is the committed lockfile', function (): void {
 
     $lockfile = new JsLockfile($base);
 
-    expect($lockfile->committedManager())->toBe(JsPackageManager::YARN);
+    expect($lockfile->committedManager())->toBe(JsPackageManager::Yarn);
 
     $parser = $lockfile->scan()->first(fn ($p): bool => $p->name() === '@babel/parser');
     expect($parser->version())->toEqual('7.28.5');
@@ -99,7 +99,7 @@ it('scans bun.lock when it is the committed lockfile', function (): void {
 
     $lockfile = new JsLockfile($base);
 
-    expect($lockfile->committedManager())->toBe(JsPackageManager::BUN);
+    expect($lockfile->committedManager())->toBe(JsPackageManager::Bun);
 
     $alpine = $lockfile->scan()->first(fn ($p): bool => $p->name() === 'alpinejs');
     expect($alpine->version())->toEqual('3.14.8');
@@ -116,7 +116,7 @@ it('falls back to package.json when only bun.lockb is committed', function (): v
 
     $lockfile = new JsLockfile($tempDir);
 
-    expect($lockfile->committedManager())->toBe(JsPackageManager::BUN);
+    expect($lockfile->committedManager())->toBe(JsPackageManager::Bun);
 
     $vue = $lockfile->scan()->first(fn ($p): bool => $p->name() === 'vue');
     expect($vue)->not->toBeNull();
@@ -127,7 +127,7 @@ it('falls back to package.json when only bun.lockb is committed', function (): v
 
 it('reports the committed manager from lockfile presence', function (): void {
     $manager = (new JsLockfile(__DIR__.'/../../fixtures/fog/'))->committedManager();
-    expect($manager)->toBe(JsPackageManager::NPM);
+    expect($manager)->toBe(JsPackageManager::Npm);
 });
 
 it('falls back to package.json when no lockfile is committed', function (): void {

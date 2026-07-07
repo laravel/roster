@@ -14,9 +14,14 @@ use UnexpectedValueException;
 
 class Ecosystem
 {
+    /** @var array<string, Package> */
+    protected array $byName = [];
+
     public function __construct(protected PackageCollection $packages)
     {
-        //
+        foreach ($packages as $package) {
+            $this->byName[$package->name()] ??= $package;
+        }
     }
 
     /**
@@ -75,7 +80,7 @@ class Ecosystem
 
     public function package(string $name): ?Package
     {
-        return $this->packages->first(fn (Package $package): bool => $package->name() === $name);
+        return $this->byName[$name] ?? null;
     }
 
     public function packages(): PackageCollection

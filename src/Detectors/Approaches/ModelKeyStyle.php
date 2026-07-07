@@ -13,8 +13,8 @@ class ModelKeyStyle extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::MODEL_UUID_KEYS->value => 0,
-            Approach::MODEL_ULID_KEYS->value => 0,
+            Approach::ModelUuidKeys->value => 0,
+            Approach::ModelUlidKeys->value => 0,
         ];
 
         $paths = [];
@@ -29,7 +29,7 @@ class ModelKeyStyle extends Convention
                 continue;
             }
 
-            $tally[$uuid ? Approach::MODEL_UUID_KEYS->value : Approach::MODEL_ULID_KEYS->value]++;
+            $tally[$uuid ? Approach::ModelUuidKeys->value : Approach::ModelUlidKeys->value]++;
             $paths[] = $path;
         }
 

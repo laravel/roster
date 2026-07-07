@@ -14,10 +14,10 @@ class EditorsDetector extends MarkerDetector
 {
     /** @var array<string, list<string>> */
     private const PROJECT_MARKERS = [
-        Editor::PHPSTORM->value => ['.idea'],
-        Editor::VSCODE->value => ['.vscode'],
-        Editor::ZED->value => ['.zed'],
-        Editor::SUBLIME_TEXT->value => ['*.sublime-project', '*.sublime-workspace'],
+        Editor::PhpStorm->value => ['.idea'],
+        Editor::VsCode->value => ['.vscode'],
+        Editor::Zed->value => ['.zed'],
+        Editor::SublimeText->value => ['*.sublime-project', '*.sublime-workspace'],
     ];
 
     protected static function projectMarkers(): array

@@ -15,10 +15,10 @@ it('detects a framework only when its package and marker are both present', func
         $base,
     );
 
-    expect($found)->toContain(BrowserTestFramework::DUSK);
-    expect($found)->toContain(BrowserTestFramework::PEST_BROWSER);
-    expect($found)->toContain(BrowserTestFramework::PLAYWRIGHT);
-    expect($found)->not->toContain(BrowserTestFramework::CYPRESS);
+    expect($found)->toContain(BrowserTestFramework::Dusk);
+    expect($found)->toContain(BrowserTestFramework::PestBrowser);
+    expect($found)->toContain(BrowserTestFramework::Playwright);
+    expect($found)->not->toContain(BrowserTestFramework::Cypress);
     expect($found)->toHaveCount(3);
 
     cleanup($base);

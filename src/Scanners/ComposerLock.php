@@ -32,7 +32,7 @@ class ComposerLock extends PackageScanner
 
     protected function source(): PackageSource
     {
-        return PackageSource::COMPOSER;
+        return PackageSource::Composer;
     }
 
     protected function manifestFile(): string

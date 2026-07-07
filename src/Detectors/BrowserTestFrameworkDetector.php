@@ -16,26 +16,26 @@ class BrowserTestFrameworkDetector
      */
     private const RULES = [
         [
-            'framework' => BrowserTestFramework::DUSK,
-            'ecosystem' => PackageSource::COMPOSER,
+            'framework' => BrowserTestFramework::Dusk,
+            'ecosystem' => PackageSource::Composer,
             'package' => 'laravel/dusk',
             'markers' => ['tests/Browser'],
         ],
         [
-            'framework' => BrowserTestFramework::PEST_BROWSER,
-            'ecosystem' => PackageSource::COMPOSER,
+            'framework' => BrowserTestFramework::PestBrowser,
+            'ecosystem' => PackageSource::Composer,
             'package' => 'pestphp/pest-plugin-browser',
             'markers' => [],
         ],
         [
-            'framework' => BrowserTestFramework::PLAYWRIGHT,
-            'ecosystem' => PackageSource::NPM,
+            'framework' => BrowserTestFramework::Playwright,
+            'ecosystem' => PackageSource::Npm,
             'package' => '@playwright/test',
             'markers' => ['playwright.config.ts', 'playwright.config.js', 'playwright.config.mjs', 'playwright.config.cjs'],
         ],
         [
-            'framework' => BrowserTestFramework::CYPRESS,
-            'ecosystem' => PackageSource::NPM,
+            'framework' => BrowserTestFramework::Cypress,
+            'ecosystem' => PackageSource::Npm,
             'package' => 'cypress',
             'markers' => ['cypress.config.ts', 'cypress.config.js', 'cypress.config.mjs', 'cypress.config.cjs', 'cypress.json'],
         ],
@@ -49,7 +49,7 @@ class BrowserTestFrameworkDetector
         $found = [];
 
         foreach (self::RULES as $rule) {
-            $ecosystem = $rule['ecosystem'] === PackageSource::COMPOSER ? $php : $js;
+            $ecosystem = $rule['ecosystem'] === PackageSource::Composer ? $php : $js;
 
             if ($ecosystem->usesDirect($rule['package']) && self::markersPresent($basePath, $rule['markers'])) {
                 $found[] = $rule['framework'];

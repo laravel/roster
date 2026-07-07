@@ -45,7 +45,7 @@ trait ParsesManifests
 
     protected static function normalizeVersion(string $version): string
     {
-        return preg_match('/\d+(?:\.\d+)*/', $version, $matches) === 1 ? $matches[0] : '';
+        return preg_match('/\d+(?:\.\d+)*(?:-[0-9A-Za-z.]+)?/', $version, $matches) === 1 ? $matches[0] : '';
     }
 
     /**

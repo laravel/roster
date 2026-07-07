@@ -13,8 +13,8 @@ class CommandSignatureSyntax extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::COMMAND_ATTRIBUTE_SYNTAX->value => 0,
-            Approach::COMMAND_PROPERTY_SYNTAX->value => 0,
+            Approach::CommandAttributeSyntax->value => 0,
+            Approach::CommandPropertySyntax->value => 0,
         ];
 
         $paths = [];
@@ -22,15 +22,16 @@ class CommandSignatureSyntax extends Convention
         foreach ($files->php('Commands') as $path) {
             $contents = $files->contents($path);
 
-            $attributes = (int) preg_match_all('/#\[\s*(?:Signature|Description)\b/', $contents);
-            $properties = (int) preg_match_all('/protected\s+\$(?:signature|description)\b\s*=/', $contents);
+            $winner = $this->fileVote([
+                Approach::CommandAttributeSyntax->value => (int) preg_match_all('/#\[\s*(?:Signature|Description)\b/', $contents),
+                Approach::CommandPropertySyntax->value => (int) preg_match_all('/protected\s+\$(?:signature|description)\b\s*=/', $contents),
+            ]);
 
-            if ($attributes === 0 && $properties === 0) {
+            if ($winner === null) {
                 continue;
             }
 
-            $tally[Approach::COMMAND_ATTRIBUTE_SYNTAX->value] += $attributes;
-            $tally[Approach::COMMAND_PROPERTY_SYNTAX->value] += $properties;
+            $tally[$winner]++;
             $paths[] = $path;
         }
 

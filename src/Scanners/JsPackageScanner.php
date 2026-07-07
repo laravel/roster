@@ -22,7 +22,7 @@ abstract class JsPackageScanner extends PackageScanner
 
     protected function source(): PackageSource
     {
-        return PackageSource::NPM;
+        return PackageSource::Npm;
     }
 
     protected function manifestFile(): string

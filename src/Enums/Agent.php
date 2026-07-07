@@ -6,19 +6,19 @@ namespace Laravel\Roster\Enums;
 
 enum Agent: string
 {
-    case CLAUDE_CODE = 'claude-code';
-    case CURSOR = 'cursor';
-    case CODEX = 'codex';
-    case COPILOT = 'copilot';
-    case GEMINI = 'gemini';
-    case JUNIE = 'junie';
-    case KIRO = 'kiro';
-    case OPENCODE = 'opencode';
-    case AMP = 'amp';
-    case REPLIT = 'replit';
-    case DEVIN = 'devin';
+    case ClaudeCode = 'claude-code';
+    case Cursor = 'cursor';
+    case Codex = 'codex';
+    case Copilot = 'copilot';
+    case Gemini = 'gemini';
+    case Junie = 'junie';
+    case Kiro = 'kiro';
+    case OpenCode = 'opencode';
+    case Amp = 'amp';
+    case Replit = 'replit';
+    case Devin = 'devin';
     case V0 = 'v0';
-    case AUGMENT = 'augment';
-    case ANTIGRAVITY = 'antigravity';
-    case WINDSURF = 'windsurf';
+    case Augment = 'augment';
+    case Antigravity = 'antigravity';
+    case Windsurf = 'windsurf';
 }

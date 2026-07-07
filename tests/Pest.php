@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\Ecosystems\JsEcosystem;
 use Laravel\Roster\Enums\PackageSource;
@@ -11,7 +13,7 @@ use Laravel\Roster\PackageCollection;
  */
 function phpEcosystem(array $specs): Ecosystem
 {
-    return new Ecosystem(packagesFromSpecs($specs, PackageSource::COMPOSER));
+    return new Ecosystem(packagesFromSpecs($specs, PackageSource::Composer));
 }
 
 /**
@@ -20,7 +22,7 @@ function phpEcosystem(array $specs): Ecosystem
 function jsEcosystem(array $specs): JsEcosystem
 {
     return new JsEcosystem(
-        packagesFromSpecs($specs, PackageSource::NPM),
+        packagesFromSpecs($specs, PackageSource::Npm),
         null,
     );
 }

@@ -14,21 +14,21 @@ class AgentsDetector extends MarkerDetector
 {
     /** @var array<string, list<string>> */
     private const PROJECT_MARKERS = [
-        Agent::CLAUDE_CODE->value => ['.claude', 'CLAUDE.md', '.claude.json'],
-        Agent::CURSOR->value => ['.cursor', '.cursorrules'],
-        Agent::CODEX->value => ['.codex', 'AGENTS.md'],
-        Agent::COPILOT->value => ['.github/copilot-instructions.md'],
-        Agent::GEMINI->value => ['.gemini', 'GEMINI.md'],
-        Agent::JUNIE->value => ['.junie'],
-        Agent::KIRO->value => ['.kiro'],
-        Agent::OPENCODE->value => ['.opencode', 'opencode.json'],
-        Agent::AMP->value => ['.amp', 'amp.json'],
-        Agent::REPLIT->value => ['.replit', 'replit.nix'],
-        Agent::DEVIN->value => ['.devin'],
+        Agent::ClaudeCode->value => ['.claude', 'CLAUDE.md', '.claude.json'],
+        Agent::Cursor->value => ['.cursor', '.cursorrules'],
+        Agent::Codex->value => ['.codex', 'AGENTS.md'],
+        Agent::Copilot->value => ['.github/copilot-instructions.md'],
+        Agent::Gemini->value => ['.gemini', 'GEMINI.md'],
+        Agent::Junie->value => ['.junie'],
+        Agent::Kiro->value => ['.kiro'],
+        Agent::OpenCode->value => ['.opencode', 'opencode.json'],
+        Agent::Amp->value => ['.amp', 'amp.json'],
+        Agent::Replit->value => ['.replit', 'replit.nix'],
+        Agent::Devin->value => ['.devin'],
         Agent::V0->value => ['.v0'],
-        Agent::AUGMENT->value => ['.augment'],
-        Agent::ANTIGRAVITY->value => ['.antigravity'],
-        Agent::WINDSURF->value => ['.windsurf', '.windsurfrules'],
+        Agent::Augment->value => ['.augment'],
+        Agent::Antigravity->value => ['.antigravity'],
+        Agent::Windsurf->value => ['.windsurf', '.windsurfrules'],
     ];
 
     protected static function projectMarkers(): array

@@ -13,8 +13,8 @@ class ValidationSyntax extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
-            Approach::VALIDATION_PIPE_SYNTAX->value => 0,
-            Approach::VALIDATION_ARRAY_SYNTAX->value => 0,
+            Approach::ValidationPipeSyntax->value => 0,
+            Approach::ValidationArraySyntax->value => 0,
         ];
 
         $paths = [];
@@ -33,7 +33,7 @@ class ValidationSyntax extends Convention
                 continue;
             }
 
-            $tally[$pipe > $array ? Approach::VALIDATION_PIPE_SYNTAX->value : Approach::VALIDATION_ARRAY_SYNTAX->value]++;
+            $tally[$pipe > $array ? Approach::ValidationPipeSyntax->value : Approach::ValidationArraySyntax->value]++;
             $paths[] = $path;
         }
 

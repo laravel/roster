@@ -6,8 +6,8 @@ namespace Laravel\Roster\Enums;
 
 enum Editor: string
 {
-    case PHPSTORM = 'phpstorm';
-    case VSCODE = 'vscode';
-    case ZED = 'zed';
-    case SUBLIME_TEXT = 'sublime-text';
+    case PhpStorm = 'phpstorm';
+    case VsCode = 'vscode';
+    case Zed = 'zed';
+    case SublimeText = 'sublime-text';
 }

@@ -11,9 +11,9 @@ class FrontendDetector
 {
     /** @var array<string, Frontend> */
     private const RULES = [
-        'vue' => Frontend::VUE,
-        'react' => Frontend::REACT,
-        'svelte' => Frontend::SVELTE,
+        'vue' => Frontend::Vue,
+        'react' => Frontend::React,
+        'svelte' => Frontend::Svelte,
     ];
 
     /**
