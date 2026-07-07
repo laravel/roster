@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Scanners\Concerns;
 
+use Composer\Semver\VersionParser;
+use UnexpectedValueException;
+
 trait ParsesManifests
 {
     /**
@@ -45,7 +48,21 @@ trait ParsesManifests
 
     protected static function normalizeVersion(string $version): string
     {
-        return preg_match('/\d+(?:\.\d+)*(?:-[0-9A-Za-z.]+)?/', $version, $matches) === 1 ? $matches[0] : '';
+        if (preg_match('/\d+(?:\.\d+)*(?:-[0-9A-Za-z.]+)?/', $version, $matches) !== 1) {
+            return '';
+        }
+
+        $normalized = $matches[0];
+
+        if (str_contains($normalized, '-')) {
+            try {
+                (new VersionParser)->normalize($normalized);
+            } catch (UnexpectedValueException) {
+                return explode('-', $normalized, 2)[0];
+            }
+        }
+
+        return $normalized;
     }
 
     /**

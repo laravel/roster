@@ -134,14 +134,19 @@ class ProjectManager
 
             if ($manager instanceof CacheFactory) {
                 $store = $manager->store();
-                $cached = $store->get($key);
-
-                if ($cached instanceof Project) {
-                    return $cached;
-                }
             }
         } catch (Throwable) {
             $store = null;
+        }
+
+        try {
+            $cached = $store?->get($key);
+
+            if ($cached instanceof Project) {
+                return $cached;
+            }
+        } catch (Throwable) {
+            //
         }
 
         $project = $scan();
@@ -157,7 +162,7 @@ class ProjectManager
 
     private function cacheKey(string $basePath): string
     {
-        return 'roster:project:v2:'.md5(
+        return 'roster:project:v3:'.md5(
             $basePath.'|'.$this->lockfileHash($basePath).'|'.$this->markerHash($basePath)
         );
     }

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Cache\ArrayStore;
+use Illuminate\Cache\Repository;
 use Illuminate\Contracts\Cache\Factory;
 use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\ProjectManager;
@@ -77,6 +79,46 @@ it('scans without a usable cache driver', function (): void {
 
     expect((new ProjectManager)->scan($base)->js()->uses('vue'))->toBeTrue();
 
+    cleanup($base);
+});
+
+it('overwrites a corrupt cache entry instead of rescanning forever', function (): void {
+    $repository = new class(new ArrayStore) extends Repository
+    {
+        public bool $corrupt = true;
+
+        public function get($key, $default = null): mixed
+        {
+            if ($this->corrupt) {
+                $this->corrupt = false;
+
+                throw new RuntimeException('unserialize failed');
+            }
+
+            return parent::get($key, $default);
+        }
+    };
+
+    $factory = new class($repository) implements Factory
+    {
+        public function __construct(private Repository $repository) {}
+
+        public function store($name = null): Repository
+        {
+            return $this->repository;
+        }
+    };
+
+    app()->instance('cache', $factory);
+
+    $base = tempBase();
+
+    $manager = new ProjectManager;
+    $scanned = $manager->scan($base);
+
+    expect($manager->scan($base))->toBe($scanned);
+
+    app()->forgetInstance('cache');
     cleanup($base);
 });
 

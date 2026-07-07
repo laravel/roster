@@ -20,6 +20,8 @@ it('pins normalizeVersion behavior for common constraint shapes', function (): v
         ->and($subject::normalize('^3.4.0'))->toBe('3.4.0')
         ->and($subject::normalize('~1.2'))->toBe('1.2')
         ->and($subject::normalize('1.0.0-beta.1'))->toBe('1.0.0-beta.1')
+        ->and($subject::normalize('14.3.0-canary.24'))->toBe('14.3.0')
+        ->and($subject::normalize('1.0.0-nightly.1'))->toBe('1.0.0')
         ->and($subject::normalize('2.0.x-dev'))->toBe('2.0')
         ->and($subject::normalize('1.0.0 - 2.0.0'))->toBe('1.0.0')
         ->and($subject::normalize('>=1.2.0 <2.0.0'))->toBe('1.2.0')

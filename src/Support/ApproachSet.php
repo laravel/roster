@@ -75,7 +75,9 @@ class ApproachSet
                 ? (string) $result->approach->value
                 : $result->approach::class.':'.$result->approach->value;
 
-            $keyed->put($key, $result);
+            if (! $keyed->has($key)) {
+                $keyed->put($key, $result);
+            }
         }
 
         return $keyed;

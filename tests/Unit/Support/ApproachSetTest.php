@@ -101,3 +101,14 @@ it('keeps both results when enums share a backing value', function (): void {
         ->and($set->result(SetStyleA::STRICT)?->confidence)->toBe(1.0)
         ->and($set->result(SetStyleB::STRICT)?->confidence)->toBe(0.9);
 });
+
+it('keeps the first result when the same case is reported twice', function (): void {
+    $set = new ApproachSet([
+        new ApproachResult(SetStyleA::STRICT, 1.0, 5, 5, []),
+        new ApproachResult(SetStyleA::STRICT, 0.9, 9, 10, []),
+    ]);
+
+    expect($set->all())->toHaveCount(1)
+        ->and($set->all()->first()?->confidence)->toBe(1.0)
+        ->and($set->result(SetStyleA::STRICT)?->confidence)->toBe(1.0);
+});

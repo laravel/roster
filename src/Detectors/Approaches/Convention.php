@@ -31,6 +31,34 @@ abstract class Convention
     }
 
     /**
+     * @param  callable(string): (array<string, int>|null)  $counts  file contents => per-style occurrence counts, null to skip the file
+     */
+    protected function electByFile(SourceFiles $files, ?string $in, callable $counts): ?ApproachResult
+    {
+        $tally = [];
+        $paths = [];
+
+        foreach ($files->php($in) as $path) {
+            $fileCounts = $counts($files->contents($path));
+
+            if ($fileCounts === null) {
+                continue;
+            }
+
+            $winner = $this->fileVote($fileCounts);
+
+            if ($winner === null) {
+                continue;
+            }
+
+            $tally[$winner] = ($tally[$winner] ?? 0) + 1;
+            $paths[] = $path;
+        }
+
+        return $this->dominant($tally, $paths);
+    }
+
+    /**
      * @param  array<string, int>  $counts  approach value => occurrences within one file
      */
     protected function fileVote(array $counts): ?string
