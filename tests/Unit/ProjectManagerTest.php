@@ -6,6 +6,7 @@ use Illuminate\Cache\ArrayStore;
 use Illuminate\Cache\Repository;
 use Illuminate\Contracts\Cache\Factory;
 use Laravel\Roster\Enums\Agent;
+use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\ProjectManager;
 use Tests\TestCase;
 
@@ -80,6 +81,21 @@ it('scans without a usable cache driver', function (): void {
     expect((new ProjectManager)->scan($base)->js()->uses('vue'))->toBeTrue();
 
     cleanup($base);
+});
+
+it('serves projects through a cache store that actually serializes', function (): void {
+    config()->set('cache.default', 'array');
+    config()->set('cache.stores.array.serialize', true);
+
+    $base = dirname(__DIR__).DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'approaches'.DIRECTORY_SEPARATOR.'fillable-models-app';
+
+    $scanned = (new ProjectManager)->scan($base);
+    $scanned->approaches();
+
+    $restored = (new ProjectManager)->scan($base);
+
+    expect($restored)->not->toBe($scanned)
+        ->and($restored->approaches()->uses(Approach::MassAssignmentFillable))->toBeTrue();
 });
 
 it('overwrites a corrupt cache entry instead of rescanning forever', function (): void {

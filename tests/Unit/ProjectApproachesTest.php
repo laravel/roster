@@ -23,14 +23,26 @@ it('keeps the array payload cheap by omitting approaches', function (): void {
     expect($payload)->not->toHaveKey('approaches');
 });
 
-it('drops approaches on serialization and recomputes them lazily', function (): void {
+it('strips computed approaches from the serialized payload', function (): void {
+    $project = Project::scan(approachesFixturePath('fillable-models-app'));
+
+    $project->approaches();
+
+    expect($project->__serialize())
+        ->not->toHaveKey('approaches')
+        ->not->toHaveKey('approachesGeneration')
+        ->and(serialize($project))->not->toContain('ApproachSet');
+});
+
+it('recomputes approaches lazily after a serialize round-trip', function (): void {
     $project = Project::scan(approachesFixturePath('fillable-models-app'));
 
     $project->approaches();
 
     $restored = unserialize(serialize($project));
 
-    expect($project->__serialize())->not->toHaveKey('approaches')
-        ->and($restored)->toBeInstanceOf(Project::class)
-        ->and($restored->approaches()->uses(Approach::MassAssignmentFillable))->toBeTrue();
+    expect($restored)->toBeInstanceOf(Project::class)
+        ->and($restored)->not->toBe($project)
+        ->and($restored->approaches()->uses(Approach::MassAssignmentFillable))->toBeTrue()
+        ->and($restored->approaches()->uses(Approach::MassAssignmentGuarded))->toBeFalse();
 });
