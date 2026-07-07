@@ -6,9 +6,6 @@ namespace Laravel\Roster\Enums;
 
 enum Approach: string
 {
-    case Action = 'action';
-    case Ddd = 'ddd';
-    case Modular = 'modular';
     case MassAssignmentFillable = 'mass-assignment-fillable';
     case MassAssignmentGuarded = 'mass-assignment-guarded';
     case EnumCaseScreamingSnake = 'enum-case-screaming-snake';
@@ -18,8 +15,6 @@ enum Approach: string
     case ValidationArraySyntax = 'validation-array-syntax';
     case ValidationInline = 'validation-inline';
     case ValidationFormRequest = 'validation-form-request';
-    case ModelAttributeSyntax = 'model-attribute-syntax';
-    case ModelPropertySyntax = 'model-property-syntax';
     case ControllerInvokable = 'controller-invokable';
     case ControllerMultiAction = 'controller-multi-action';
     case CommandAttributeSyntax = 'command-attribute-syntax';

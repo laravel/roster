@@ -65,8 +65,7 @@ it('stays silent when models are split between fillable and guarded', function (
     $approaches = detectApproaches('mixed-models-app');
 
     expect($approaches->uses(Approach::MassAssignmentFillable))->toBeFalse()
-        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse()
-        ->and($approaches->uses(Approach::ModelPropertySyntax))->toBeTrue();
+        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
 });
 
 it('detects screaming snake enum case naming with one vote per case', function (): void {
@@ -158,26 +157,6 @@ it('detects array validation rule syntax', function (): void {
         ->and($result->total)->toBe(5);
 });
 
-it('counts #[Scope] attributes as attribute-syntax votes', function (): void {
-    $approaches = detectApproaches('attribute-scopes-app');
-
-    expect($approaches->uses(Approach::ModelAttributeSyntax))->toBeTrue()
-        ->and($approaches->uses(Approach::ModelPropertySyntax))->toBeFalse();
-
-    /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::ModelAttributeSyntax->value);
-
-    expect($result->matched)->toBe(5)
-        ->and($result->total)->toBe(5);
-});
-
-it('counts scopeXxx() methods as property-syntax votes', function (): void {
-    $approaches = detectApproaches('naming-scopes-app');
-
-    expect($approaches->uses(Approach::ModelPropertySyntax))->toBeTrue()
-        ->and($approaches->uses(Approach::ModelAttributeSyntax))->toBeFalse();
-});
-
 it('samples Models directories anywhere beneath a PSR-4 root', function (): void {
     $approaches = detectApproaches('nested-models-app');
 
@@ -192,58 +171,6 @@ it('samples Models directories anywhere beneath a PSR-4 root', function (): void
 
 it('stays silent when there are too few votes', function (): void {
     expect(detectApproaches('carbon-app')->all())->toBeEmpty();
-});
-
-it('detects directory conventions with full confidence', function (): void {
-    $base = tempBase();
-    mkdir($base.'app'.DIRECTORY_SEPARATOR.'Actions', 0777, true);
-
-    $approaches = new ApproachSet(ApproachesDetector::detect(rtrim($base, DIRECTORY_SEPARATOR)));
-
-    expect($approaches->uses(Approach::Action))->toBeTrue()
-        ->and($approaches->uses(Approach::Ddd))->toBeFalse();
-
-    /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::Action->value);
-
-    expect($result->confidence)->toBe(1.0)
-        ->and($result->paths[0])->toContain('Actions');
-
-    cleanup($base);
-});
-
-it('detects singular directory convention variants', function (): void {
-    $base = tempBase();
-    mkdir($base.'app'.DIRECTORY_SEPARATOR.'Action', 0777, true);
-    mkdir($base.'src'.DIRECTORY_SEPARATOR.'Domain', 0777, true);
-
-    $approaches = new ApproachSet(ApproachesDetector::detect(rtrim($base, DIRECTORY_SEPARATOR)));
-
-    expect($approaches->uses(Approach::Action))->toBeTrue()
-        ->and($approaches->uses(Approach::Ddd))->toBeTrue();
-
-    cleanup($base);
-});
-
-it('detects the modular convention from any module directory', function (): void {
-    foreach (['modules', 'Modules', 'app-modules'] as $dir) {
-        $base = tempBase();
-        mkdir($base.$dir);
-
-        $approaches = new ApproachSet(ApproachesDetector::detect($base));
-
-        expect($approaches->uses(Approach::Modular))->toBeTrue();
-
-        cleanup($base);
-    }
-});
-
-it('reports no directory conventions on a bare directory', function (): void {
-    $base = tempBase();
-
-    expect((new ApproachSet(ApproachesDetector::detect($base)))->all())->toBeEmpty();
-
-    cleanup($base);
 });
 
 it('rejects a 4/5 majority as insufficient evidence', function (): void {
@@ -479,67 +406,6 @@ it('lets attribute-style models outvote legacy property-style models', function 
 
     expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue()
         ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
-
-    cleanup($base);
-});
-
-it('detects attribute syntax as the dominant model configuration style', function (): void {
-    $base = tempBase();
-
-    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
-        writeAttributeModel($base, $name, 'Fillable');
-    }
-
-    foreach (['Delta', 'Hotel'] as $name) {
-        writeAttributeModel($base, $name, 'Hidden');
-    }
-
-    $approaches = new ApproachSet(ApproachesDetector::detect($base));
-
-    expect($approaches->uses(Approach::ModelAttributeSyntax))->toBeTrue()
-        ->and($approaches->uses(Approach::ModelPropertySyntax))->toBeFalse();
-
-    /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::ModelAttributeSyntax->value);
-
-    expect($result->matched)->toBe(5)
-        ->and($result->total)->toBe(5);
-
-    cleanup($base);
-});
-
-it('detects property syntax as the dominant model configuration style', function (): void {
-    $base = tempBase();
-
-    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta'] as $name) {
-        writeModel($base, $name, 'fillable');
-    }
-
-    writeModel($base, 'Hotel', 'hidden');
-
-    $approaches = new ApproachSet(ApproachesDetector::detect($base));
-
-    expect($approaches->uses(Approach::ModelPropertySyntax))->toBeTrue()
-        ->and($approaches->uses(Approach::ModelAttributeSyntax))->toBeFalse();
-
-    cleanup($base);
-});
-
-it('stays silent on model config syntax when styles are contested', function (): void {
-    $base = tempBase();
-
-    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
-        writeAttributeModel($base, $name, 'Fillable');
-    }
-
-    foreach (['Delta', 'Hotel'] as $name) {
-        writeModel($base, $name, 'fillable');
-    }
-
-    $approaches = new ApproachSet(ApproachesDetector::detect($base));
-
-    expect($approaches->uses(Approach::ModelAttributeSyntax))->toBeFalse()
-        ->and($approaches->uses(Approach::ModelPropertySyntax))->toBeFalse();
 
     cleanup($base);
 });

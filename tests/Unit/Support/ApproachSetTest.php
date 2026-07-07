@@ -41,12 +41,12 @@ it('retrieves a typed result per approach', function (): void {
 
 it('checks all-of membership with usesAll', function (): void {
     $fillable = new ApproachResult(Approach::MassAssignmentFillable, 1.0, 5, 5, []);
-    $ddd = new ApproachResult(Approach::Ddd, 1.0, 1, 1, []);
+    $formRequest = new ApproachResult(Approach::ValidationFormRequest, 1.0, 1, 1, []);
 
-    $set = new ApproachSet([$fillable, $ddd]);
+    $set = new ApproachSet([$fillable, $formRequest]);
 
-    expect($set->usesAll([Approach::MassAssignmentFillable, Approach::Ddd]))->toBeTrue()
-        ->and($set->usesAll([Approach::MassAssignmentFillable, Approach::Action]))->toBeFalse()
+    expect($set->usesAll([Approach::MassAssignmentFillable, Approach::ValidationFormRequest]))->toBeTrue()
+        ->and($set->usesAll([Approach::MassAssignmentFillable, Approach::ValidationInline]))->toBeFalse()
         ->and($set->usesAll([]))->toBeTrue();
 });
 

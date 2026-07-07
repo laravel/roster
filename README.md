@@ -18,7 +18,6 @@
 - [Detecting Agents and Editors](#detecting-agents-and-editors)
 - [Detecting JS Package Managers](#detecting-js-package-managers)
 - [Detecting Approaches](#detecting-approaches)
-    - [Directory Conventions](#directory-conventions)
     - [Source Conventions](#source-conventions)
     - [Custom Conventions](#custom-conventions)
 - [Caching](#caching)
@@ -195,22 +194,11 @@ $project->js()->packageManager() === JsPackageManager::Pnpm;
 
 ## Detecting Approaches
 
-The `approaches` method reports the conventions a project has adopted — both structural conventions read from the directory layout and stylistic conventions read from the source code itself.
-
-### Directory Conventions
-
-Architectural conventions are detected from the project's directory layout — `app/Actions` (`Approach::Action`), `app/Domains` (`Approach::Ddd`), and module directories such as `modules` or `app-modules` (`Approach::Modular`). Since a directory is either present or not, these always report with a confidence of `1.0`:
-
-```php
-use Laravel\Roster\Enums\Approach;
-
-$project->approaches()->uses(Approach::Action);
-$project->approaches()->uses([Approach::Action, Approach::Ddd]);
-```
+The `approaches` method reports the stylistic conventions a project has adopted, read from the source code itself.
 
 ### Source Conventions
 
-The `approaches` method also inspects the project's **own source code** — not its manifests — and reports which stylistic conventions the application has adopted: `fillable` vs `guarded` mass assignment (detected in both the `protected $fillable` property and `#[Fillable]` attribute spellings), attribute vs property model configuration (`#[Fillable]`, `#[Hidden]`, `#[Scope]` versus `protected $fillable`, `protected $hidden`, `scopeXxx()`), enum case casing, pipe vs array validation rule syntax, and inline validation vs form requests (`$request->validate([...])` versus dedicated `rules()` classes under `Http/Requests`):
+The `approaches` method inspects the project's **own source code** — not its manifests — and reports which stylistic conventions the application has adopted: `fillable` vs `guarded` mass assignment (detected in both the `protected $fillable` property and `#[Fillable]` attribute spellings), enum case casing, pipe vs array validation rule syntax, and inline validation vs form requests (`$request->validate([...])` versus dedicated `rules()` classes under `Http/Requests`):
 
 ```php
 use Laravel\Roster\Enums\Approach;

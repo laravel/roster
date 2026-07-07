@@ -13,11 +13,9 @@ use Laravel\Roster\Detectors\Approaches\CommandSignatureSyntax;
 use Laravel\Roster\Detectors\Approaches\ControllerStyle;
 use Laravel\Roster\Detectors\Approaches\Convention;
 use Laravel\Roster\Detectors\Approaches\CustomConventions;
-use Laravel\Roster\Detectors\Approaches\DirectoryConventions;
 use Laravel\Roster\Detectors\Approaches\EnumCasing;
 use Laravel\Roster\Detectors\Approaches\HttpClientErrorStyle;
 use Laravel\Roster\Detectors\Approaches\MassAssignment;
-use Laravel\Roster\Detectors\Approaches\ModelConfigSyntax;
 use Laravel\Roster\Detectors\Approaches\ModelKeyStyle;
 use Laravel\Roster\Detectors\Approaches\NotificationSendStyle;
 use Laravel\Roster\Detectors\Approaches\ValidationStyle;
@@ -72,9 +70,7 @@ class ApproachesDetector
     protected function conventions(): array
     {
         return [
-            new DirectoryConventions,
             new MassAssignment,
-            new ModelConfigSyntax,
             new EnumCasing,
             new ValidationSyntax,
             new ValidationStyle,
