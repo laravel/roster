@@ -518,7 +518,6 @@ it('detects resourceful controllers and lets non-resource controllers abstain', 
         PHP);
     }
 
-    // Single resource action — abstains.
     writeSource($base, 'app/Http/Controllers/SingleController.php', <<<'PHP'
     class SingleController
     {
@@ -529,7 +528,6 @@ it('detects resourceful controllers and lets non-resource controllers abstain', 
     }
     PHP);
 
-    // Two public methods, but none are resource actions — abstains.
     writeSource($base, 'app/Http/Controllers/HelperController.php', <<<'PHP'
     class HelperController
     {
