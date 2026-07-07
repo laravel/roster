@@ -212,6 +212,19 @@ it('detects directory conventions with full confidence', function (): void {
     cleanup($base);
 });
 
+it('detects singular directory convention variants', function (): void {
+    $base = tempBase();
+    mkdir($base.'app'.DIRECTORY_SEPARATOR.'Action', 0777, true);
+    mkdir($base.'src'.DIRECTORY_SEPARATOR.'Domain', 0777, true);
+
+    $approaches = new ApproachSet(ApproachesDetector::detect(rtrim($base, DIRECTORY_SEPARATOR)));
+
+    expect($approaches->uses(Approach::Action))->toBeTrue()
+        ->and($approaches->uses(Approach::Ddd))->toBeTrue();
+
+    cleanup($base);
+});
+
 it('detects the modular convention from any module directory', function (): void {
     foreach (['modules', 'Modules', 'app-modules'] as $dir) {
         $base = tempBase();

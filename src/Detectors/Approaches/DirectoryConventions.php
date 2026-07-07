@@ -12,8 +12,8 @@ class DirectoryConventions extends Convention
 {
     /** @var list<array{approach: Approach, paths: list<string>}> */
     private const DIRECTORY_RULES = [
-        ['approach' => Approach::Action, 'paths' => ['app/Actions']],
-        ['approach' => Approach::Ddd, 'paths' => ['app/Domains']],
+        ['approach' => Approach::Action, 'paths' => ['app/Actions', 'app/Action']],
+        ['approach' => Approach::Ddd, 'paths' => ['app/Domains', 'app/Domain', 'src/Domain']],
         ['approach' => Approach::Modular, 'paths' => ['modules', 'Modules', 'app-modules']],
     ];
 
