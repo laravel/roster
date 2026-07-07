@@ -493,12 +493,12 @@ it('detects invokable controllers as the dominant style', function (): void {
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
     expect($approaches->uses(Approach::ControllerInvokable))->toBeTrue()
-        ->and($approaches->uses(Approach::ControllerMultiAction))->toBeFalse();
+        ->and($approaches->uses(Approach::ControllerResourceful))->toBeFalse();
 
     cleanup($base);
 });
 
-it('detects multi-action controllers and lets single-action plain controllers abstain', function (): void {
+it('detects resourceful controllers and lets non-resource controllers abstain', function (): void {
     $base = tempBase();
 
     foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
@@ -518,8 +518,9 @@ it('detects multi-action controllers and lets single-action plain controllers ab
         PHP);
     }
 
-    writeSource($base, 'app/Http/Controllers/AmbiguousController.php', <<<'PHP'
-    class AmbiguousController
+    // Single resource action — abstains.
+    writeSource($base, 'app/Http/Controllers/SingleController.php', <<<'PHP'
+    class SingleController
     {
         public function index(): string
         {
@@ -528,13 +529,29 @@ it('detects multi-action controllers and lets single-action plain controllers ab
     }
     PHP);
 
+    // Two public methods, but none are resource actions — abstains.
+    writeSource($base, 'app/Http/Controllers/HelperController.php', <<<'PHP'
+    class HelperController
+    {
+        public function process(): string
+        {
+            return 'done';
+        }
+
+        public function middleware(): array
+        {
+            return [];
+        }
+    }
+    PHP);
+
     $approaches = new ApproachSet(ApproachesDetector::detect($base));
 
-    expect($approaches->uses(Approach::ControllerMultiAction))->toBeTrue()
+    expect($approaches->uses(Approach::ControllerResourceful))->toBeTrue()
         ->and($approaches->uses(Approach::ControllerInvokable))->toBeFalse();
 
     /** @var ApproachResult $result */
-    $result = $approaches->all()->get(Approach::ControllerMultiAction->value);
+    $result = $approaches->all()->get(Approach::ControllerResourceful->value);
 
     expect($result->total)->toBe(5);
 

@@ -10,11 +10,14 @@ use Laravel\Roster\Support\SourceFiles;
 
 class ControllerStyle extends Convention
 {
+    /** @var list<string> */
+    private const RESOURCE_ACTIONS = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'];
+
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         $tally = [
             Approach::ControllerInvokable->value => 0,
-            Approach::ControllerMultiAction->value => 0,
+            Approach::ControllerResourceful->value => 0,
         ];
 
         $paths = [];
@@ -22,17 +25,32 @@ class ControllerStyle extends Convention
         foreach ($files->php('Http/Controllers') as $path) {
             $contents = $files->contents($path);
 
-            $invokable = preg_match('/function\s+__invoke\s*\(/', $contents) === 1;
-            $actions = (int) preg_match_all('/public\s+function\s+(?!__)\w+\s*\(/', $contents);
+            if (preg_match('/function\s+__invoke\s*\(/', $contents) === 1) {
+                $tally[Approach::ControllerInvokable->value]++;
+                $paths[] = $path;
 
-            if (! $invokable && $actions < 2) {
                 continue;
             }
 
-            $tally[$invokable ? Approach::ControllerInvokable->value : Approach::ControllerMultiAction->value]++;
-            $paths[] = $path;
+            if ($this->resourceActionCount($contents) >= 2) {
+                $tally[Approach::ControllerResourceful->value]++;
+                $paths[] = $path;
+            }
         }
 
         return $this->dominant($tally, $paths);
+    }
+
+    private function resourceActionCount(string $contents): int
+    {
+        $count = 0;
+
+        foreach (self::RESOURCE_ACTIONS as $action) {
+            if (preg_match('/public\s+function\s+'.$action.'\s*\(/', $contents) === 1) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 }
