@@ -7,6 +7,7 @@ namespace Laravel\Roster;
 use Closure;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Contracts\Cache\Repository;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\EditorsDetector;
@@ -116,12 +117,9 @@ class ProjectManager
      */
     private function rememberScan(string $key, Closure $scan): Project
     {
-        $store = null;
+        $store = $this->cacheStore();
 
         try {
-            $manager = Container::getInstance()->make('cache');
-            $store = $manager instanceof CacheFactory ? $manager->store() : null;
-
             $cached = $store?->get($key);
 
             if ($cached instanceof Project) {
@@ -140,6 +138,17 @@ class ProjectManager
         }
 
         return $project;
+    }
+
+    private function cacheStore(): ?Repository
+    {
+        try {
+            $manager = Container::getInstance()->make('cache');
+
+            return $manager instanceof CacheFactory ? $manager->store() : null;
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     private function cacheKey(string $basePath): string

@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Detectors\Approaches;
 
-use BackedEnum;
 use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Enums\Approach;
 use Laravel\Roster\Support\SourceFiles;
 
 abstract class Convention
 {
-    protected const MIN_SAMPLE = 5;
+    protected const MIN_SAMPLE = 3;
 
     protected const CONFIDENCE_FLOOR = 0.8;
 
@@ -82,9 +81,8 @@ abstract class Convention
     /**
      * @param  array<string, int>  $tally  approach value => votes
      * @param  list<string>  $paths
-     * @param  array<string, BackedEnum>  $cases  approach value => case, for non-built-in enums
      */
-    protected function dominant(array $tally, array $paths, array $cases = []): ?ApproachResult
+    protected function dominant(array $tally, array $paths): ?ApproachResult
     {
         $tally = array_filter($tally, fn (int $votes): bool => $votes > 0);
         $total = array_sum($tally);
@@ -102,7 +100,7 @@ abstract class Convention
         }
 
         return new ApproachResult(
-            approach: $cases[$winner] ?? Approach::from($winner),
+            approach: Approach::from($winner),
             confidence: $votes / $total,
             matched: $votes,
             total: $total,

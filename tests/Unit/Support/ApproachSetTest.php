@@ -68,47 +68,26 @@ it('serializes results to an array shape', function (): void {
     ]);
 });
 
-enum SetStyleA: string
-{
-    case STRICT = 'strict';
-}
-
-enum SetStyleB: string
-{
-    case STRICT = 'strict';
-}
-
-it('does not match a different enum sharing the same backing value', function (): void {
+it('keeps distinct approaches side by side', function (): void {
     $set = new ApproachSet([
-        new ApproachResult(SetStyleB::STRICT, 1.0, 5, 5, []),
-    ]);
-
-    expect($set->uses(SetStyleB::STRICT))->toBeTrue()
-        ->and($set->uses(SetStyleA::STRICT))->toBeFalse()
-        ->and($set->result(SetStyleA::STRICT))->toBeNull()
-        ->and($set->result(SetStyleB::STRICT)?->approach)->toBe(SetStyleB::STRICT);
-});
-
-it('keeps both results when enums share a backing value', function (): void {
-    $set = new ApproachSet([
-        new ApproachResult(SetStyleA::STRICT, 1.0, 5, 5, []),
-        new ApproachResult(SetStyleB::STRICT, 0.9, 9, 10, []),
+        new ApproachResult(Approach::MassAssignmentFillable, 1.0, 5, 5, []),
+        new ApproachResult(Approach::ValidationFormRequest, 0.9, 9, 10, []),
     ]);
 
     expect($set->all())->toHaveCount(2)
-        ->and($set->uses(SetStyleA::STRICT))->toBeTrue()
-        ->and($set->uses(SetStyleB::STRICT))->toBeTrue()
-        ->and($set->result(SetStyleA::STRICT)?->confidence)->toBe(1.0)
-        ->and($set->result(SetStyleB::STRICT)?->confidence)->toBe(0.9);
+        ->and($set->uses(Approach::MassAssignmentFillable))->toBeTrue()
+        ->and($set->uses(Approach::ValidationFormRequest))->toBeTrue()
+        ->and($set->result(Approach::MassAssignmentFillable)?->confidence)->toBe(1.0)
+        ->and($set->result(Approach::ValidationFormRequest)?->confidence)->toBe(0.9);
 });
 
-it('keeps the first result when the same case is reported twice', function (): void {
+it('keeps the first result when the same approach is reported twice', function (): void {
     $set = new ApproachSet([
-        new ApproachResult(SetStyleA::STRICT, 1.0, 5, 5, []),
-        new ApproachResult(SetStyleA::STRICT, 0.9, 9, 10, []),
+        new ApproachResult(Approach::MassAssignmentFillable, 1.0, 5, 5, []),
+        new ApproachResult(Approach::MassAssignmentFillable, 0.9, 9, 10, []),
     ]);
 
     expect($set->all())->toHaveCount(1)
         ->and($set->all()->first()?->confidence)->toBe(1.0)
-        ->and($set->result(SetStyleA::STRICT)?->confidence)->toBe(1.0);
+        ->and($set->result(Approach::MassAssignmentFillable)?->confidence)->toBe(1.0);
 });

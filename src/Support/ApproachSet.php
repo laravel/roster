@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Support;
 
-use BackedEnum;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Enums\Approach;
@@ -24,34 +22,22 @@ class ApproachSet
     }
 
     /**
-     * @param  BackedEnum|array<int, BackedEnum>  $approach
+     * @param  Approach|array<int, Approach>  $approach
      */
-    public function uses(BackedEnum|array $approach): bool
+    public function uses(Approach|array $approach): bool
     {
-        foreach (Arr::wrap($approach) as $needle) {
-            if ($this->result($needle) instanceof ApproachResult) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->approaches()->uses($approach);
     }
 
     /**
-     * @param  array<int, BackedEnum>  $approaches
+     * @param  array<int, Approach>  $approaches
      */
     public function usesAll(array $approaches): bool
     {
-        foreach ($approaches as $needle) {
-            if (! $this->result($needle) instanceof ApproachResult) {
-                return false;
-            }
-        }
-
-        return true;
+        return $this->approaches()->usesAll($approaches);
     }
 
-    public function result(BackedEnum $approach): ?ApproachResult
+    public function result(Approach $approach): ?ApproachResult
     {
         foreach ($this->results as $result) {
             if ($result->approach === $approach) {
@@ -71,15 +57,22 @@ class ApproachSet
         $keyed = new Collection;
 
         foreach ($this->results as $result) {
-            $key = $result->approach instanceof Approach
-                ? (string) $result->approach->value
-                : $result->approach::class.':'.$result->approach->value;
-
-            if (! $keyed->has($key)) {
-                $keyed->put($key, $result);
+            if (! $keyed->has($result->approach->value)) {
+                $keyed->put($result->approach->value, $result);
             }
         }
 
         return $keyed;
+    }
+
+    /**
+     * @return EnumSet<Approach>
+     */
+    protected function approaches(): EnumSet
+    {
+        return new EnumSet(array_map(
+            fn (ApproachResult $result): Approach => $result->approach,
+            $this->results,
+        ));
     }
 }

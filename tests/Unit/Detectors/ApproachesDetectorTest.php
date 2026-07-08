@@ -186,6 +186,20 @@ it('stays silent when there are too few votes', function (): void {
     expect(detectApproaches('carbon-app')->all())->toBeEmpty();
 });
 
+it('reports a convention once the minimum sample of three is reached', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeModel($base, $name, 'fillable');
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue();
+
+    cleanup($base);
+});
+
 it('rejects a 4/5 majority as insufficient evidence', function (): void {
     $base = tempBase();
 
