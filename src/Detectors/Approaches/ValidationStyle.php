@@ -10,7 +10,7 @@ use Laravel\Roster\Support\SourceFiles;
 
 class ValidationStyle extends Convention
 {
-    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
+    protected function result(SourceFiles $files): ?ApproachResult
     {
         $tally = [
             Approach::ValidationInline->value => 0,

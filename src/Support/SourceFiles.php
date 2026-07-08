@@ -18,9 +18,6 @@ class SourceFiles
     /** @var list<string>|null */
     protected ?array $roots = null;
 
-    /** @var array<string, string> */
-    protected array $contents = [];
-
     /** @var array<string, list<string>> */
     protected array $filesByRoot = [];
 
@@ -73,7 +70,7 @@ class SourceFiles
 
     public function contents(string $path): string
     {
-        return $this->contents[$path] ??= (is_file($path) ? ((string) @file_get_contents($path)) : '');
+        return is_file($path) ? ((string) @file_get_contents($path)) : '';
     }
 
     /**

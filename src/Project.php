@@ -147,7 +147,15 @@ class Project
 
     public function json(): string
     {
-        return json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}';
+        return self::encode($this->toArray());
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public static function encode(array $payload): string
+    {
+        return json_encode($payload, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}';
     }
 
     /**
@@ -162,7 +170,16 @@ class Project
     }
 
     /**
-     * @param  array{basePath: string, php: Ecosystem, js: JsEcosystem, stacks: EnumSet<Stack>, browserTestFrameworks: EnumSet<BrowserTestFramework>, frontends: EnumSet<Frontend>, agents: EnumSet<Agent>, editors: EnumSet<Editor>}  $properties
+     * @param  array{
+     *     basePath: string,
+     *     php: Ecosystem,
+     *     js: JsEcosystem,
+     *     stacks: EnumSet<Stack>,
+     *     browserTestFrameworks: EnumSet<BrowserTestFramework>,
+     *     frontends: EnumSet<Frontend>,
+     *     agents: EnumSet<Agent>,
+     *     editors: EnumSet<Editor>,
+     * }  $properties
      */
     public function __unserialize(array $properties): void
     {

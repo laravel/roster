@@ -41,8 +41,8 @@ trait ParsesManifests
     protected static function collectManifestDeps(array $manifest, string $prodKey, string $devKey): array
     {
         return array_replace(
-            self::collectDeps($manifest[$prodKey] ?? null, false),
             self::collectDeps($manifest[$devKey] ?? null, true),
+            self::collectDeps($manifest[$prodKey] ?? null, false),
         );
     }
 

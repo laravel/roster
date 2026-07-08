@@ -19,8 +19,6 @@ enum Approach: string
     case ControllerResourceful = 'controller-resourceful';
     case CommandAttributeSyntax = 'command-attribute-syntax';
     case CommandPropertySyntax = 'command-property-syntax';
-    case HttpClientThrow = 'http-client-throw';
-    case HttpClientStatusCheck = 'http-client-status-check';
     case NotificationNotify = 'notification-notify';
     case NotificationFacade = 'notification-facade';
     case AuthorizationGate = 'authorization-gate';
@@ -32,4 +30,5 @@ enum Approach: string
     case AuthHelper = 'auth-helper';
     case ModelUuidKeys = 'model-uuid-keys';
     case ModelUlidKeys = 'model-ulid-keys';
+    case ModelIncrementingKeys = 'model-incrementing-keys';
 }

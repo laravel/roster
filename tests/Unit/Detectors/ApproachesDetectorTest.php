@@ -170,6 +170,32 @@ it("does not count a regex rule's alternation as pipe validation syntax", functi
     expect($approaches->uses(Approach::ValidationPipeSyntax))->toBeFalse();
 });
 
+it('counts pipe rules whose values contain slashes', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Http/Requests/{$name}Request.php", <<<PHP
+        class {$name}Request
+        {
+            public function rules(): array
+            {
+                return [
+                    'avatar' => 'required|mimetypes:image/png',
+                    'date' => 'nullable|date_format:d/m/Y',
+                ];
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::ValidationPipeSyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::ValidationArraySyntax))->toBeFalse();
+
+    cleanup($base);
+});
+
 it('samples Models directories anywhere beneath a PSR-4 root', function (): void {
     $approaches = detectApproaches('nested-models-app');
 
@@ -558,65 +584,6 @@ it('detects command signature properties', function (): void {
     cleanup($base);
 });
 
-it('detects http client throw style only in files using the Http client', function (): void {
-    $base = tempBase();
-
-    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
-        writeSource($base, "app/Services/{$name}.php", <<<PHP
-        class {$name}
-        {
-            public function handle(): void
-            {
-                Http::get('https://example.com')->throw();
-            }
-        }
-        PHP);
-    }
-
-    writeSource($base, 'app/Services/NotHttp.php', <<<'PHP'
-    class NotHttp
-    {
-        public function handle($upload): void
-        {
-            $upload->failed();
-            $upload->successful();
-        }
-    }
-    PHP);
-
-    $approaches = new ApproachSet(ApproachesDetector::detect($base));
-
-    expect($approaches->uses(Approach::HttpClientThrow))->toBeTrue()
-        ->and($approaches->uses(Approach::HttpClientStatusCheck))->toBeFalse();
-
-    cleanup($base);
-});
-
-it('detects http client status-check style', function (): void {
-    $base = tempBase();
-
-    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
-        writeSource($base, "app/Services/{$name}.php", <<<PHP
-        class {$name}
-        {
-            public function handle(): bool
-            {
-                \$response = Http::get('https://example.com');
-
-                return \$response->successful() && ! \$response->failed();
-            }
-        }
-        PHP);
-    }
-
-    $approaches = new ApproachSet(ApproachesDetector::detect($base));
-
-    expect($approaches->uses(Approach::HttpClientStatusCheck))->toBeTrue()
-        ->and($approaches->uses(Approach::HttpClientThrow))->toBeFalse();
-
-    cleanup($base);
-});
-
 it('detects the notify trait style over the Notification facade', function (): void {
     $base = tempBase();
 
@@ -778,6 +745,35 @@ it('detects uuid model keys and abstains on files mixing both traits', function 
     $result = $approaches->all()->get(Approach::ModelUuidKeys->value);
 
     expect($result->total)->toBe(5);
+
+    cleanup($base);
+});
+
+it('measures uuid adoption against models using the default incrementing key', function (): void {
+    $base = tempBase();
+
+    for ($i = 0; $i < 15; $i++) {
+        writeSource($base, "app/Models/Plain{$i}.php", <<<PHP
+        class Plain{$i}
+        {
+            protected \$table = 'plain';
+        }
+        PHP);
+    }
+
+    foreach (['Ua', 'Ub', 'Uc'] as $name) {
+        writeSource($base, "app/Models/{$name}.php", <<<PHP
+        class {$name}
+        {
+            use HasUuids;
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::ModelIncrementingKeys))->toBeTrue()
+        ->and($approaches->uses(Approach::ModelUuidKeys))->toBeFalse();
 
     cleanup($base);
 });

@@ -24,7 +24,6 @@ class PnpmPackageLock extends JsPackageScanner
         }
 
         try {
-            /** @var array<string, mixed> $parsed */
             $parsed = Yaml::parse($contents);
         } catch (Exception) {
             $this->warn('Failed to parse pnpm-lock.yaml: '.$lockFilePath);
@@ -33,6 +32,16 @@ class PnpmPackageLock extends JsPackageScanner
 
             return $packages;
         }
+
+        if (! is_array($parsed)) {
+            $this->warn('Malformed pnpm-lock.yaml (empty or not a mapping): '.$lockFilePath);
+
+            $this->failed = true;
+
+            return $packages;
+        }
+
+        /** @var array<string, mixed> $parsed */
 
         /** @var array<string, string> $allPackages */
         $allPackages = [];
@@ -71,19 +80,36 @@ class PnpmPackageLock extends JsPackageScanner
         /** @var array<string, mixed> $rootDevDeps */
         $rootDevDeps = is_array($root['devDependencies'] ?? null) ? $root['devDependencies'] : [];
 
-        foreach ([$rootDeps, $rootDevDeps] as $entries) {
-            foreach ($entries as $name => $data) {
-                $version = is_array($data) ? ($data['version'] ?? null) : $data;
+        foreach ($rootDeps as $name => $data) {
+            $version = $this->resolvedVersion($data);
 
-                if (is_scalar($version)) {
-                    $allPackages[(string) $name] = $this->stripPeerSuffix((string) $version);
-                }
+            if ($version !== null) {
+                $allPackages[(string) $name] = $version;
+            }
+        }
+
+        $devPackages = [];
+
+        foreach ($rootDevDeps as $name => $data) {
+            $version = $this->resolvedVersion($data);
+
+            if ($version !== null) {
+                $devPackages[(string) $name] = $version;
+                unset($allPackages[(string) $name]);
             }
         }
 
         $this->processDependencies($allPackages, $packages, false);
+        $this->processDependencies($devPackages, $packages, true);
 
         return $packages;
+    }
+
+    private function resolvedVersion(mixed $data): ?string
+    {
+        $version = is_array($data) ? ($data['version'] ?? null) : $data;
+
+        return is_scalar($version) ? $this->stripPeerSuffix((string) $version) : null;
     }
 
     /**

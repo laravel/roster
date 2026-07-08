@@ -10,7 +10,7 @@ use Laravel\Roster\Support\SourceFiles;
 
 class CommandSignatureSyntax extends Convention
 {
-    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
+    protected function result(SourceFiles $files): ?ApproachResult
     {
         return $this->electByFile($files, 'Commands', fn (string $contents): array => [
             Approach::CommandAttributeSyntax->value => (int) preg_match_all('/#\[\s*(?:Signature|Description)\b/', $contents),

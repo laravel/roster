@@ -25,7 +25,13 @@ class ApproachResult
     }
 
     /**
-     * @return array{approach: string, confidence: float, matched: int, total: int, paths: list<string>}
+     * @return array{
+     *     approach: string,
+     *     confidence: float,
+     *     matched: int,
+     *     total: int,
+     *     paths: list<string>,
+     * }
      */
     public function toArray(): array
     {

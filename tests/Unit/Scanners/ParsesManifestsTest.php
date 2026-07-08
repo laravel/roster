@@ -28,3 +28,27 @@ it('pins normalizeVersion behavior for common constraint shapes', function (): v
         ->and($subject::normalize('workspace:*'))->toBe('')
         ->and($subject::normalize('*'))->toBe('');
 });
+
+it('classifies a dependency listed in both sections as production', function (): void {
+    $subject = new class
+    {
+        use ParsesManifests;
+
+        /**
+         * @param  array<string, mixed>  $manifest
+         * @return array<string, array{constraint: string, isDev: bool}>
+         */
+        public static function collect(array $manifest): array
+        {
+            return self::collectManifestDeps($manifest, 'dependencies', 'devDependencies');
+        }
+    };
+
+    $deps = $subject::collect([
+        'dependencies' => ['vite' => '^5.0'],
+        'devDependencies' => ['vite' => '^5.0', 'eslint' => '^9.0'],
+    ]);
+
+    expect($deps['vite']['isDev'])->toBeFalse()
+        ->and($deps['eslint']['isDev'])->toBeTrue();
+});

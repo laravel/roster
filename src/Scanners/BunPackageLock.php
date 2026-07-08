@@ -21,11 +21,9 @@ class BunPackageLock extends JsPackageScanner
             return $packages;
         }
 
-        $sanitized = preg_replace('/,\s*([]}])/m', '$1', $contents) ?? $contents;
+        $json = $this->decodeLockfile($contents);
 
-        $json = json_decode($sanitized, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
+        if ($json === null) {
             $this->warn('Failed to decode bun.lock: '.$lockFilePath);
 
             $this->failed = true;
@@ -66,9 +64,56 @@ class BunPackageLock extends JsPackageScanner
             }
         }
 
+        $devPackages = [];
+
+        foreach ($this->workspaceDevNames($json) as $name) {
+            if (isset($allPackages[$name])) {
+                $devPackages[$name] = $allPackages[$name];
+                unset($allPackages[$name]);
+            }
+        }
+
         $this->processDependencies($allPackages + $nestedPackages, $packages, false);
+        $this->processDependencies($devPackages, $packages, true);
 
         return $packages;
+    }
+
+    /**
+     * @param  array<string, mixed>  $json
+     * @return list<string>
+     */
+    private function workspaceDevNames(array $json): array
+    {
+        $workspaces = $json['workspaces'] ?? null;
+        $root = is_array($workspaces) ? ($workspaces[''] ?? null) : null;
+        $dev = is_array($root) ? ($root['devDependencies'] ?? null) : null;
+
+        return is_array($dev) ? array_map(strval(...), array_keys($dev)) : [];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function decodeLockfile(string $contents): ?array
+    {
+        $json = json_decode($contents, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+            /** @var array<string, mixed> $json */
+            return $json;
+        }
+
+        $sanitized = preg_replace('/,[ \t]*(\r?\n\s*)([]}])/', '$1$2', $contents) ?? $contents;
+
+        $json = json_decode($sanitized, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+            /** @var array<string, mixed> $json */
+            return $json;
+        }
+
+        return null;
     }
 
     private function extractName(mixed $entry): ?string

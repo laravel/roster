@@ -27,13 +27,38 @@ function jsEcosystem(array $specs): JsEcosystem
     );
 }
 
+/**
+ * @return list<string>
+ */
+function trackedTempDirs(?string $add = null, bool $reset = false): array
+{
+    static $dirs = [];
+
+    if ($reset) {
+        $dirs = [];
+    } elseif ($add !== null) {
+        $dirs[] = $add;
+    }
+
+    return $dirs;
+}
+
 function tempBase(): string
 {
     $base = sys_get_temp_dir().DIRECTORY_SEPARATOR.'roster_test_'.uniqid().DIRECTORY_SEPARATOR;
     mkdir($base);
+    trackedTempDirs($base);
 
     return $base;
 }
+
+afterEach(function (): void {
+    foreach (trackedTempDirs() as $dir) {
+        cleanup($dir);
+    }
+
+    trackedTempDirs(reset: true);
+});
 
 /**
  * @param  array<string, string>  $files

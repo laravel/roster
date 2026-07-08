@@ -13,7 +13,7 @@ class ControllerStyle extends Convention
     /** @var list<string> */
     private const RESOURCE_ACTIONS = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'];
 
-    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
+    protected function result(SourceFiles $files): ?ApproachResult
     {
         $tally = [
             Approach::ControllerInvokable->value => 0,

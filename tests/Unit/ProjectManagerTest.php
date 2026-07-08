@@ -138,6 +138,36 @@ it('overwrites a corrupt cache entry instead of rescanning forever', function ()
     cleanup($base);
 });
 
+it('still scans when writing to the cache throws', function (): void {
+    $repository = new class(new ArrayStore) extends Repository
+    {
+        public function put($key, $value, $ttl = null): bool
+        {
+            throw new RuntimeException('cache write failed');
+        }
+    };
+
+    $factory = new class($repository) implements Factory
+    {
+        public function __construct(private Repository $repository) {}
+
+        public function store($name = null): Repository
+        {
+            return $this->repository;
+        }
+    };
+
+    app()->instance('cache', $factory);
+
+    $base = tempBase();
+    file_put_contents($base.'package.json', json_encode(['dependencies' => ['vue' => '^3.0']]));
+
+    expect((new ProjectManager)->scan($base)->js()->uses('vue'))->toBeTrue();
+
+    app()->forgetInstance('cache');
+    cleanup($base);
+});
+
 it('still scans when the cache store throws', function (): void {
     $broken = new class implements Factory
     {

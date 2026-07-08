@@ -17,14 +17,14 @@ abstract class Convention
     /**
      * @return list<ApproachResult>
      */
-    public function detect(string $basePath, SourceFiles $files): array
+    public function detect(SourceFiles $files): array
     {
-        $result = $this->result($basePath, $files);
+        $result = $this->result($files);
 
         return $result instanceof ApproachResult ? [$result] : [];
     }
 
-    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
+    protected function result(SourceFiles $files): ?ApproachResult
     {
         return null;
     }
@@ -87,7 +87,7 @@ abstract class Convention
         $tally = array_filter($tally, fn (int $votes): bool => $votes > 0);
         $total = array_sum($tally);
 
-        if ($total < self::MIN_SAMPLE) {
+        if ($total < static::MIN_SAMPLE) {
             return null;
         }
 
@@ -95,7 +95,7 @@ abstract class Convention
         $winner = (string) array_key_first($tally);
         $votes = $tally[$winner];
 
-        if ($votes / $total <= self::CONFIDENCE_FLOOR) {
+        if ($votes / $total <= static::CONFIDENCE_FLOOR) {
             return null;
         }
 

@@ -65,7 +65,15 @@ class Package
     }
 
     /**
-     * @return array{name: string, version: string, constraint: string, direct: bool, dev: bool, source: string, path: ?string}
+     * @return array{
+     *     name: string,
+     *     version: string,
+     *     constraint: string,
+     *     direct: bool,
+     *     dev: bool,
+     *     source: string,
+     *     path: ?string,
+     * }
      */
     public function toArray(): array
     {

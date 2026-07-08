@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Container\Container;
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\Scanners\ComposerLock;
 
@@ -79,6 +80,32 @@ it('returns an empty collection for a malformed composer.lock', function (): voi
 
     expect((new ComposerLock($base))->scan())->toHaveCount(0);
 
+    cleanup($base);
+});
+
+it('warns when composer.lock decodes but lacks a packages key', function (): void {
+    $logger = new class
+    {
+        /** @var list<string> */
+        public array $warnings = [];
+
+        public function warning(string $message): void
+        {
+            $this->warnings[] = $message;
+        }
+    };
+
+    Container::getInstance()->instance('log', $logger);
+
+    $base = tempBase();
+    file_put_contents($base.'composer.lock', json_encode(['packages-dev' => []]));
+
+    $packages = (new ComposerLock($base))->scan();
+
+    expect($packages)->toHaveCount(0)
+        ->and($logger->warnings)->not->toBeEmpty();
+
+    Container::getInstance()->forgetInstance('log');
     cleanup($base);
 });
 

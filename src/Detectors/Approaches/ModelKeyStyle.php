@@ -10,11 +10,17 @@ use Laravel\Roster\Support\SourceFiles;
 
 class ModelKeyStyle extends Convention
 {
-    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
+    protected function result(SourceFiles $files): ?ApproachResult
     {
-        return $this->electByFile($files, 'Models', fn (string $contents): array => [
-            Approach::ModelUuidKeys->value => preg_match('/\bHasUuids\b/', $contents) === 1 ? 1 : 0,
-            Approach::ModelUlidKeys->value => preg_match('/\bHasUlids\b/', $contents) === 1 ? 1 : 0,
-        ]);
+        return $this->electByFile($files, 'Models', function (string $contents): array {
+            $uuid = preg_match('/\bHasUuids\b/', $contents) === 1;
+            $ulid = preg_match('/\bHasUlids\b/', $contents) === 1;
+
+            return [
+                Approach::ModelUuidKeys->value => $uuid ? 1 : 0,
+                Approach::ModelUlidKeys->value => $ulid ? 1 : 0,
+                Approach::ModelIncrementingKeys->value => $uuid || $ulid ? 0 : 1,
+            ];
+        });
     }
 }

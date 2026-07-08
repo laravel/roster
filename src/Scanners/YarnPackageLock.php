@@ -58,6 +58,12 @@ class YarnPackageLock extends JsPackageScanner
             }
         }
 
+        if ($dependencies === []) {
+            $this->failed = true;
+
+            return $packages;
+        }
+
         $this->processDependencies($dependencies, $packages, false);
 
         return $packages;
@@ -81,6 +87,11 @@ class YarnPackageLock extends JsPackageScanner
         $position = strpos($selector, '@', 1);
 
         if ($position === false || $position === 0) {
+            return null;
+        }
+
+        // Skip workspace selectors (`my-app@workspace:.`, `pkg-a@workspace:pkgs/a`):
+        if (str_starts_with(substr($selector, $position + 1), 'workspace:')) {
             return null;
         }
 

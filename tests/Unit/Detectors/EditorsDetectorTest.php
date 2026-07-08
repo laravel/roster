@@ -27,3 +27,15 @@ it('detects glob markers such as sublime project files', function (): void {
 
     cleanup($base);
 });
+
+it('detects glob markers when the project path contains glob metacharacters', function (): void {
+    $base = tempBase();
+    $tricky = $base.'[client]'.DIRECTORY_SEPARATOR;
+    mkdir($tricky);
+    touchFile($tricky.'app.sublime-project');
+
+    $detected = EditorsDetector::detect($tricky);
+    expect($detected)->toContain(Editor::SublimeText);
+
+    cleanup($base);
+});

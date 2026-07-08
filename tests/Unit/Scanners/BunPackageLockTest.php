@@ -63,6 +63,58 @@ it('resolves nested keys to the real package name and prefers the top-level entr
     cleanup($base);
 });
 
+it('classifies bun root devDependencies as dev', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'bun.lock', json_encode([
+        'lockfileVersion' => 1,
+        'workspaces' => [
+            '' => [
+                'name' => 'app',
+                'dependencies' => ['tailwindcss' => '^3.4.3'],
+                'devDependencies' => ['vite' => '^5.0.0'],
+            ],
+        ],
+        'packages' => [
+            'tailwindcss' => ['tailwindcss@3.4.3', '', [], 'sha512-a'],
+            'vite' => ['vite@5.0.0', '', [], 'sha512-b'],
+        ],
+    ]));
+
+    $packages = (new BunPackageLock($base))->scan();
+
+    $vite = $packages->first(fn ($p): bool => $p->name() === 'vite');
+    $tailwind = $packages->first(fn ($p): bool => $p->name() === 'tailwindcss');
+
+    expect($vite)->not->toBeNull()
+        ->and($vite->isDev())->toBeTrue()
+        ->and($tailwind)->not->toBeNull()
+        ->and($tailwind->isDev())->toBeFalse();
+
+    cleanup($base);
+});
+
+it('strips structural trailing commas without corrupting string values', function (): void {
+    $scanner = new class(sys_get_temp_dir().DIRECTORY_SEPARATOR) extends BunPackageLock
+    {
+        /** @return array<string, mixed>|null */
+        public function decodePublic(string $contents): ?array
+        {
+            return $this->decodeLockfile($contents);
+        }
+    };
+
+    $decoded = $scanner->decodePublic(<<<'JSON'
+    {
+      "lockfileVersion": 1,
+      "note": "keep this ,} intact",
+    }
+    JSON);
+
+    expect($decoded)->not->toBeNull()
+        ->and($decoded['note'])->toBe('keep this ,} intact');
+});
+
 it('keeps npm-aliased top-level entries under their alias name', function (): void {
     $base = tempBase();
 

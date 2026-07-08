@@ -19,6 +19,10 @@ class ComposerLock extends PackageScanner
             return $packages;
         }
 
+        if (! is_array($json['packages'] ?? null)) {
+            $this->warn('Malformed composer.lock (missing "packages" key): '.$this->path.'composer.lock');
+        }
+
         $this->processDependencies($this->versions($json['packages'] ?? null), $packages, false, authoritative: true);
         $this->processDependencies($this->versions($json['packages-dev'] ?? null), $packages, true, authoritative: true);
 

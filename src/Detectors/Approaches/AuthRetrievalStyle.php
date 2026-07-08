@@ -10,7 +10,7 @@ use Laravel\Roster\Support\SourceFiles;
 
 class AuthRetrievalStyle extends Convention
 {
-    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
+    protected function result(SourceFiles $files): ?ApproachResult
     {
         return $this->electByFile($files, null, fn (string $contents): array => [
             Approach::AuthFacade->value => (int) preg_match_all('/\bAuth::(?:user|id|check|guest)\s*\(/', $contents),

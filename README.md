@@ -19,7 +19,6 @@
 - [Detecting JS Package Managers](#detecting-js-package-managers)
 - [Detecting Approaches](#detecting-approaches)
     - [Source Conventions](#source-conventions)
-    - [Custom Conventions](#custom-conventions)
 - [Caching](#caching)
 - [The `roster:scan` Command](#the-rosterscan-command)
 - [Upgrading](#upgrading)
@@ -30,7 +29,7 @@
 
 ## Introduction
 
-Laravel Roster is a detection package for the Laravel ecosystem. It reads your project's lockfiles, configuration markers, and (optionally) probes the host machine to answer questions about what is in use.
+Laravel Roster is a detection package for the Laravel ecosystem. It reads your project's lockfiles, configuration markers, and (optionally) its own source code to answer questions about what is in use.
 
 The `Project` facade reads your project's lockfiles and configuration markers to report installed packages, the application's stack, the frontend in use, browser test frameworks, configured AI agents and editors, the committed JS package manager, and the conventions the codebase has adopted.
 
@@ -196,7 +195,18 @@ The `approaches` method reports the stylistic conventions a project has adopted,
 
 ### Source Conventions
 
-The `approaches` method inspects the project's **own source code**, not its manifests, and reports which stylistic conventions the application has adopted: `fillable` vs `guarded` mass assignment (detected in both the `protected $fillable` property and `#[Fillable]` attribute spellings), enum case casing, pipe vs array validation rule syntax, and inline validation vs form requests (`$request->validate([...])` versus dedicated `rules()` classes under `Http/Requests`):
+The `approaches` method inspects the project's **own source code**, not its manifests, and reports which stylistic conventions the application has adopted:
+
+- `fillable` vs `guarded` mass assignment (detected in both the `protected $fillable` property and `#[Fillable]` attribute spellings)
+- enum case casing (screaming snake, Pascal, or camel)
+- pipe vs array validation rule syntax
+- inline validation vs form requests (`$request->validate([...])` versus dedicated `rules()` classes under `Http/Requests`)
+- invokable vs resourceful controllers
+- command signature via the `#[AsCommand]` attribute vs the `$signature` property
+- notifications sent via `$notifiable->notify()` vs the `Notification` facade
+- authorization via gates, `$user->can()`, the `#[Can]` attribute, or the `AuthorizesRequests` trait
+- authenticated-user retrieval via the `Auth` facade, `$request->user()`, or the `auth()` helper
+- model key style: UUID (`HasUuids`), ULID (`HasUlids`), or the default auto-incrementing key
 
 ```php
 use Laravel\Roster\Enums\Approach;
@@ -211,7 +221,7 @@ $project->approaches()->all();                                    // Collection<
 
 Detection is best-effort: source is read with lightweight pattern matching rather than a full parser, so an unusual file may abstain or be classified from a comment or string literal. This is why approaches are reported as a confidence-weighted vote rather than an exact answer.
 
-A stylistic approach is only reported when it is backed by enough evidence: at least 5 votes (one per voting file, or one per enum case for casing), with more than 80% of them for the winning style, so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent. A file that mixes styles votes for its majority style and abstains on a tie.
+A stylistic approach is only reported when it is backed by enough evidence: at least 3 votes (one per voting file, or one per enum case for casing), with more than 80% of them for the winning style, so a 2/3 majority is rejected, 9/10 passes, and an evenly split codebase stays silent. A file that mixes styles votes for its majority style and abstains on a tie.
 
 Each `ApproachResult` exposes the winning `approach`, its raw `confidence` ratio, the `matched` and `total` vote counts, and the `paths` of the files that voted. You may retrieve a result via the `result` method:
 

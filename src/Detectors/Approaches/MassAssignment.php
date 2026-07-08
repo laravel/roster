@@ -10,7 +10,7 @@ use Laravel\Roster\Support\SourceFiles;
 
 class MassAssignment extends Convention
 {
-    protected function result(string $basePath, SourceFiles $files): ?ApproachResult
+    protected function result(SourceFiles $files): ?ApproachResult
     {
         return $this->electByFile($files, 'Models', function (string $contents): array {
             $fillable = preg_match('/protected\s+\$fillable\b/', $contents) === 1

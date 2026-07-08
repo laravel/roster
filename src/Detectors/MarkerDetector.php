@@ -59,14 +59,27 @@ abstract class MarkerDetector
 
     public static function markerMatches(string $basePath, string $marker): bool
     {
-        $path = $basePath.str_replace('/', DIRECTORY_SEPARATOR, $marker);
+        $relative = str_replace('/', DIRECTORY_SEPARATOR, $marker);
 
-        if (str_contains($marker, '*')) {
-            $matches = glob($path);
-
-            return is_array($matches) && $matches !== [];
+        if (! str_contains($marker, '*')) {
+            return file_exists($basePath.$relative);
         }
 
-        return file_exists($path);
+        $directory = dirname($relative) === '.'
+            ? rtrim($basePath, DIRECTORY_SEPARATOR)
+            : $basePath.dirname($relative);
+        $pattern = basename($relative);
+
+        if (! is_dir($directory)) {
+            return false;
+        }
+
+        foreach (scandir($directory) ?: [] as $entry) {
+            if ($entry !== '.' && $entry !== '..' && fnmatch($pattern, $entry)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -167,11 +167,11 @@ Detection of binaries installed on the host machine has also been removed; Roste
 
 **Likelihood Of Impact: Low**
 
-The `Approaches` enum has been renamed to `Approach` (singular), and its wrapping value class has been removed. Detected approaches are reported through the `approaches` method on the `Project` facade, which covers both directory conventions and source-code conventions:
+The `Approaches` enum has been renamed to `Approach` (singular), and its wrapping value class has been removed. Detected approaches are reported through the `approaches` method on the `Project` facade. Detection now reads the project's source code rather than its directory layout; the former directory-based cases (`ACTION`, `DDD`, `MODULAR`) have been removed in favour of stylistic conventions such as mass assignment, validation, and enum casing:
 
 ```php
-Project::approaches()->uses(Approach::Action);
-Project::approaches()->uses([Approach::Action, Approach::Ddd]);
+Project::approaches()->uses(Approach::MassAssignmentFillable);
+Project::approaches()->uses([Approach::ValidationPipeSyntax, Approach::ValidationArraySyntax]);
 ```
 
 ### The `roster:scan` Command
