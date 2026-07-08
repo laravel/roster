@@ -12,6 +12,11 @@ use Tests\TestCase;
 
 uses(TestCase::class);
 
+enum ManagerConvention: string
+{
+    case ThinModels = 'manager.thin-models';
+}
+
 it('invalidates the cache when a project marker appears', function (): void {
     config()->set('cache.default', 'array');
 
@@ -179,4 +184,22 @@ it('memoizes the default instance', function (): void {
     $manager = new ProjectManager;
 
     expect($manager->instance())->toBe($manager->instance());
+});
+
+it('injects registered approach conventions into scanned projects', function (): void {
+    config()->set('cache.default', 'array');
+
+    $manager = new ProjectManager;
+    $manager->extendApproaches(
+        fn (string $contents): ?ManagerConvention => str_contains($contents, '$fillable')
+            ? ManagerConvention::ThinModels
+            : null,
+        in: 'Models',
+    );
+
+    $project = $manager->scan(
+        dirname(__DIR__).DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'approaches'.DIRECTORY_SEPARATOR.'fillable-models-app',
+    );
+
+    expect($project->approaches()->uses(ManagerConvention::ThinModels))->toBeTrue();
 });

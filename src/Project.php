@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laravel\Roster;
 
+use BackedEnum;
 use Illuminate\Support\Str;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\ApproachesDetector;
@@ -27,7 +28,8 @@ class Project
 {
     protected ?ApproachSet $approaches = null;
 
-    protected int $approachesGeneration = 0;
+    /** @var list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}> */
+    protected array $approachExtensions = [];
 
     /**
      * @param  EnumSet<Stack>  $stacks
@@ -91,14 +93,24 @@ class Project
 
     public function approaches(): ApproachSet
     {
-        $generation = ApproachesDetector::generation();
+        return $this->approaches ??= new ApproachSet(
+            ApproachesDetector::detect($this->basePath, $this->approachExtensions),
+        );
+    }
 
-        if (! $this->approaches instanceof ApproachSet || $this->approachesGeneration !== $generation) {
-            $this->approaches = new ApproachSet(ApproachesDetector::detect($this->basePath));
-            $this->approachesGeneration = $generation;
+    /**
+     * @param  list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}>  $extensions
+     *
+     * @internal Extensions are injected by the ProjectManager; use Project::extendApproaches().
+     */
+    public function withApproachExtensions(array $extensions): self
+    {
+        if ($extensions !== $this->approachExtensions) {
+            $this->approachExtensions = $extensions;
+            $this->approaches = null;
         }
 
-        return $this->approaches;
+        return $this;
     }
 
     public static function scan(?string $basePath = null): self
@@ -163,7 +175,7 @@ class Project
     public function __serialize(): array
     {
         $properties = get_object_vars($this);
-        unset($properties['approaches'], $properties['approachesGeneration']);
+        unset($properties['approaches'], $properties['approachExtensions']);
 
         return $properties;
     }
@@ -178,5 +190,6 @@ class Project
         }
 
         $this->approaches = null;
+        $this->approachExtensions = [];
     }
 }

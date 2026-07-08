@@ -211,6 +211,8 @@ $project->approaches()->uses([                                    // any-of, lik
 $project->approaches()->all();                                    // Collection<string, ApproachResult>
 ```
 
+Detection is best-effort: source is read with lightweight pattern matching rather than a full parser, so an unusual file may abstain or be classified from a comment or string literal. This is why approaches are reported as a confidence-weighted vote rather than an exact answer.
+
 A stylistic approach is only reported when it is backed by enough evidence: at least 5 votes (one per voting file — or one per enum case for casing), with more than 80% of them for the winning style — so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent. A file that mixes styles votes for its majority style and abstains on a tie.
 
 Each `ApproachResult` exposes the winning `approach`, its raw `confidence` ratio, the `matched` and `total` vote counts, and the `paths` of the files that voted. You may retrieve a result via the `result` method:

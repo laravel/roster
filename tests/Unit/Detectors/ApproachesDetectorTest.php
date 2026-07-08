@@ -14,12 +14,14 @@ enum CustomConvention: string
     case FAT_MODELS = 'custom.fat-models';
 }
 
-afterEach(fn () => ApproachesDetector::flushExtensions());
-
-function detectApproaches(string $app): ApproachSet
+/**
+ * @param  list<array{vote: callable, in: string|null}>  $extensions
+ */
+function detectApproaches(string $app, array $extensions = []): ApproachSet
 {
     return new ApproachSet(ApproachesDetector::detect(
         dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'approaches'.DIRECTORY_SEPARATOR.$app,
+        $extensions,
     ));
 }
 
@@ -157,6 +159,28 @@ it('detects array validation rule syntax', function (): void {
         ->and($result->total)->toBe(5);
 });
 
+it("does not count a regex rule's alternation as pipe validation syntax", function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Http/Requests/{$name}Request.php", <<<PHP
+        class {$name}Request
+        {
+            public function rules(): array
+            {
+                return [
+                    'code' => 'regex:/^(A|B)\$/',
+                ];
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::ValidationPipeSyntax))->toBeFalse();
+});
+
 it('samples Models directories anywhere beneath a PSR-4 root', function (): void {
     $approaches = detectApproaches('nested-models-app');
 
@@ -273,14 +297,12 @@ it('accepts an array of approaches with any-of semantics', function (): void {
 });
 
 it('detects a registered custom convention with its own enum', function (): void {
-    ApproachesDetector::extend(
-        fn (string $contents, string $path): ?CustomConvention => str_contains($contents, '$fillable')
+    $approaches = detectApproaches('fillable-models-app', [[
+        'vote' => fn (string $contents, string $path): ?CustomConvention => str_contains($contents, '$fillable')
             ? CustomConvention::THIN_MODELS
             : null,
-        in: 'Models',
-    );
-
-    $approaches = detectApproaches('fillable-models-app');
+        'in' => 'Models',
+    ]]);
 
     expect($approaches->uses(CustomConvention::THIN_MODELS))->toBeTrue()
         ->and($approaches->uses(CustomConvention::FAT_MODELS))->toBeFalse();
@@ -296,14 +318,14 @@ it('detects a registered custom convention with its own enum', function (): void
 });
 
 it('applies the evidence thresholds to custom conventions', function (): void {
-    ApproachesDetector::extend(
-        fn (string $contents): ?CustomConvention => match (true) {
+    $extension = [[
+        'vote' => fn (string $contents): ?CustomConvention => match (true) {
             str_contains($contents, '$fillable') => CustomConvention::THIN_MODELS,
             str_contains($contents, '$guarded') => CustomConvention::FAT_MODELS,
             default => null,
         },
-        in: 'Models',
-    );
+        'in' => 'Models',
+    ]];
 
     $base = tempBase();
 
@@ -315,7 +337,7 @@ it('applies the evidence thresholds to custom conventions', function (): void {
         writeModel($base, $name, 'guarded');
     }
 
-    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+    $approaches = new ApproachSet(ApproachesDetector::detect($base, $extension));
 
     expect($approaches->uses(CustomConvention::THIN_MODELS))->toBeFalse()
         ->and($approaches->uses(CustomConvention::FAT_MODELS))->toBeFalse();
@@ -351,12 +373,12 @@ it('recomputes memoized approaches when a convention is registered later', funct
 
     expect($project->approaches()->uses(CustomConvention::THIN_MODELS))->toBeFalse();
 
-    ApproachesDetector::extend(
-        fn (string $contents): ?CustomConvention => str_contains($contents, '$fillable')
+    $project->withApproachExtensions([[
+        'vote' => fn (string $contents): ?CustomConvention => str_contains($contents, '$fillable')
             ? CustomConvention::THIN_MODELS
             : null,
-        in: 'Models',
-    );
+        'in' => 'Models',
+    ]]);
 
     expect($project->approaches()->uses(CustomConvention::THIN_MODELS))->toBeTrue();
 });

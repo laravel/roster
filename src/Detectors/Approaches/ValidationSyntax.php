@@ -13,7 +13,7 @@ class ValidationSyntax extends Convention
     protected function result(string $basePath, SourceFiles $files): ?ApproachResult
     {
         return $this->electByFile($files, 'Http/Requests', fn (string $contents): ?array => str_contains($contents, 'function rules') ? [
-            Approach::ValidationPipeSyntax->value => (int) preg_match_all("/=>\s*'[^']*\|[^']*'/", $contents),
+            Approach::ValidationPipeSyntax->value => (int) preg_match_all("/=>\s*'[^'\/]*\|[^'\/]*'/", $contents),
             Approach::ValidationArraySyntax->value => (int) preg_match_all("/=>\s*\[\s*'/", $contents),
         ] : null);
     }

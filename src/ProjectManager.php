@@ -9,7 +9,6 @@ use Closure;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Laravel\Roster\Detectors\AgentsDetector;
-use Laravel\Roster\Detectors\ApproachesDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\EditorsDetector;
 use Laravel\Roster\Detectors\MarkerDetector;
@@ -31,21 +30,24 @@ class ProjectManager
 
     protected ?Project $cached = null;
 
+    /** @var list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}> */
+    protected array $extensions = [];
+
     public function scan(?string $basePath = null): Project
     {
         $resolvedBase = Project::normalizeBasePath($basePath);
 
-        $project = $this->rememberScan(
+        $project = $this->hydrate($this->rememberScan(
             $this->cacheKey($resolvedBase),
             fn (): Project => Project::scan($resolvedBase),
-        );
+        ));
 
         return $basePath === null ? ($this->cached = $project) : $project;
     }
 
     public function fresh(?string $basePath = null): Project
     {
-        $project = Project::scan(Project::normalizeBasePath($basePath));
+        $project = $this->hydrate(Project::scan(Project::normalizeBasePath($basePath)));
 
         return $basePath === null ? ($this->cached = $project) : $project;
     }
@@ -106,7 +108,14 @@ class ProjectManager
      */
     public function extendApproaches(callable $vote, ?string $in = null): void
     {
-        ApproachesDetector::extend($vote, $in);
+        $this->extensions[] = ['vote' => $vote, 'in' => $in];
+
+        $this->cached?->withApproachExtensions($this->extensions);
+    }
+
+    private function hydrate(Project $project): Project
+    {
+        return $project->withApproachExtensions($this->extensions);
     }
 
     /**

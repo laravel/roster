@@ -24,44 +24,23 @@ use Laravel\Roster\Support\SourceFiles;
 
 class ApproachesDetector
 {
-    /** @var list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}> */
-    protected static array $extensions = [];
-
-    protected static int $generation = 0;
-
     protected string $basePath;
 
-    public function __construct(string $basePath, protected SourceFiles $files)
+    /**
+     * @param  list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}>  $extensions
+     */
+    public function __construct(string $basePath, protected SourceFiles $files, protected array $extensions = [])
     {
         $this->basePath = Str::finish($basePath, DIRECTORY_SEPARATOR);
     }
 
     /**
-     * @param  callable(string, string): (BackedEnum|null)  $vote
-     */
-    public static function extend(callable $vote, ?string $in = null): void
-    {
-        static::$extensions[] = ['vote' => $vote, 'in' => $in];
-        static::$generation++;
-    }
-
-    public static function flushExtensions(): void
-    {
-        static::$extensions = [];
-        static::$generation++;
-    }
-
-    public static function generation(): int
-    {
-        return static::$generation;
-    }
-
-    /**
+     * @param  list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}>  $extensions
      * @return list<ApproachResult>
      */
-    public static function detect(string $basePath): array
+    public static function detect(string $basePath, array $extensions = []): array
     {
-        return (new self($basePath, new SourceFiles($basePath)))->all();
+        return (new self($basePath, new SourceFiles($basePath), $extensions))->all();
     }
 
     /**
@@ -81,7 +60,7 @@ class ApproachesDetector
             new AuthorizationStyle,
             new AuthRetrievalStyle,
             new ModelKeyStyle,
-            new CustomConventions(static::$extensions),
+            new CustomConventions($this->extensions),
         ];
     }
 
