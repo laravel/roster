@@ -15,11 +15,6 @@ abstract class JsPackageScanner extends PackageScanner
         return $this->failed;
     }
 
-    protected function markFailed(): void
-    {
-        $this->failed = true;
-    }
-
     protected function source(): PackageSource
     {
         return PackageSource::Npm;

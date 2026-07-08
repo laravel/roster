@@ -11,24 +11,19 @@ class NpmPackageLock extends JsPackageScanner
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection;
-        $lockFilePath = $this->path.'package-lock.json';
 
-        $json = self::readJsonFile($lockFilePath);
+        $json = $this->readJsonOrWarn('package-lock.json');
 
         if ($json === null) {
-            if (file_exists($lockFilePath)) {
-                $this->warn('Failed to decode package-lock.json: '.$lockFilePath);
-            }
-
-            $this->markFailed();
+            $this->failed = true;
 
             return $packages;
         }
 
         if (! is_array($json['packages'] ?? null)) {
-            $this->warn('Unsupported package-lock.json (missing "packages" key): '.$lockFilePath);
+            $this->warn('Unsupported package-lock.json (missing "packages" key): '.$this->path.'package-lock.json');
 
-            $this->markFailed();
+            $this->failed = true;
 
             return $packages;
         }

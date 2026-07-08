@@ -131,15 +131,8 @@ class ProjectManager
 
         try {
             $manager = Container::getInstance()->make('cache');
+            $store = $manager instanceof CacheFactory ? $manager->store() : null;
 
-            if ($manager instanceof CacheFactory) {
-                $store = $manager->store();
-            }
-        } catch (Throwable) {
-            $store = null;
-        }
-
-        try {
             $cached = $store?->get($key);
 
             if ($cached instanceof Project) {

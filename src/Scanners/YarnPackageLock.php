@@ -22,7 +22,7 @@ class YarnPackageLock extends JsPackageScanner
         $contents = $this->readContents($lockFilePath, 'yarn.lock');
 
         if ($contents === null) {
-            $this->markFailed();
+            $this->failed = true;
 
             return $packages;
         }

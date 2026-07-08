@@ -12,15 +12,10 @@ class ComposerLock extends PackageScanner
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection;
-        $lockFilePath = $this->path.'composer.lock';
 
-        $json = self::readJsonFile($lockFilePath);
+        $json = $this->readJsonOrWarn('composer.lock');
 
         if ($json === null) {
-            if (file_exists($lockFilePath)) {
-                $this->warn('Failed to decode composer.lock: '.$lockFilePath);
-            }
-
             return $packages;
         }
 

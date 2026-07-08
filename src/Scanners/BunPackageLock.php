@@ -16,7 +16,7 @@ class BunPackageLock extends JsPackageScanner
         $contents = $this->readContents($lockFilePath, 'bun.lock');
 
         if ($contents === null) {
-            $this->markFailed();
+            $this->failed = true;
 
             return $packages;
         }
@@ -28,7 +28,7 @@ class BunPackageLock extends JsPackageScanner
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($json)) {
             $this->warn('Failed to decode bun.lock: '.$lockFilePath);
 
-            $this->markFailed();
+            $this->failed = true;
 
             return $packages;
         }
@@ -36,7 +36,7 @@ class BunPackageLock extends JsPackageScanner
         if (! is_array($json['packages'] ?? null)) {
             $this->warn('Malformed bun.lock (missing "packages" key): '.$lockFilePath);
 
-            $this->markFailed();
+            $this->failed = true;
 
             return $packages;
         }

@@ -110,6 +110,21 @@ abstract class PackageScanner
         return $this->resolvedBase ??= (realpath($this->path) ?: $this->path);
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function readJsonOrWarn(string $file): ?array
+    {
+        $path = $this->path.$file;
+        $json = self::readJsonFile($path);
+
+        if ($json === null && file_exists($path)) {
+            $this->warn("Failed to decode {$file}: {$path}");
+        }
+
+        return $json;
+    }
+
     protected function readContents(string $path, string $label): ?string
     {
         if (! file_exists($path) || ! is_readable($path)) {
@@ -126,13 +141,7 @@ abstract class PackageScanner
     protected function warn(string $message): void
     {
         try {
-            $container = Container::getInstance();
-
-            if (! $container->bound('log')) {
-                return;
-            }
-
-            $logger = $container->make('log');
+            $logger = Container::getInstance()->make('log');
 
             if (is_object($logger) && method_exists($logger, 'warning')) {
                 $logger->warning($message);
