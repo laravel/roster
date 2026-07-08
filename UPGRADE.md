@@ -161,7 +161,7 @@ The `TestFramework` and `StarterKit` detections have been removed. Test framewor
 Project::php()->uses('pestphp/pest');
 ```
 
-Detection of binaries installed on the host machine has also been removed — Roster now only reports on the project itself.
+Detection of binaries installed on the host machine has also been removed; Roster now only reports on the project itself.
 
 ### The `Approaches` Enum
 

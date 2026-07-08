@@ -19,7 +19,6 @@ use Laravel\Roster\ProjectManager;
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Agent> agents()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Editor> editors()
  * @method static \Laravel\Roster\Support\ApproachSet approaches()
- * @method static void extendApproaches(callable $vote, ?string $in = null)
  * @method static array<string, mixed> toArray()
  * @method static string json()
  *

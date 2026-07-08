@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Roster;
 
-use BackedEnum;
 use Closure;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
@@ -30,24 +29,21 @@ class ProjectManager
 
     protected ?Project $cached = null;
 
-    /** @var list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}> */
-    protected array $extensions = [];
-
     public function scan(?string $basePath = null): Project
     {
         $resolvedBase = Project::normalizeBasePath($basePath);
 
-        $project = $this->hydrate($this->rememberScan(
+        $project = $this->rememberScan(
             $this->cacheKey($resolvedBase),
             fn (): Project => Project::scan($resolvedBase),
-        ));
+        );
 
         return $basePath === null ? ($this->cached = $project) : $project;
     }
 
     public function fresh(?string $basePath = null): Project
     {
-        $project = $this->hydrate(Project::scan(Project::normalizeBasePath($basePath)));
+        $project = Project::scan(Project::normalizeBasePath($basePath));
 
         return $basePath === null ? ($this->cached = $project) : $project;
     }
@@ -100,22 +96,6 @@ class ProjectManager
     public function approaches(): ApproachSet
     {
         return $this->instance()->approaches();
-    }
-
-    /**
-     * @param  callable(string, string): (BackedEnum|null)  $vote
-     * @param  string|null  $in  Restrict voting to files beneath this subdirectory of any source root.
-     */
-    public function extendApproaches(callable $vote, ?string $in = null): void
-    {
-        $this->extensions[] = ['vote' => $vote, 'in' => $in];
-
-        $this->cached?->withApproachExtensions($this->extensions);
-    }
-
-    private function hydrate(Project $project): Project
-    {
-        return $project->withApproachExtensions($this->extensions);
     }
 
     /**

@@ -63,8 +63,6 @@ $project = Project::scan();          // uses base_path() / getcwd()
 $project = Project::scan($basePath);
 ```
 
-Note that `Laravel\Roster\Project::scan()` performs a fresh scan on every call, while the `Laravel\Roster\Facades\Project` facade caches — take care to import the one you intend.
-
 The examples that follow use `$project` for clarity, but every call works on the facade.
 
 ## Detecting Packages
@@ -198,7 +196,7 @@ The `approaches` method reports the stylistic conventions a project has adopted,
 
 ### Source Conventions
 
-The `approaches` method inspects the project's **own source code** — not its manifests — and reports which stylistic conventions the application has adopted: `fillable` vs `guarded` mass assignment (detected in both the `protected $fillable` property and `#[Fillable]` attribute spellings), enum case casing, pipe vs array validation rule syntax, and inline validation vs form requests (`$request->validate([...])` versus dedicated `rules()` classes under `Http/Requests`):
+The `approaches` method inspects the project's **own source code**, not its manifests, and reports which stylistic conventions the application has adopted: `fillable` vs `guarded` mass assignment (detected in both the `protected $fillable` property and `#[Fillable]` attribute spellings), enum case casing, pipe vs array validation rule syntax, and inline validation vs form requests (`$request->validate([...])` versus dedicated `rules()` classes under `Http/Requests`):
 
 ```php
 use Laravel\Roster\Enums\Approach;
@@ -213,7 +211,7 @@ $project->approaches()->all();                                    // Collection<
 
 Detection is best-effort: source is read with lightweight pattern matching rather than a full parser, so an unusual file may abstain or be classified from a comment or string literal. This is why approaches are reported as a confidence-weighted vote rather than an exact answer.
 
-A stylistic approach is only reported when it is backed by enough evidence: at least 5 votes (one per voting file — or one per enum case for casing), with more than 80% of them for the winning style — so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent. A file that mixes styles votes for its majority style and abstains on a tie.
+A stylistic approach is only reported when it is backed by enough evidence: at least 5 votes (one per voting file, or one per enum case for casing), with more than 80% of them for the winning style, so a 4/5 majority is rejected, 90/100 passes, and an evenly split codebase stays silent. A file that mixes styles votes for its majority style and abstains on a tie.
 
 Each `ApproachResult` exposes the winning `approach`, its raw `confidence` ratio, the `matched` and `total` vote counts, and the `paths` of the files that voted. You may retrieve a result via the `result` method:
 
@@ -228,44 +226,11 @@ $result->paths;      // ['/app/Models/User.php', ...]
 
 Source files are discovered from the `composer.json` PSR-4 autoload roots unioned with `app/`, and subdirectories such as `Models/` are matched anywhere beneath a root, so modular layouts like `src/Domain/Orders/Models/` are sampled too. `vendor/`, `node_modules/`, and hidden directories are always excluded.
 
-Because source files change without touching any lockfile, approaches are never persisted with the cached scan — they are computed lazily per process, and only when you ask for them: `toArray()` and `json()` stay cheap and omit them, while the `roster:scan` command accepts an `--approaches` flag to include them in its output.
-
-### Custom Conventions
-
-You may teach Roster your own source conventions using the `extendApproaches` method, typically within the `boot` method of a service provider. Define the competing styles as your own backed enum, then register a callback that receives each source file's contents and path and returns the style the file votes for — or `null` to abstain:
-
-```php
-use Laravel\Roster\Facades\Project;
-
-enum Persistence: string
-{
-    case Repository = 'acme.repository';
-    case DirectEloquent = 'acme.direct-eloquent';
-}
-
-// In a service provider's boot method...
-Project::extendApproaches(
-    fn (string $contents, string $path): ?Persistence => match (true) {
-        str_contains($contents, 'RepositoryInterface') => Persistence::Repository,
-        str_contains($contents, '::query()') => Persistence::DirectEloquent,
-        default => null,
-    },
-    in: 'Models',
-);
-```
-
-The `in` argument restricts voting to files beneath the given subdirectory of any source root, just like the built-in conventions; omit it to sample every source file. Custom conventions then flow through the same election as the built-ins — the vote and confidence thresholds apply, and results are queried the same way:
-
-```php
-Project::approaches()->uses(Persistence::Repository);
-Project::approaches()->result(Persistence::Repository)?->confidence;
-```
-
-Registrations take effect immediately: if approaches were already computed, the next call to the `approaches` method re-detects with the new convention included.
+Because source files change without touching any lockfile, approaches are never persisted with the cached scan; they are computed lazily per process, and only when you ask for them: `toArray()` and `json()` stay cheap and omit them, while the `roster:scan` command accepts an `--approaches` flag to include them in its output.
 
 ## Caching
 
-The first call to the `Project` facade scans once and memoizes the result for the remainder of the process. Across processes, scans are cached using your application's configured cache driver, keyed on a hash of your lockfile contents and detector marker directories — so edits to `composer.lock` or a newly added `.claude` directory invalidate the persisted cache automatically. Roster gracefully falls back to a direct scan when no cache driver is configured or the driver fails.
+The first call to the `Project` facade scans once and memoizes the result for the remainder of the process. Across processes, scans are cached using your application's configured cache driver, keyed on a hash of your lockfile contents and detector marker directories, so edits to `composer.lock` or a newly added `.claude` directory invalidate the persisted cache automatically. Roster gracefully falls back to a direct scan when no cache driver is configured or the driver fails.
 
 In long-running processes such as Octane or queue workers, the memoized instance is kept until the worker restarts. You may call `Project::fresh()` to bypass both the memo and the persisted cache and force a re-read at any time.
 

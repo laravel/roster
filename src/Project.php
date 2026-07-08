@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Roster;
 
-use BackedEnum;
 use Illuminate\Support\Str;
 use Laravel\Roster\Detectors\AgentsDetector;
 use Laravel\Roster\Detectors\ApproachesDetector;
@@ -27,9 +26,6 @@ use Laravel\Roster\Support\EnumSet;
 class Project
 {
     protected ?ApproachSet $approaches = null;
-
-    /** @var list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}> */
-    protected array $approachExtensions = [];
 
     /**
      * @param  EnumSet<Stack>  $stacks
@@ -94,23 +90,8 @@ class Project
     public function approaches(): ApproachSet
     {
         return $this->approaches ??= new ApproachSet(
-            ApproachesDetector::detect($this->basePath, $this->approachExtensions),
+            ApproachesDetector::detect($this->basePath),
         );
-    }
-
-    /**
-     * @param  list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}>  $extensions
-     *
-     * @internal Extensions are injected by the ProjectManager; use Project::extendApproaches().
-     */
-    public function withApproachExtensions(array $extensions): self
-    {
-        if ($extensions !== $this->approachExtensions) {
-            $this->approachExtensions = $extensions;
-            $this->approaches = null;
-        }
-
-        return $this;
     }
 
     public static function scan(?string $basePath = null): self
@@ -175,7 +156,7 @@ class Project
     public function __serialize(): array
     {
         $properties = get_object_vars($this);
-        unset($properties['approaches'], $properties['approachExtensions']);
+        unset($properties['approaches']);
 
         return $properties;
     }
@@ -190,6 +171,5 @@ class Project
         }
 
         $this->approaches = null;
-        $this->approachExtensions = [];
     }
 }

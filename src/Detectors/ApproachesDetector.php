@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Detectors;
 
-use BackedEnum;
 use Illuminate\Support\Str;
 use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Detectors\Approaches\AuthorizationStyle;
@@ -12,7 +11,6 @@ use Laravel\Roster\Detectors\Approaches\AuthRetrievalStyle;
 use Laravel\Roster\Detectors\Approaches\CommandSignatureSyntax;
 use Laravel\Roster\Detectors\Approaches\ControllerStyle;
 use Laravel\Roster\Detectors\Approaches\Convention;
-use Laravel\Roster\Detectors\Approaches\CustomConventions;
 use Laravel\Roster\Detectors\Approaches\EnumCasing;
 use Laravel\Roster\Detectors\Approaches\HttpClientErrorStyle;
 use Laravel\Roster\Detectors\Approaches\MassAssignment;
@@ -26,21 +24,17 @@ class ApproachesDetector
 {
     protected string $basePath;
 
-    /**
-     * @param  list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}>  $extensions
-     */
-    public function __construct(string $basePath, protected SourceFiles $files, protected array $extensions = [])
+    public function __construct(string $basePath, protected SourceFiles $files)
     {
         $this->basePath = Str::finish($basePath, DIRECTORY_SEPARATOR);
     }
 
     /**
-     * @param  list<array{vote: callable(string, string): (BackedEnum|null), in: string|null}>  $extensions
      * @return list<ApproachResult>
      */
-    public static function detect(string $basePath, array $extensions = []): array
+    public static function detect(string $basePath): array
     {
-        return (new self($basePath, new SourceFiles($basePath), $extensions))->all();
+        return (new self($basePath, new SourceFiles($basePath)))->all();
     }
 
     /**
@@ -60,7 +54,6 @@ class ApproachesDetector
             new AuthorizationStyle,
             new AuthRetrievalStyle,
             new ModelKeyStyle,
-            new CustomConventions($this->extensions),
         ];
     }
 

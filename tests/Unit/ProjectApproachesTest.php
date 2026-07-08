@@ -30,7 +30,6 @@ it('strips computed approaches from the serialized payload', function (): void {
 
     expect($project->__serialize())
         ->not->toHaveKey('approaches')
-        ->not->toHaveKey('approachExtensions')
         ->and(serialize($project))->not->toContain('ApproachSet');
 });
 

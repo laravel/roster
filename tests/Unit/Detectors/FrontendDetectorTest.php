@@ -17,6 +17,12 @@ it('returns empty when nothing present', function (): void {
     expect(FrontendDetector::detect(jsEcosystem([])))->toBe([]);
 });
 
+it('detects a frontend from an adapter marker without the core package', function (): void {
+    $frontends = FrontendDetector::detect(jsEcosystem(['@inertiajs/svelte']));
+
+    expect($frontends)->toBe([Frontend::Svelte]);
+});
+
 it('ignores a transitively installed frontend package', function (): void {
     $frontends = FrontendDetector::detect(jsEcosystem([
         ['name' => 'react', 'direct' => false],

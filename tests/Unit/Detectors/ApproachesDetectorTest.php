@@ -5,23 +5,12 @@ declare(strict_types=1);
 use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Detectors\ApproachesDetector;
 use Laravel\Roster\Enums\Approach;
-use Laravel\Roster\Project;
 use Laravel\Roster\Support\ApproachSet;
 
-enum CustomConvention: string
-{
-    case THIN_MODELS = 'custom.thin-models';
-    case FAT_MODELS = 'custom.fat-models';
-}
-
-/**
- * @param  list<array{vote: callable, in: string|null}>  $extensions
- */
-function detectApproaches(string $app, array $extensions = []): ApproachSet
+function detectApproaches(string $app): ApproachSet
 {
     return new ApproachSet(ApproachesDetector::detect(
         dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'approaches'.DIRECTORY_SEPARATOR.$app,
-        $extensions,
     ));
 }
 
@@ -296,55 +285,6 @@ it('accepts an array of approaches with any-of semantics', function (): void {
         ->and($approaches->uses([Approach::MassAssignmentGuarded, Approach::EnumCaseCamel]))->toBeFalse();
 });
 
-it('detects a registered custom convention with its own enum', function (): void {
-    $approaches = detectApproaches('fillable-models-app', [[
-        'vote' => fn (string $contents, string $path): ?CustomConvention => str_contains($contents, '$fillable')
-            ? CustomConvention::THIN_MODELS
-            : null,
-        'in' => 'Models',
-    ]]);
-
-    expect($approaches->uses(CustomConvention::THIN_MODELS))->toBeTrue()
-        ->and($approaches->uses(CustomConvention::FAT_MODELS))->toBeFalse();
-
-    /** @var ApproachResult $result */
-    $result = $approaches->result(CustomConvention::THIN_MODELS);
-
-    expect($result->approach)->toBe(CustomConvention::THIN_MODELS)
-        ->and($result->matched)->toBe(6)
-        ->and($result->total)->toBe(6)
-        ->and($result->confidence)->toBe(1.0)
-        ->and($result->paths[0])->toContain('Models');
-});
-
-it('applies the evidence thresholds to custom conventions', function (): void {
-    $extension = [[
-        'vote' => fn (string $contents): ?CustomConvention => match (true) {
-            str_contains($contents, '$fillable') => CustomConvention::THIN_MODELS,
-            str_contains($contents, '$guarded') => CustomConvention::FAT_MODELS,
-            default => null,
-        },
-        'in' => 'Models',
-    ]];
-
-    $base = tempBase();
-
-    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
-        writeModel($base, $name, 'fillable');
-    }
-
-    foreach (['Delta', 'Hotel'] as $name) {
-        writeModel($base, $name, 'guarded');
-    }
-
-    $approaches = new ApproachSet(ApproachesDetector::detect($base, $extension));
-
-    expect($approaches->uses(CustomConvention::THIN_MODELS))->toBeFalse()
-        ->and($approaches->uses(CustomConvention::FAT_MODELS))->toBeFalse();
-
-    cleanup($base);
-});
-
 it('dedupes files reachable through overlapping source roots', function (): void {
     $base = tempBase();
 
@@ -364,23 +304,6 @@ it('dedupes files reachable through overlapping source roots', function (): void
     expect($result->total)->toBe(5);
 
     cleanup($base);
-});
-
-it('recomputes memoized approaches when a convention is registered later', function (): void {
-    $project = Project::scan(
-        dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'approaches'.DIRECTORY_SEPARATOR.'fillable-models-app',
-    );
-
-    expect($project->approaches()->uses(CustomConvention::THIN_MODELS))->toBeFalse();
-
-    $project->withApproachExtensions([[
-        'vote' => fn (string $contents): ?CustomConvention => str_contains($contents, '$fillable')
-            ? CustomConvention::THIN_MODELS
-            : null,
-        'in' => 'Models',
-    ]]);
-
-    expect($project->approaches()->uses(CustomConvention::THIN_MODELS))->toBeTrue();
 });
 
 function writeAttributeModel(string $base, string $name, string $attribute): void
