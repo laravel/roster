@@ -8,7 +8,6 @@ use Laravel\Roster\ApproachResult;
 use Laravel\Roster\Detectors\Approaches\AuthorizationStyle;
 use Laravel\Roster\Detectors\Approaches\AuthRetrievalStyle;
 use Laravel\Roster\Detectors\Approaches\CommandSignatureSyntax;
-use Laravel\Roster\Detectors\Approaches\ControllerStyle;
 use Laravel\Roster\Detectors\Approaches\Convention;
 use Laravel\Roster\Detectors\Approaches\EnumCasing;
 use Laravel\Roster\Detectors\Approaches\MassAssignment;
@@ -43,7 +42,6 @@ class ApproachesDetector
             new EnumCasing,
             new ValidationSyntax,
             new ValidationStyle,
-            new ControllerStyle,
             new CommandSignatureSyntax,
             new NotificationSendStyle,
             new AuthorizationStyle,

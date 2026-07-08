@@ -15,8 +15,6 @@ enum Approach: string
     case ValidationArraySyntax = 'validation-array-syntax';
     case ValidationInline = 'validation-inline';
     case ValidationFormRequest = 'validation-form-request';
-    case ControllerInvokable = 'controller-invokable';
-    case ControllerResourceful = 'controller-resourceful';
     case CommandAttributeSyntax = 'command-attribute-syntax';
     case CommandPropertySyntax = 'command-property-syntax';
     case NotificationNotify = 'notification-notify';

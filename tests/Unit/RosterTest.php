@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Laravel\Roster\Enums\Frontend;
 use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\Enums\Stack;
-use Laravel\Roster\Project;
+use Laravel\Roster\ProjectScan;
 
 it('scans the fog fixture end to end', function (): void {
     $path = __DIR__.'/../fixtures/fog';
 
-    $project = Project::scan($path);
+    $project = ProjectScan::scan($path);
 
     expect($project->php()->uses('pestphp/pest'))->toBeTrue();
     expect($project->php()->uses('laravel/framework'))->toBeTrue();
@@ -28,7 +28,7 @@ it('scans the fog fixture end to end', function (): void {
 
 it('renders json without error', function (): void {
     $path = __DIR__.'/../fixtures/fog';
-    $project = Project::scan($path);
+    $project = ProjectScan::scan($path);
     $payload = json_decode($project->json(), true);
 
     expect($payload)->toBeArray();

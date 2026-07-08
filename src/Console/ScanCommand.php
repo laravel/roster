@@ -6,7 +6,8 @@ namespace Laravel\Roster\Console;
 
 use Illuminate\Console\Command;
 use Laravel\Roster\ApproachResult;
-use Laravel\Roster\Project;
+use Laravel\Roster\ProjectManager;
+use Laravel\Roster\ProjectScan;
 
 class ScanCommand extends Command
 {
@@ -14,9 +15,9 @@ class ScanCommand extends Command
 
     protected $description = 'Detect packages, stacks, frameworks, agents, and approaches in use and output as JSON';
 
-    public function handle(): int
+    public function handle(ProjectManager $projects): int
     {
-        $directory = $this->argument('directory') ?? Project::normalizeBasePath(null);
+        $directory = $this->argument('directory') ?? ProjectScan::normalizeBasePath(null);
 
         if (! is_string($directory)) {
             $this->error('Pass a directory.');
@@ -30,7 +31,7 @@ class ScanCommand extends Command
             return self::FAILURE;
         }
 
-        $project = Project::scan($directory);
+        $project = $projects->fresh($directory);
         $payload = $project->toArray();
 
         if ($this->option('approaches')) {
@@ -39,7 +40,7 @@ class ScanCommand extends Command
                 ->all();
         }
 
-        $this->line(Project::encode($payload));
+        $this->line(ProjectScan::encode($payload));
 
         return self::SUCCESS;
     }

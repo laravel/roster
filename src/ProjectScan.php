@@ -23,7 +23,7 @@ use Laravel\Roster\Scanners\JsLockfile;
 use Laravel\Roster\Support\ApproachSet;
 use Laravel\Roster\Support\EnumSet;
 
-class Project
+class ProjectScan
 {
     protected ?ApproachSet $approaches = null;
 

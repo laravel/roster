@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Roster\Enums\Approach;
-use Laravel\Roster\Project;
+use Laravel\Roster\ProjectScan;
 
 function approachesFixturePath(string $app): string
 {
@@ -11,20 +11,20 @@ function approachesFixturePath(string $app): string
 }
 
 it('exposes approaches from a full project scan', function (): void {
-    $project = Project::scan(approachesFixturePath('fillable-models-app'));
+    $project = ProjectScan::scan(approachesFixturePath('fillable-models-app'));
 
     expect($project->approaches()->uses(Approach::MassAssignmentFillable))->toBeTrue()
         ->and($project->approaches()->uses(Approach::MassAssignmentGuarded))->toBeFalse();
 });
 
 it('keeps the array payload cheap by omitting approaches', function (): void {
-    $payload = Project::scan(approachesFixturePath('fillable-models-app'))->toArray();
+    $payload = ProjectScan::scan(approachesFixturePath('fillable-models-app'))->toArray();
 
     expect($payload)->not->toHaveKey('approaches');
 });
 
 it('strips computed approaches from the serialized payload', function (): void {
-    $project = Project::scan(approachesFixturePath('fillable-models-app'));
+    $project = ProjectScan::scan(approachesFixturePath('fillable-models-app'));
 
     $project->approaches();
 
@@ -34,13 +34,13 @@ it('strips computed approaches from the serialized payload', function (): void {
 });
 
 it('recomputes approaches lazily after a serialize round-trip', function (): void {
-    $project = Project::scan(approachesFixturePath('fillable-models-app'));
+    $project = ProjectScan::scan(approachesFixturePath('fillable-models-app'));
 
     $project->approaches();
 
     $restored = unserialize(serialize($project));
 
-    expect($restored)->toBeInstanceOf(Project::class)
+    expect($restored)->toBeInstanceOf(ProjectScan::class)
         ->and($restored)->not->toBe($project)
         ->and($restored->approaches()->uses(Approach::MassAssignmentFillable))->toBeTrue()
         ->and($restored->approaches()->uses(Approach::MassAssignmentGuarded))->toBeFalse();

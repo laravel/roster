@@ -28,28 +28,28 @@ class ProjectManager
 {
     protected const CACHE_TTL = 3600;
 
-    protected ?Project $cached = null;
+    protected ?ProjectScan $cached = null;
 
-    public function scan(?string $basePath = null): Project
+    public function scan(?string $basePath = null): ProjectScan
     {
-        $resolvedBase = Project::normalizeBasePath($basePath);
+        $resolvedBase = ProjectScan::normalizeBasePath($basePath);
 
         $project = $this->rememberScan(
             $this->cacheKey($resolvedBase),
-            fn (): Project => Project::scan($resolvedBase),
+            fn (): ProjectScan => ProjectScan::scan($resolvedBase),
         );
 
         return $basePath === null ? ($this->cached = $project) : $project;
     }
 
-    public function fresh(?string $basePath = null): Project
+    public function fresh(?string $basePath = null): ProjectScan
     {
-        $project = Project::scan(Project::normalizeBasePath($basePath));
+        $project = ProjectScan::scan(ProjectScan::normalizeBasePath($basePath));
 
         return $basePath === null ? ($this->cached = $project) : $project;
     }
 
-    public function instance(): Project
+    public function instance(): ProjectScan
     {
         return $this->cached ??= $this->scan();
     }
@@ -113,16 +113,16 @@ class ProjectManager
     }
 
     /**
-     * @param  Closure(): Project  $scan
+     * @param  Closure(): ProjectScan  $scan
      */
-    private function rememberScan(string $key, Closure $scan): Project
+    private function rememberScan(string $key, Closure $scan): ProjectScan
     {
         $store = $this->cacheStore();
 
         try {
             $cached = $store?->get($key);
 
-            if ($cached instanceof Project) {
+            if ($cached instanceof ProjectScan) {
                 return $cached;
             }
         } catch (Throwable) {

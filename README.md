@@ -53,13 +53,15 @@ Project::php()->uses('pestphp/pest');
 Project::stacks()->uses(Stack::InertiaReact);
 ```
 
-Outside of a Laravel container, or when you would like an explicit handle, you may use the static `scan` method:
+Outside of a Laravel container, or when you would like an explicit handle, instantiate the manager directly. It gracefully runs uncached when no container or cache driver is available:
 
 ```php
-use Laravel\Roster\Project;
+use Laravel\Roster\ProjectManager;
 
-$project = Project::scan();          // uses base_path() / getcwd()
-$project = Project::scan($basePath);
+$projects = new ProjectManager;
+
+$project = $projects->scan();          // uses base_path() / getcwd()
+$project = $projects->scan($basePath);
 ```
 
 The examples that follow use `$project` for clarity, but every call works on the facade.
@@ -201,7 +203,6 @@ The `approaches` method inspects the project's **own source code**, not its mani
 - enum case casing (screaming snake, Pascal, or camel)
 - pipe vs array validation rule syntax
 - inline validation vs form requests (`$request->validate([...])` versus dedicated `rules()` classes under `Http/Requests`)
-- invokable vs resourceful controllers
 - command signature via the `#[AsCommand]` attribute vs the `$signature` property
 - notifications sent via `$notifiable->notify()` vs the `Notification` facade
 - authorization via gates, `$user->can()`, or the `AuthorizesRequests` trait
