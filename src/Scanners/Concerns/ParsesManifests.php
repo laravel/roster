@@ -36,14 +36,18 @@ trait ParsesManifests
 
     /**
      * @param  array<string, mixed>  $manifest
+     * @param  array<string, bool>  $sections
      * @return array<string, array{constraint: string, isDev: bool}>
      */
-    protected static function collectManifestDeps(array $manifest, string $prodKey, string $devKey): array
+    protected static function collectManifestDeps(array $manifest, array $sections): array
     {
-        return array_replace(
-            self::collectDeps($manifest[$devKey] ?? null, true),
-            self::collectDeps($manifest[$prodKey] ?? null, false),
-        );
+        $collected = [];
+
+        foreach ($sections as $section => $isDev) {
+            $collected = array_replace($collected, self::collectDeps($manifest[$section] ?? null, $isDev));
+        }
+
+        return $collected;
     }
 
     protected static function normalizeVersion(string $version): string

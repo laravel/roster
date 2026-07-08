@@ -204,7 +204,7 @@ The `approaches` method inspects the project's **own source code**, not its mani
 - invokable vs resourceful controllers
 - command signature via the `#[AsCommand]` attribute vs the `$signature` property
 - notifications sent via `$notifiable->notify()` vs the `Notification` facade
-- authorization via gates, `$user->can()`, the `#[Can]` attribute, or the `AuthorizesRequests` trait
+- authorization via gates, `$user->can()`, or the `AuthorizesRequests` trait
 - authenticated-user retrieval via the `Auth` facade, `$request->user()`, or the `auth()` helper
 - model key style: UUID (`HasUuids`), ULID (`HasUlids`), or the default auto-incrementing key
 

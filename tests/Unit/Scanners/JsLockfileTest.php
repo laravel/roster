@@ -42,6 +42,25 @@ it('marks transitive dev-only npm packages as dev', function (): void {
     cleanup($base);
 });
 
+it('indexes npm transitives nested under another dependency', function (): void {
+    $base = fixtureCopy([
+        'fog/package.json' => 'package.json',
+        'fog/package-lock.json' => 'package-lock.json',
+    ]);
+
+    $packages = (new JsLockfile($base))->scan();
+
+    $specificity = $packages->first(fn ($p): bool => $p->name() === '@csstools/selector-specificity');
+    expect($specificity->version())->toEqual('3.1.1');
+    expect($specificity->isDev())->toBeTrue();
+    expect($specificity->isDirect())->toBeFalse();
+
+    $globParent = $packages->first(fn ($p): bool => $p->name() === 'glob-parent');
+    expect($globParent->version())->toEqual('6.0.2');
+
+    cleanup($base);
+});
+
 it('prefers package-lock.json when multiple lockfiles are committed', function (): void {
     $base = fixtureCopy([
         'fog/package.json' => 'package.json',
@@ -148,6 +167,30 @@ it('falls back to package.json when no lockfile is committed', function (): void
     $inertia = $packages->first(fn ($p): bool => $p->name() === '@inertiajs/react');
     expect($inertia)->not->toBeNull();
     expect($inertia->isDev())->toBeTrue();
+
+    cleanup($tempDir);
+});
+
+it('treats optional and peer dependencies as direct manifest packages', function (): void {
+    $tempDir = tempBase();
+
+    file_put_contents($tempDir.'package.json', json_encode([
+        'dependencies' => ['vue' => '^3.4.0'],
+        'optionalDependencies' => ['fsevents' => '^2.3.0'],
+        'peerDependencies' => ['react' => '^18.0.0'],
+    ]));
+
+    $packages = (new JsLockfile($tempDir))->scan();
+
+    $fsevents = $packages->first(fn ($p): bool => $p->name() === 'fsevents');
+    expect($fsevents)->not->toBeNull()
+        ->and($fsevents->isDirect())->toBeTrue()
+        ->and($fsevents->isDev())->toBeFalse();
+
+    $react = $packages->first(fn ($p): bool => $p->name() === 'react');
+    expect($react)->not->toBeNull()
+        ->and($react->isDirect())->toBeTrue()
+        ->and($react->isDev())->toBeFalse();
 
     cleanup($tempDir);
 });

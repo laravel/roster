@@ -40,7 +40,10 @@ it('classifies a dependency listed in both sections as production', function ():
          */
         public static function collect(array $manifest): array
         {
-            return self::collectManifestDeps($manifest, 'dependencies', 'devDependencies');
+            return self::collectManifestDeps($manifest, [
+                'devDependencies' => true,
+                'dependencies' => false,
+            ]);
         }
     };
 

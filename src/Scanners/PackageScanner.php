@@ -38,9 +38,9 @@ abstract class PackageScanner
     abstract protected function manifestFile(): string;
 
     /**
-     * @return array{string, string}
+     * @return array<string, bool>
      */
-    abstract protected function dependencyKeys(): array;
+    abstract protected function manifestSections(): array;
 
     abstract protected function computePath(string $packageName): string;
 
@@ -87,9 +87,7 @@ abstract class PackageScanner
             return $this->directPackages = [];
         }
 
-        [$prodKey, $devKey] = $this->dependencyKeys();
-
-        return $this->directPackages = self::collectManifestDeps($manifest, $prodKey, $devKey);
+        return $this->directPackages = self::collectManifestDeps($manifest, $this->manifestSections());
     }
 
     /**

@@ -37,17 +37,7 @@ class NpmPackageLock extends JsPackageScanner
         /** @var array<string, string> $devPackages */
         $devPackages = [];
 
-        foreach ($jsonPackages as $key => $entry) {
-            if ($key === '') {
-                continue;
-            }
-
-            $name = $this->nameFromNodeModulesPath($key);
-
-            if ($name === null) {
-                continue;
-            }
-
+        foreach ($this->entriesByDepth($jsonPackages) as [$name, $entry]) {
             if (isset($prodPackages[$name])) {
                 continue;
             }
@@ -71,15 +61,43 @@ class NpmPackageLock extends JsPackageScanner
         return $packages;
     }
 
+    /**
+     * @param  array<string, array<string, mixed>>  $jsonPackages
+     * @return list<array{0: string, 1: array<string, mixed>}>
+     */
+    private function entriesByDepth(array $jsonPackages): array
+    {
+        $topLevel = [];
+        $nested = [];
+
+        foreach ($jsonPackages as $key => $entry) {
+            $key = (string) $key;
+            $name = $this->nameFromNodeModulesPath($key);
+
+            if ($name === null) {
+                continue;
+            }
+
+            if (substr_count($key, 'node_modules/') === 1) {
+                $topLevel[] = [$name, $entry];
+            } else {
+                $nested[] = [$name, $entry];
+            }
+        }
+
+        return array_merge($topLevel, $nested);
+    }
+
     private function nameFromNodeModulesPath(string $key): ?string
     {
         $marker = 'node_modules/';
+        $position = strrpos($key, $marker);
 
-        if (! str_starts_with($key, $marker) || substr_count($key, $marker) !== 1) {
+        if ($position === false || ! str_starts_with($key, $marker)) {
             return null;
         }
 
-        $name = substr($key, strlen($marker));
+        $name = substr($key, $position + strlen($marker));
 
         return $name === '' ? null : $name;
     }

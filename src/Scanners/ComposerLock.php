@@ -40,11 +40,14 @@ class ComposerLock extends PackageScanner
     }
 
     /**
-     * @return array{string, string}
+     * @return array<string, bool>
      */
-    protected function dependencyKeys(): array
+    protected function manifestSections(): array
     {
-        return ['require', 'require-dev'];
+        return [
+            'require-dev' => true,
+            'require' => false,
+        ];
     }
 
     protected function computePath(string $packageName): string

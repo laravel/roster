@@ -546,8 +546,7 @@ it('detects command signature attribute vs property syntax', function (): void {
 
     foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
         writeSource($base, "app/Console/Commands/{$name}Command.php", <<<PHP
-        #[Signature('{$name}:run')]
-        #[Description('Run {$name}')]
+        #[AsCommand(name: '{$name}:run', description: 'Run {$name}')]
         class {$name}Command
         {
         }
@@ -594,6 +593,29 @@ it('detects the notify trait style over the Notification facade', function (): v
             public function handle(\$user): void
             {
                 \$user->notify(new InvoicePaid());
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::NotificationNotify))->toBeTrue()
+        ->and($approaches->uses(Approach::NotificationFacade))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('counts notify calls that pass a variable instead of a new expression', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Actions/{$name}.php", <<<PHP
+        class {$name}
+        {
+            public function handle(\$user, \$notification): void
+            {
+                \$user->notify(\$notification);
             }
         }
         PHP);
@@ -665,6 +687,42 @@ it('detects the dominant authorization call style in controllers', function (): 
 
     expect($result->matched)->toBe(5)
         ->and($result->total)->toBe(6);
+
+    cleanup($base);
+});
+
+it('detects user can calls on both plain variables and request chains', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeSource($base, "app/Http/Controllers/{$name}Controller.php", <<<PHP
+        class {$name}Controller
+        {
+            public function update(\$user, \$post): void
+            {
+                abort_unless(\$user->can('update', \$post), 403);
+            }
+        }
+        PHP);
+    }
+
+    foreach (['Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Http/Controllers/{$name}Controller.php", <<<PHP
+        class {$name}Controller
+        {
+            public function update(\$request, \$post): void
+            {
+                abort_if(\$request->user()->cannot('update', \$post), 403);
+            }
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::AuthorizationUserCan))->toBeTrue()
+        ->and($approaches->uses(Approach::AuthorizationGate))->toBeFalse()
+        ->and($approaches->uses(Approach::AuthorizationTrait))->toBeFalse();
 
     cleanup($base);
 });

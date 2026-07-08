@@ -26,11 +26,16 @@ abstract class JsPackageScanner extends PackageScanner
     }
 
     /**
-     * @return array{string, string}
+     * @return array<string, bool>
      */
-    protected function dependencyKeys(): array
+    protected function manifestSections(): array
     {
-        return ['dependencies', 'devDependencies'];
+        return [
+            'devDependencies' => true,
+            'peerDependencies' => false,
+            'optionalDependencies' => false,
+            'dependencies' => false,
+        ];
     }
 
     protected function computePath(string $packageName): string

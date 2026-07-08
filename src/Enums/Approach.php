@@ -23,7 +23,6 @@ enum Approach: string
     case NotificationFacade = 'notification-facade';
     case AuthorizationGate = 'authorization-gate';
     case AuthorizationUserCan = 'authorization-user-can';
-    case AuthorizationAttribute = 'authorization-attribute';
     case AuthorizationTrait = 'authorization-trait';
     case AuthFacade = 'auth-facade';
     case AuthRequest = 'auth-request';
