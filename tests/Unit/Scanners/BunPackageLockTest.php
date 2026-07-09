@@ -138,3 +138,36 @@ it('keeps npm-aliased top-level entries under their alias name', function (): vo
 
     cleanup($base);
 });
+
+it('emits a root devDependency once with the direct version when it also appears as a nested transitive', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'bun.lock', json_encode([
+        'lockfileVersion' => 1,
+        'workspaces' => [
+            '' => [
+                'dependencies' => ['@typescript-eslint/parser' => '^8.0.0'],
+                'devDependencies' => ['eslint' => '^9.0.0'],
+            ],
+        ],
+        'packages' => [
+            'eslint' => ['eslint@9.2.0', '', [], 'sha512-a'],
+            '@typescript-eslint/parser' => ['@typescript-eslint/parser@8.0.0', '', [], 'sha512-b'],
+            '@typescript-eslint/parser/eslint' => ['eslint@8.1.0', '', [], 'sha512-c'],
+        ],
+    ]));
+    file_put_contents($base.'package.json', json_encode([
+        'dependencies' => ['@typescript-eslint/parser' => '^8.0.0'],
+        'devDependencies' => ['eslint' => '^9.0.0'],
+    ]));
+
+    $packages = (new BunPackageLock($base))->scan();
+
+    $eslint = $packages->filter(fn ($p): bool => $p->name() === 'eslint');
+    expect($eslint)->toHaveCount(1)
+        ->and($eslint->first()->version())->toEqual('9.2.0')
+        ->and($eslint->first()->isDev())->toBeTrue()
+        ->and($eslint->first()->isDirect())->toBeTrue();
+
+    cleanup($base);
+});

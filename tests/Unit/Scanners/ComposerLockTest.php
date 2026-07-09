@@ -132,3 +132,27 @@ it('classifies dev from the lockfile section even when require-dev disagrees', f
 
     cleanup($base);
 });
+
+it('leaves the constraint blank for transitive packages and normalizes the version', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'composer.lock', json_encode([
+        'packages' => [
+            ['name' => 'laravel/prompts', 'version' => 'v0.3.5'],
+        ],
+        'packages-dev' => [],
+    ]));
+    file_put_contents($base.'composer.json', json_encode([
+        'require' => ['laravel/framework' => '^11.0'],
+    ]));
+
+    $packages = (new ComposerLock($base))->scan();
+
+    $prompts = $packages->first(fn ($p): bool => $p->name() === 'laravel/prompts');
+    expect($prompts)->not->toBeNull()
+        ->and($prompts->isDirect())->toBeFalse()
+        ->and($prompts->version())->toEqual('0.3.5')
+        ->and($prompts->constraint())->toBeEmpty();
+
+    cleanup($base);
+});

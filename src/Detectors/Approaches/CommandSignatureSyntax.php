@@ -14,7 +14,7 @@ class CommandSignatureSyntax extends Convention
     {
         return $this->electByFile($files, 'Commands', fn (string $contents): array => [
             Approach::CommandAttributeSyntax->value => (int) preg_match_all('/#\[\s*AsCommand\b/', $contents),
-            Approach::CommandPropertySyntax->value => (int) preg_match_all('/protected\s+\$(?:signature|description)\b\s*=/', $contents),
+            Approach::CommandPropertySyntax->value => (int) preg_match_all('/protected\s+(?:\S+\s+)*\$(?:signature|description)\b\s*=/', $contents),
         ]);
     }
 }

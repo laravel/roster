@@ -39,11 +39,8 @@ class BunPackageLock extends JsPackageScanner
             return $packages;
         }
 
-        /** @var array<string, string> $allPackages */
-        $allPackages = [];
-
-        /** @var array<string, string> $nestedPackages */
-        $nestedPackages = [];
+        /** @var array<string, array{version: string, topLevel: bool}> $byName */
+        $byName = [];
 
         foreach ($json['packages'] as $key => $entry) {
             $key = (string) $key;
@@ -51,30 +48,34 @@ class BunPackageLock extends JsPackageScanner
             $topLevel = ! str_contains($key, '/')
                 || (str_starts_with($key, '@') && substr_count($key, '/') === 1);
 
-            if ($topLevel) {
-                $allPackages[$key] = $this->extractVersion($entry);
+            $name = $topLevel ? $key : ($this->extractName($entry) ?? $key);
 
+            if ($name === '') {
                 continue;
             }
 
-            $name = $this->extractName($entry) ?? $key;
+            if (isset($byName[$name]) && ! ($topLevel && ! $byName[$name]['topLevel'])) {
+                continue;
+            }
 
-            if (! isset($nestedPackages[$name])) {
-                $nestedPackages[$name] = $this->extractVersion($entry);
+            $byName[$name] = ['version' => $this->extractVersion($entry), 'topLevel' => $topLevel];
+        }
+
+        $devSet = array_flip($this->workspaceDevNames($json));
+
+        $prod = [];
+        $dev = [];
+
+        foreach ($byName as $name => $entry) {
+            if ($entry['topLevel'] && isset($devSet[$name])) {
+                $dev[$name] = $entry['version'];
+            } else {
+                $prod[$name] = $entry['version'];
             }
         }
 
-        $devPackages = [];
-
-        foreach ($this->workspaceDevNames($json) as $name) {
-            if (isset($allPackages[$name])) {
-                $devPackages[$name] = $allPackages[$name];
-                unset($allPackages[$name]);
-            }
-        }
-
-        $this->processDependencies($allPackages + $nestedPackages, $packages, false);
-        $this->processDependencies($devPackages, $packages, true);
+        $this->processDependencies($prod, $packages, false);
+        $this->processDependencies($dev, $packages, true);
 
         return $packages;
     }

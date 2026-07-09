@@ -13,9 +13,9 @@ class MassAssignment extends Convention
     protected function result(SourceFiles $files): ?ApproachResult
     {
         return $this->electByFile($files, 'Models', function (string $contents): array {
-            $fillable = preg_match('/protected\s+\$fillable\b/', $contents) === 1
+            $fillable = preg_match('/protected\s+(?:\S+\s+)*\$fillable\b/', $contents) === 1
                 || preg_match('/#\[\s*Fillable\b/', $contents) === 1;
-            $guarded = preg_match('/protected\s+\$guarded\b/', $contents) === 1
+            $guarded = preg_match('/protected\s+(?:\S+\s+)*\$guarded\b/', $contents) === 1
                 || preg_match('/#\[\s*Guarded\b/', $contents) === 1;
 
             return [

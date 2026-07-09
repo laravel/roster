@@ -66,7 +66,7 @@ abstract class PackageScanner
                 source: $this->source(),
                 dev: $isDirect && ! $authoritative ? $direct[$packageName]['isDev'] : $isDev,
                 direct: $isDirect,
-                constraint: $isDirect ? $direct[$packageName]['constraint'] : $version,
+                constraint: $isDirect ? $direct[$packageName]['constraint'] : '',
                 path: $this->computePath($packageName),
             ));
         }

@@ -294,6 +294,56 @@ it('skips models declaring both fillable and guarded', function (): void {
     cleanup($base);
 });
 
+it('detects typed property declarations of fillable', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        touchFile($base.'app/Models/'.$name.'.php');
+        file_put_contents(
+            $base.'app/Models/'.$name.'.php',
+            "<?php\n\nnamespace App\\Models;\n\nclass {$name}\n{\n    protected array \$fillable = ['name'];\n}\n",
+        );
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue()
+        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MassAssignmentFillable->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+
+    cleanup($base);
+});
+
+it('detects fillable declared with multiple type and modifier tokens', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        touchFile($base.'app/Models/'.$name.'.php');
+        file_put_contents(
+            $base.'app/Models/'.$name.'.php',
+            "<?php\n\nnamespace App\\Models;\n\nclass {$name}\n{\n    protected readonly array \$fillable = ['name'];\n}\n",
+        );
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue()
+        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::MassAssignmentFillable->value);
+
+    expect($result->matched)->toBe(5)
+        ->and($result->total)->toBe(5);
+
+    cleanup($base);
+});
+
 it('never lets vendor or node_modules code vote', function (): void {
     $base = tempBase();
 
@@ -490,6 +540,28 @@ it('detects command signature properties', function (): void {
             protected \$signature = '{$name}:run';
 
             protected \$description = 'Run {$name}';
+        }
+        PHP);
+    }
+
+    $approaches = new ApproachSet(ApproachesDetector::detect($base));
+
+    expect($approaches->uses(Approach::CommandPropertySyntax))->toBeTrue()
+        ->and($approaches->uses(Approach::CommandAttributeSyntax))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('detects typed command signature properties', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel'] as $name) {
+        writeSource($base, "app/Console/Commands/{$name}Command.php", <<<PHP
+        class {$name}Command
+        {
+            protected ?string \$signature = '{$name}:run';
+
+            protected string \$description = 'Run {$name}';
         }
         PHP);
     }
