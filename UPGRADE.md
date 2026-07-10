@@ -5,7 +5,7 @@
 ## High Impact Changes
 
 - [Updating Dependencies](#updating-dependencies)
-- [The `Roster` Facade](#the-roster-facade)
+- [The `Roster` Class](#the-roster-class)
 - [The `Packages` Enum](#the-packages-enum)
 - [Version Constraints](#version-constraints)
 
@@ -37,15 +37,15 @@ You should update the following dependency in your application's `composer.json`
 
 - `laravel/roster` to `^1.0`
 
-### The `Roster` Facade
+### The `Roster` Class
 
 **Likelihood Of Impact: High**
 
-The `Laravel\Roster\Facades\Roster` facade has been removed and replaced by the `Laravel\Roster\Facades\Project` facade, which reads your project's lockfiles and configuration markers. Calls to `Roster::scan()` should be replaced with `Project::scan()`:
+The `Laravel\Roster\Roster` class and its static `scan` entry point have been removed in favour of the `Laravel\Roster\Facades\Project` facade, which reads your project's lockfiles and configuration markers. Calls to `Roster::scan()` should be replaced with `Project::scan()`:
 
 ```php
 // 0.x...
-use Laravel\Roster\Facades\Roster;
+use Laravel\Roster\Roster;
 
 Roster::scan();
 
@@ -114,13 +114,9 @@ Package collections are now retrieved per ecosystem via `Project::php()->package
 
 **Likelihood Of Impact: Medium**
 
-The `stack` method has been renamed to `stacks`, now lives on the `Project` facade, and returns an `EnumSet` containing every detected stack. Membership is checked via the `uses` method:
+Stack detection is new in 1.0. The `Project` facade exposes a `stacks` method that returns an `EnumSet` containing every detected stack. Membership is checked via the `uses` method:
 
 ```php
-// 0.x...
-$roster->stack();
-
-// 1.0...
 Project::stacks()->uses(Stack::InertiaReact);
 ```
 

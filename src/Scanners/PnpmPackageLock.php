@@ -80,7 +80,10 @@ class PnpmPackageLock extends JsPackageScanner
         /** @var array<string, mixed> $rootDevDeps */
         $rootDevDeps = is_array($root['devDependencies'] ?? null) ? $root['devDependencies'] : [];
 
-        foreach ($rootDeps as $name => $data) {
+        /** @var array<string, mixed> $rootOptionalDeps */
+        $rootOptionalDeps = is_array($root['optionalDependencies'] ?? null) ? $root['optionalDependencies'] : [];
+
+        foreach ([...$rootDeps, ...$rootOptionalDeps] as $name => $data) {
             $version = $this->resolvedVersion($data);
 
             if ($version !== null) {

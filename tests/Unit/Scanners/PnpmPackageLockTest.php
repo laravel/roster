@@ -168,6 +168,39 @@ it('flags an empty pnpm-lock.yaml as failed', function (): void {
         ->and($scanner->failed())->toBeTrue();
 });
 
+it('promotes a root optional dependency over an earlier transitive resolution', function (): void {
+    $lock = <<<'YAML'
+    lockfileVersion: '9.0'
+
+    importers:
+
+      .:
+        optionalDependencies:
+          fsevents:
+            specifier: ^3.0.0
+            version: 3.3.0
+
+    packages:
+
+      fsevents@1.2.13:
+        resolution: {integrity: sha512-old==}
+
+      fsevents@3.3.0:
+        resolution: {integrity: sha512-new==}
+    YAML;
+
+    $base = writePnpmProject($lock, json_encode(['optionalDependencies' => ['fsevents' => '^3.0.0']]));
+
+    $packages = (new PnpmPackageLock($base))->scan();
+
+    $fsevents = $packages->first(fn ($p): bool => $p->name() === 'fsevents');
+
+    expect($fsevents)->not->toBeNull()
+        ->and($fsevents->version())->toEqual('3.3.0')
+        ->and($fsevents->isDev())->toBeFalse()
+        ->and($fsevents->isDirect())->toBeTrue();
+});
+
 it('parses v5 keys with underscore peer suffixes', function (): void {
     $lock = <<<'YAML'
     lockfileVersion: 5.4

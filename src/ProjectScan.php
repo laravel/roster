@@ -22,6 +22,7 @@ use Laravel\Roster\Scanners\ComposerLock;
 use Laravel\Roster\Scanners\JsLockfile;
 use Laravel\Roster\Support\ApproachSet;
 use Laravel\Roster\Support\EnumSet;
+use Throwable;
 
 class ProjectScan
 {
@@ -123,9 +124,20 @@ class ProjectScan
      */
     public static function normalizeBasePath(?string $basePath): string
     {
-        $resolved = $basePath ?? (function_exists('base_path') ? base_path() : (getcwd() ?: '.'));
+        return Str::finish($basePath ?? self::defaultBasePath(), DIRECTORY_SEPARATOR);
+    }
 
-        return Str::finish($resolved, DIRECTORY_SEPARATOR);
+    private static function defaultBasePath(): string
+    {
+        if (function_exists('base_path')) {
+            try {
+                return base_path();
+            } catch (Throwable) {
+                //
+            }
+        }
+
+        return getcwd() ?: '.';
     }
 
     /**
