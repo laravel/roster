@@ -24,10 +24,10 @@ it('scans the fog fixture end to end', function (): void {
     expect($project->frontends()->uses(Frontend::Vue))->toBeFalse();
 
     expect($project->js()->packageManager())->toBe(JsPackageManager::Npm);
-    expect($project->js()->isPackageManager(JsPackageManager::Npm))->toBeTrue();
-    expect($project->js()->isPackageManager('npm'))->toBeTrue();
-    expect($project->js()->isPackageManager(JsPackageManager::Pnpm))->toBeFalse();
-    expect($project->js()->isPackageManager('not-a-package-manager'))->toBeFalse();
+    expect($project->js()->usesPackageManager(JsPackageManager::Npm))->toBeTrue();
+    expect($project->js()->usesPackageManager('npm'))->toBeTrue();
+    expect($project->js()->usesPackageManager(JsPackageManager::Pnpm))->toBeFalse();
+    expect($project->js()->usesPackageManager('not-a-package-manager'))->toBeFalse();
 });
 
 it('renders json without error', function (): void {

@@ -191,11 +191,11 @@ use Laravel\Roster\Enums\JsPackageManager;
 $project->js()->packageManager() === JsPackageManager::Pnpm;
 ```
 
-You may also check for a specific package manager via the `isPackageManager` method, which accepts an enum case or its string value:
+You may also check for a specific package manager via the `usesPackageManager` method, which accepts an enum case or its string value:
 
 ```php
-$project->js()->isPackageManager(JsPackageManager::Pnpm);
-$project->js()->isPackageManager('pnpm');
+$project->js()->usesPackageManager(JsPackageManager::Pnpm);
+$project->js()->usesPackageManager('pnpm');
 ```
 
 ## Detecting Approaches

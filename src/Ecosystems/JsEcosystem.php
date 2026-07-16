@@ -21,7 +21,7 @@ class JsEcosystem extends Ecosystem
         return $this->packageManager;
     }
 
-    public function isPackageManager(JsPackageManager|string $packageManager): bool
+    public function usesPackageManager(JsPackageManager|string $packageManager): bool
     {
         if (is_string($packageManager)) {
             $packageManager = JsPackageManager::tryFrom($packageManager);
