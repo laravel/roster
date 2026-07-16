@@ -17,7 +17,7 @@ use Laravel\Roster\Detectors\Approaches\ValidationStyle;
 use Laravel\Roster\Detectors\Approaches\ValidationSyntax;
 use Laravel\Roster\Support\SourceFiles;
 
-class ApproachesDetector
+class ApproachDetector
 {
     public function __construct(protected SourceFiles $files)
     {

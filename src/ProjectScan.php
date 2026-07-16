@@ -6,7 +6,7 @@ namespace Laravel\Roster;
 
 use Illuminate\Support\Str;
 use Laravel\Roster\Detectors\AgentsDetector;
-use Laravel\Roster\Detectors\ApproachesDetector;
+use Laravel\Roster\Detectors\ApproachDetector;
 use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\EditorsDetector;
 use Laravel\Roster\Detectors\FrontendDetector;
@@ -91,7 +91,7 @@ class ProjectScan
     public function approaches(): ApproachSet
     {
         return $this->approaches ??= new ApproachSet(
-            ApproachesDetector::detect($this->basePath),
+            ApproachDetector::detect($this->basePath),
         );
     }
 
