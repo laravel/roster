@@ -95,7 +95,7 @@ abstract class Convention
         $winner = (string) array_key_first($tally);
         $votes = $tally[$winner];
 
-        if ($votes / $total <= static::CONFIDENCE_FLOOR) {
+        if ($votes / $total < static::CONFIDENCE_FLOOR) {
             return null;
         }
 

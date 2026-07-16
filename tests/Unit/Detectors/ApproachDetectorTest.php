@@ -226,7 +226,24 @@ it('reports a convention once the minimum sample of three is reached', function 
     cleanup($base);
 });
 
-it('rejects a 4/5 majority as insufficient evidence', function (): void {
+it('rejects a 3/4 majority as insufficient evidence', function (): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeModel($base, $name, 'fillable');
+    }
+
+    writeModel($base, 'Hotel', 'guarded');
+
+    $approaches = new ApproachSet(ApproachDetector::detect($base));
+
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeFalse()
+        ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
+
+    cleanup($base);
+});
+
+it('accepts a 4/5 majority at the confidence floor', function (): void {
     $base = tempBase();
 
     foreach (['Alpha', 'Bravo', 'Charlie', 'Delta'] as $name) {
@@ -237,7 +254,7 @@ it('rejects a 4/5 majority as insufficient evidence', function (): void {
 
     $approaches = new ApproachSet(ApproachDetector::detect($base));
 
-    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeFalse()
+    expect($approaches->uses(Approach::MassAssignmentFillable))->toBeTrue()
         ->and($approaches->uses(Approach::MassAssignmentGuarded))->toBeFalse();
 
     cleanup($base);
