@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Detectors;
 
-use BackedEnum;
 use Laravel\Roster\Enums\Editor;
 
 /**
@@ -12,6 +11,8 @@ use Laravel\Roster\Enums\Editor;
  */
 class EditorsDetector extends MarkerDetector
 {
+    protected const ENUM = Editor::class;
+
     /** @var array<string, list<string>> */
     private const PROJECT_MARKERS = [
         Editor::PhpStorm->value => ['.idea'],
@@ -23,10 +24,5 @@ class EditorsDetector extends MarkerDetector
     protected static function projectMarkers(): array
     {
         return self::PROJECT_MARKERS;
-    }
-
-    protected static function fromValue(string $value): BackedEnum
-    {
-        return Editor::from($value);
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Detectors;
 
-use BackedEnum;
 use Laravel\Roster\Enums\Agent;
 
 /**
@@ -12,6 +11,8 @@ use Laravel\Roster\Enums\Agent;
  */
 class AgentsDetector extends MarkerDetector
 {
+    protected const ENUM = Agent::class;
+
     /** @var array<string, list<string>> */
     private const PROJECT_MARKERS = [
         Agent::ClaudeCode->value => ['.claude', 'CLAUDE.md', '.claude.json'],
@@ -34,10 +35,5 @@ class AgentsDetector extends MarkerDetector
     protected static function projectMarkers(): array
     {
         return self::PROJECT_MARKERS;
-    }
-
-    protected static function fromValue(string $value): BackedEnum
-    {
-        return Agent::from($value);
     }
 }

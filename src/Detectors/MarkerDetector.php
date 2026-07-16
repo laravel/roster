@@ -11,15 +11,13 @@ use BackedEnum;
  */
 abstract class MarkerDetector
 {
+    /** @var class-string<TEnum> */
+    protected const ENUM = BackedEnum::class;
+
     /**
      * @return array<string, list<string>>
      */
     abstract protected static function projectMarkers(): array;
-
-    /**
-     * @return TEnum
-     */
-    abstract protected static function fromValue(string $value): BackedEnum;
 
     /**
      * @return list<TEnum>
@@ -31,7 +29,7 @@ abstract class MarkerDetector
         foreach (static::projectMarkers() as $value => $markers) {
             foreach ($markers as $marker) {
                 if (self::markerMatches($basePath, $marker)) {
-                    $detected[] = static::fromValue((string) $value);
+                    $detected[] = static::ENUM::from((string) $value);
 
                     break;
                 }
