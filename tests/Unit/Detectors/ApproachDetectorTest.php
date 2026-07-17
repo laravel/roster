@@ -864,6 +864,90 @@ it('detects ulid model keys', function (): void {
     cleanup($base);
 });
 
+it('abstains on files beside the models that have no key of their own', function (): void {
+    $base = tempBase();
+
+    foreach (['Order', 'Invoice', 'Payment'] as $name) {
+        writeSource($base, "app/Models/{$name}.php", <<<PHP
+        class {$name} extends Model
+        {
+            use HasUuids;
+        }
+        PHP);
+    }
+
+    writeSource($base, 'app/Models/Status.php', <<<'PHP'
+    enum Status: string
+    {
+        case Draft = 'draft';
+    }
+    PHP);
+
+    writeSource($base, 'app/Models/Sortable.php', <<<'PHP'
+    interface Sortable
+    {
+        public function sortKey(): string;
+    }
+    PHP);
+
+    writeSource($base, 'app/Models/HasSlug.php', <<<'PHP'
+    trait HasSlug
+    {
+        public function slug(): string
+        {
+            return 'slug';
+        }
+    }
+    PHP);
+
+    writeSource($base, 'app/Models/OrderData.php', <<<'PHP'
+    class OrderData
+    {
+        public function __construct(public string $reference)
+        {
+        }
+    }
+    PHP);
+
+    $approaches = new ApproachSet(ApproachDetector::detect($base));
+
+    expect($approaches->uses(Approach::ModelUuidKeys))->toBeTrue()
+        ->and($approaches->uses(Approach::ModelIncrementingKeys))->toBeFalse();
+
+    /** @var ApproachResult $result */
+    $result = $approaches->all()->get(Approach::ModelUuidKeys->value);
+
+    expect($result->matched)->toBe(3)
+        ->and($result->total)->toBe(3)
+        ->and($result->confidence)->toBe(1.0)
+        ->and($result->paths)->toHaveCount(3);
+
+    cleanup($base);
+});
+
+it('recognises a model from its base class, eloquent traits, or model properties', function (string $body): void {
+    $base = tempBase();
+
+    foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
+        writeSource($base, "app/Models/{$name}.php", str_replace('{name}', $name, $body));
+    }
+
+    $approaches = new ApproachSet(ApproachDetector::detect($base));
+
+    expect($approaches->uses(Approach::ModelIncrementingKeys))->toBeTrue();
+
+    cleanup($base);
+})->with([
+    'extends Model' => ["class {name} extends Model\n{\n}"],
+    'extends Authenticatable' => ["class {name} extends Authenticatable\n{\n}"],
+    'extends a custom base model' => ["class {name} extends BaseModel\n{\n}"],
+    'extends Pivot' => ["class {name} extends Pivot\n{\n}"],
+    'final class' => ["final class {name} extends Model\n{\n}"],
+    'uses HasFactory' => ["class {name}\n{\n    use HasFactory;\n}"],
+    'declares a table' => ["class {name}\n{\n    protected \$table = 'things';\n}"],
+    'declares fillable' => ["class {name}\n{\n    protected \$fillable = ['name'];\n}"],
+]);
+
 it('does not let a call-heavy inline file or form request internals dilute the validation style', function (): void {
     $base = tempBase();
 
