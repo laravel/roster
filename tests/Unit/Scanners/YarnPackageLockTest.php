@@ -1,45 +1,192 @@
 <?php
 
-use Laravel\Roster\Enums\Packages;
-use Laravel\Roster\Package;
+declare(strict_types=1);
+
 use Laravel\Roster\Scanners\YarnPackageLock;
 
-use function Pest\testDirectory;
+it('scans yarn v1 lockfiles', function (): void {
+    $base = fixtureCopy([
+        'fog/package.json' => 'package.json',
+        'fog/yarn-v1.lock' => 'yarn.lock',
+    ]);
 
-it('detects scoped npm packages in yarn.lock', function () {
-    $path = testDirectory('fixtures/yarn-scoped-quoted/');
-    $scanner = new YarnPackageLock($path);
-    $items = $scanner->scan();
+    $packages = (new YarnPackageLock($base))->scan();
 
-    $inertiaReact = $items->first(
-        fn ($item) => $item instanceof Package && $item->package() === Packages::INERTIA_REACT
-    );
+    $quickLru = $packages->first(fn ($p): bool => $p->name() === '@alloc/quick-lru');
+    expect($quickLru)->not->toBeNull();
+    expect($quickLru->version())->toEqual('5.2.0');
 
-    $tailwind = $items->first(
-        fn ($item) => $item instanceof Package && $item->package() === Packages::TAILWINDCSS
-    );
+    $cliui = $packages->first(fn ($p): bool => $p->name() === '@isaacs/cliui');
+    expect($cliui)->not->toBeNull();
+    expect($cliui->version())->toEqual('8.0.2');
 
-    expect($inertiaReact)->not->toBeNull('Expected @inertiajs/react to be detected')
-        ->and($inertiaReact->version())->toEqual('2.0.12')
-        ->and($tailwind)->not->toBeNull('Expected tailwindcss to be detected')
-        ->and($tailwind->version())->toEqual('3.4.16');
+    cleanup($base);
 });
 
-it('detects unquoted scoped packages in yarn.lock', function () {
-    $path = testDirectory('fixtures/yarn-scoped-unquoted/');
-    $scanner = new YarnPackageLock($path);
-    $items = $scanner->scan();
+it('scans yarn berry lockfiles', function (): void {
+    $base = fixtureCopy([
+        'fog/package.json' => 'package.json',
+        'fog/yarn.lock' => 'yarn.lock',
+    ]);
 
-    $inertiaVue = $items->first(
-        fn ($item) => $item instanceof Package && $item->package() === Packages::INERTIA_VUE
-    );
+    $packages = (new YarnPackageLock($base))->scan();
 
-    $alpine = $items->first(
-        fn ($item) => $item instanceof Package && $item->package() === Packages::ALPINEJS
-    );
+    $parser = $packages->first(fn ($p): bool => $p->name() === '@babel/parser');
+    expect($parser)->not->toBeNull();
+    expect($parser->version())->toEqual('7.28.5');
 
-    expect($inertiaVue)->not->toBeNull('Expected @inertiajs/vue3 to be detected')
-        ->and($inertiaVue->version())->toEqual('2.0.5')
-        ->and($alpine)->not->toBeNull('Expected alpinejs to be detected')
-        ->and($alpine->version())->toEqual('3.4.4');
+    $stringParser = $packages->first(fn ($p): bool => $p->name() === '@babel/helper-string-parser');
+    expect($stringParser)->not->toBeNull();
+    expect($stringParser->version())->toEqual('7.27.1');
+
+    cleanup($base);
+});
+
+it('parses quoted scoped v1 headers', function (): void {
+    $base = fixtureCopy(['yarn-scoped-quoted/yarn.lock' => 'yarn.lock']);
+
+    $packages = (new YarnPackageLock($base))->scan();
+
+    $inertia = $packages->first(fn ($p): bool => $p->name() === '@inertiajs/react');
+    expect($inertia)->not->toBeNull();
+    expect($inertia->version())->toEqual('2.0.12');
+
+    $tailwind = $packages->first(fn ($p): bool => $p->name() === 'tailwindcss');
+    expect($tailwind)->not->toBeNull();
+    expect($tailwind->version())->toEqual('3.4.16');
+
+    cleanup($base);
+});
+
+it('parses unquoted scoped v1 headers', function (): void {
+    $base = fixtureCopy(['yarn-scoped-unquoted/yarn.lock' => 'yarn.lock']);
+
+    $packages = (new YarnPackageLock($base))->scan();
+
+    $inertia = $packages->first(fn ($p): bool => $p->name() === '@inertiajs/vue3');
+    expect($inertia)->not->toBeNull();
+    expect($inertia->version())->toEqual('2.0.5');
+
+    $alpine = $packages->first(fn ($p): bool => $p->name() === 'alpinejs');
+    expect($alpine)->not->toBeNull();
+    expect($alpine->version())->toEqual('3.4.4');
+
+    cleanup($base);
+});
+
+it('returns an empty collection when the lockfile is missing', function (): void {
+    $base = tempBase();
+
+    expect((new YarnPackageLock($base))->scan())->toHaveCount(0);
+
+    cleanup($base);
+});
+
+it('parses quoted multi-range v1 headers', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'yarn.lock', <<<'LOCK'
+# yarn lockfile v1
+
+"@inertiajs/vue3@^2.0.0", "@inertiajs/vue3@^2.1.0":
+  version "2.1.4"
+
+lodash@^4.0.0, lodash@^4.1.0:
+  version "4.17.21"
+LOCK);
+
+    $packages = (new YarnPackageLock($base))->scan();
+
+    $inertia = $packages->first(fn ($p): bool => $p->name() === '@inertiajs/vue3');
+    expect($inertia)->not->toBeNull()
+        ->and($inertia->version())->toEqual('2.1.4');
+
+    $lodash = $packages->first(fn ($p): bool => $p->name() === 'lodash');
+    expect($lodash)->not->toBeNull()
+        ->and($lodash->version())->toEqual('4.17.21');
+
+    cleanup($base);
+});
+
+it('scans numeric package names without crashing', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'yarn.lock', <<<'LOCK'
+# yarn lockfile v1
+
+"101@^1.0.0":
+  version "1.6.3"
+LOCK);
+    file_put_contents($base.'package.json', json_encode(['dependencies' => ['101' => '^1.0.0']]));
+
+    $packages = (new YarnPackageLock($base))->scan();
+
+    $numeric = $packages->first(fn ($p): bool => $p->name() === '101');
+    expect($numeric)->not->toBeNull()
+        ->and($numeric->version())->toEqual('1.6.3')
+        ->and($numeric->isDirect())->toBeTrue();
+
+    cleanup($base);
+});
+
+it('does not emit the yarn berry workspace root as a package', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'yarn.lock', <<<'LOCK'
+# This file is generated by running "yarn install"
+__metadata:
+  version: 8
+
+"my-app@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "my-app@workspace:."
+  languageName: unknown
+  linkType: soft
+
+"lodash@npm:^4.17.21":
+  version: 4.17.21
+  resolution: "lodash@npm:4.17.21"
+LOCK);
+
+    $packages = (new YarnPackageLock($base))->scan();
+
+    expect($packages->first(fn ($p): bool => $p->name() === 'my-app'))->toBeNull()
+        ->and($packages->first(fn ($p): bool => $p->name() === 'lodash'))->not->toBeNull();
+
+    cleanup($base);
+});
+
+it('flags a garbage yarn.lock as failed so the manifest fallback runs', function (): void {
+    $base = tempBase();
+    file_put_contents($base.'yarn.lock', "\x00\x01 not a lockfile at all");
+
+    $scanner = new YarnPackageLock($base);
+
+    expect($scanner->scan())->toHaveCount(0)
+        ->and($scanner->failed())->toBeTrue();
+
+    cleanup($base);
+});
+
+it('does not emit phantom packages for selectors whose range contains @', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'yarn.lock', <<<'LOCK'
+# yarn lockfile v1
+
+"foo@git+ssh://git@github.com/user/foo.git#v1.0.0":
+  version "1.0.0"
+
+"resolve@patch:resolve@npm%3A1.22.8#optional!builtin<compat/resolve>":
+  version "1.22.8"
+LOCK);
+
+    $packages = (new YarnPackageLock($base))->scan();
+
+    expect($packages->first(fn ($p): bool => $p->name() === 'foo'))->not->toBeNull()
+        ->and($packages->first(fn ($p): bool => $p->name() === 'resolve'))->not->toBeNull()
+        ->and($packages->first(fn ($p): bool => str_contains($p->name(), 'git+ssh')))->toBeNull()
+        ->and($packages->first(fn ($p): bool => str_contains($p->name(), 'patch:')))->toBeNull();
+
+    cleanup($base);
 });
