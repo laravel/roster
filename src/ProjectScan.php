@@ -167,7 +167,7 @@ class ProjectScan
      */
     public static function encode(array $payload): string
     {
-        return json_encode($payload, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}';
+        return json_encode($payload, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION) ?: '{}';
     }
 
     /**

@@ -65,3 +65,15 @@ it('returns failure for non-existent directory', function (): void {
     $exitCode = Artisan::call('roster:scan', ['directory' => '/non/existent/directory']);
     expect($exitCode)->toBe(1);
 });
+
+it('encodes a whole confidence as a float so the field keeps one json type', function (): void {
+    Artisan::call('roster:scan', [
+        'directory' => __DIR__.'/../fixtures/approaches/fillable-models-app',
+        '--approaches' => true,
+    ]);
+
+    $output = Artisan::output();
+
+    expect($output)->toContain('"confidence": 1.0')
+        ->and($output)->not->toContain('"confidence": 1,');
+});
