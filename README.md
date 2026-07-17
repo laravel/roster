@@ -18,7 +18,6 @@
 - [Detecting Agents and Editors](#detecting-agents-and-editors)
 - [Detecting JS Package Managers](#detecting-js-package-managers)
 - [Detecting Approaches](#detecting-approaches)
-    - [Source Conventions](#source-conventions)
 - [Caching](#caching)
 - [The `roster:scan` Command](#the-rosterscan-command)
 - [Upgrading](#upgrading)
@@ -29,9 +28,9 @@
 
 ## Introduction
 
-Laravel Roster is a detection package for the Laravel ecosystem. It reads your project's lockfiles, configuration markers, and (optionally) its own source code to answer questions about what is in use.
+Laravel Roster is a detection package for the Laravel ecosystem. It reads your project's lockfiles and configuration markers and can optionally inspect source code to determine what the project uses.
 
-The `Project` facade reads your project's lockfiles and configuration markers to report installed packages, the application's stack, the frontend in use, browser test frameworks, configured AI agents and editors, the committed JS package manager, and the conventions the codebase has adopted.
+The `Project` facade reports package dependencies, the application's stack and frontend, browser test frameworks, configured AI agents and editors, the JS package manager indicated by the committed lockfile, and conventions adopted by the codebase.
 
 ## Installation
 
@@ -43,7 +42,7 @@ composer require laravel/roster --dev
 
 ## Basic Usage
 
-Within a Laravel application, you may call the `Project` facade directly. The first call triggers a scan and the result is cached for subsequent calls:
+Within a Laravel application, you may call the `Project` facade directly. The first call triggers a scan, and the result is reused by subsequent facade calls:
 
 ```php
 use Laravel\Roster\Enums\Stack;
@@ -53,29 +52,29 @@ Project::php()->uses('pestphp/pest');
 Project::stacks()->uses(Stack::InertiaReact);
 ```
 
-Outside of a Laravel container, or when you would like an explicit handle, instantiate the manager directly. It gracefully runs uncached when no container or cache driver is available:
+Outside a Laravel service container, or when you want an explicit project instance, instantiate the manager directly. It runs without caching when no container or cache driver is available:
 
 ```php
 use Laravel\Roster\ProjectManager;
 
 $projects = new ProjectManager;
 
-$project = $projects->scan();          // uses base_path() / getcwd()
+$project = $projects->scan(); // Uses base_path() or getcwd().
 $project = $projects->scan($basePath);
 ```
 
-The examples that follow use `$project` for clarity, but every call works on the facade.
+The following examples use `$project` for clarity, but the same calls are available through the facade.
 
 ## Detecting Packages
 
-Packages are exposed through two ecosystems: `php()` for Composer and `js()` for npm, pnpm, yarn, and bun. Both ecosystems share the same surface:
+Packages are exposed through two ecosystems: `php()` for Composer packages and `js()` for JavaScript packages managed by npm, pnpm, Yarn, or Bun. Both ecosystems provide the same methods:
 
 ```php
 $ecosystem->uses(string|array $packages, ?string $constraint = null): bool
 $ecosystem->usesAll(array $packages): bool
 ```
 
-The `uses` method returns `true` when **any** of the given packages is present, while the `usesAll` method returns `true` only when **every** package is present. Names are the raw package names you would write in your `composer.json` or `package.json` files:
+The `uses` method returns `true` when **any** of the given packages is present, while the `usesAll` method returns `true` only when **every** package is present. Use the package names that appear in `composer.json` or `package.json`:
 
 ```php
 $project->php()->uses('pestphp/pest');
@@ -84,7 +83,7 @@ $project->js()->uses('@inertiajs/react');
 
 ### Version Constraints
 
-You may pass a version constraint as the second argument to the `uses` method. The constraint accepts any composer-semver string, such as `^1.2.3`, `~1.2`, `>=11 <14`, or `1.0 || ^2.0`. A bare version like `1.2.3` means an exact match. When omitted, only the package's presence is checked:
+You may pass a version constraint as the second argument to the `uses` method. It accepts any Composer Semver constraint, such as `^1.2.3`, `~1.2`, `>=11 <14`, or `1.0 || ^2.0`. A bare version such as `1.2.3` requires an exact match. When the constraint is omitted, only the package's presence is checked:
 
 ```php
 $project->php()->uses('laravel/framework', '^12.0');
@@ -93,7 +92,7 @@ $project->php()->uses('laravel/framework', '>=11 <14');
 
 ### Checking Multiple Packages
 
-To check if **any** of several packages are present, you may pass an indexed array of names to the `uses` method. Pass an associative array when you would like per-package constraints:
+To check whether **any** of several packages are present, you may pass an indexed array of names to the `uses` method. Pass an associative array to specify constraints for individual packages:
 
 ```php
 $project->php()->uses(['pestphp/pest', 'phpunit/phpunit']);
@@ -127,7 +126,7 @@ $project->js()->usesAll(['vue', '@inertiajs/vue3']);
 
 ### Retrieving Packages
 
-You may also retrieve the underlying `Package` instance or collection. The `usesDirect` method checks that a package is a *direct* dependency (declared in your manifest rather than pulled in transitively), and the collection exposes `dev`, `production`, and `direct` filters:
+You may also retrieve the underlying `Package` instance or collection. The `usesDirect` method checks whether a package is a *direct* dependency (declared in your manifest rather than pulled in transitively). When passed an array, it returns `true` if any listed package is direct. The collection provides `dev`, `production`, and `direct` filters:
 
 ```php
 $project->php()->package('pestphp/pest')?->version();
@@ -139,7 +138,7 @@ $project->php()->packages()->direct();
 ```
 
 > [!NOTE]
-> The dev classification of *transitive* packages is only available for Composer and npm lockfiles. Yarn, pnpm, and bun lockfiles report transitive packages as production dependencies; direct dependencies are always classified from your manifest.
+> The development classification of *transitive* packages is available only for Composer and npm lockfiles. Yarn, pnpm, and Bun lockfiles report transitive packages as production dependencies. Direct dependencies are classified using authoritative lockfile metadata when available and manifest data otherwise.
 
 ## Detecting Stacks and Frontends
 
@@ -166,11 +165,11 @@ $project->browserTestFrameworks()->usesAll([
 $project->frontends()->uses(Frontend::React);
 ```
 
-The `uses` method accepts either a single case or an array of cases and returns `true` when **any** is present, while the `usesAll` method returns `true` only when **every** case is present.
+The `uses` method accepts either a single case or an array of cases and returns `true` when **any** case is present, while the `usesAll` method returns `true` only when **every** case is present.
 
 ## Detecting Agents and Editors
 
-Agents (AI coding tools such as Claude Code, Cursor, and Codex) and editors (IDEs such as PHPStorm and VSCode) are exposed through separate enums, detected through filesystem markers like `.claude`, `.cursor`, `.idea`, or `AGENTS.md`:
+Agents (AI coding tools such as Claude Code, Cursor, and Codex) and editors (IDEs such as PhpStorm and VS Code) are exposed through separate enums. Roster detects them through filesystem markers such as `.claude`, `.cursor`, `.idea`, and `AGENTS.md`:
 
 ```php
 use Laravel\Roster\Enums\Agent;
@@ -183,7 +182,7 @@ $project->editors()->uses(Editor::PhpStorm);
 
 ## Detecting JS Package Managers
 
-The `$project->js()->packageManager()` method reports the package manager *committed* to the project as a single nullable enum, based on which lockfile is present (`package-lock.json`, `pnpm-lock.yaml`, and so on):
+The `$project->js()->packageManager()` method reports the package manager indicated by the project's lockfile as a nullable enum (`package-lock.json` indicates npm, `pnpm-lock.yaml` indicates pnpm, and so on):
 
 ```php
 use Laravel\Roster\Enums\JsPackageManager;
@@ -198,38 +197,38 @@ $project->js()->usesPackageManager(JsPackageManager::Pnpm);
 $project->js()->usesPackageManager('pnpm');
 ```
 
+Projects should commit only one supported JavaScript lockfile. If multiple lockfiles are present, Roster selects the first match in this order: npm, pnpm, Yarn, then Bun.
+
 ## Detecting Approaches
-
-The `approaches` method reports the stylistic conventions a project has adopted, read from the source code itself.
-
-### Source Conventions
 
 The `approaches` method inspects the project's **own source code**, not its manifests, and reports which stylistic conventions the application has adopted:
 
-- `fillable` vs `guarded` mass assignment (detected in both the `protected $fillable` property and `#[Fillable]` attribute spellings)
-- enum case casing (screaming snake, Pascal, or camel)
-- pipe vs array validation rule syntax
-- inline validation vs form requests (`$request->validate([...])` versus dedicated `rules()` classes under `Http/Requests`)
-- command signature via the `#[AsCommand]` attribute vs the `$signature` property
+- `fillable` vs `guarded` mass assignment (including the `protected $fillable` property and `#[Fillable]` attribute)
+- enum case capitalization (`SCREAMING_SNAKE_CASE`, `PascalCase`, or `camelCase`)
+- pipe vs array validation-rule syntax
+- inline validation vs form requests (`$request->validate([...])` vs dedicated `rules()` classes under `Http/Requests`)
+- command configuration via the `#[AsCommand]` attribute vs the `$signature` or `$description` property
 - notifications sent via `$notifiable->notify()` vs the `Notification` facade
-- authorization via gates, `$user->can()`, or the `AuthorizesRequests` trait
-- authenticated-user retrieval via the `Auth` facade, `$request->user()`, or the `auth()` helper
+- authorization via gates, `$user->can()`, or `$this->authorize()`
+- authenticated user retrieval via the `Auth` facade, `$request->user()`, or the `auth()` helper
 - model key style: UUID (`HasUuids`), ULID (`HasUlids`), or the default auto-incrementing key
+
+You may check for one or more approaches or retrieve all detected results:
 
 ```php
 use Laravel\Roster\Enums\Approach;
 
-$project->approaches()->uses(Approach::MassAssignmentFillable); // is this the dominant style?
-$project->approaches()->uses([                                    // any-of, like EnumSet
+$project->approaches()->uses(Approach::MassAssignmentFillable);
+$project->approaches()->uses([
     Approach::ValidationPipeSyntax,
     Approach::ValidationArraySyntax,
 ]);
-$project->approaches()->all();                                    // Collection<string, ApproachResult>
+$project->approaches()->all(); // Collection<string, ApproachResult>
 ```
 
-Detection is best-effort: source is read with lightweight pattern matching rather than a full parser, so an unusual file may abstain or be classified from a comment or string literal. This is why approaches are reported as a confidence-weighted vote rather than an exact answer.
+Detection is best-effort: Roster uses lightweight pattern matching rather than a full parser, so an unusual file may abstain or be classified based on a comment or string literal. Approaches are therefore reported with a confidence ratio rather than as exact answers.
 
-A stylistic approach is only reported when it is backed by enough evidence: at least 3 votes (one per voting file, or one per enum case for casing), with at least 80% of them for the winning style, so a 2/3 majority is rejected, 4/5 passes, and an evenly split codebase stays silent. A file that mixes styles votes for its majority style and abstains on a tie.
+A stylistic approach is reported only when it receives at least three votes and at least 80% of the votes cast. Each file casts at most one vote, except that enum capitalization receives one vote per enum case. Consequently, a 2/3 majority is rejected, a 4/5 majority passes, and an evenly split codebase produces no result. A file that mixes styles votes for its majority style and abstains when tied.
 
 Each `ApproachResult` exposes the winning `approach`, its raw `confidence` ratio, the `matched` and `total` vote counts, and the `paths` of the files that voted. You may retrieve a result via the `result` method:
 
@@ -242,15 +241,15 @@ $result->total;      // 10
 $result->paths;      // ['/app/Models/User.php', ...]
 ```
 
-Source files are discovered from the `composer.json` PSR-4 autoload roots unioned with `app/`, and subdirectories such as `Models/` are matched anywhere beneath a root, so modular layouts like `src/Domain/Orders/Models/` are sampled too. `vendor/`, `node_modules/`, and hidden directories are always excluded.
+Roster discovers source files by combining the PSR-4 autoload roots in `composer.json` with `app/`. It matches subdirectories such as `Models/` anywhere beneath those roots, so it also scans modular layouts such as `src/Domain/Orders/Models/`. The `vendor/` and `node_modules/` directories, as well as hidden directories, are always excluded.
 
-Because source files change without touching any lockfile, approaches are never persisted with the cached scan; they are computed lazily per process, and only when you ask for them: `toArray()` and `json()` stay cheap and omit them, while the `roster:scan` command accepts an `--approaches` flag to include them in its output.
+Because source files can change without affecting a lockfile, approaches are never persisted with a cached scan. They are computed lazily once per scan instance and only when requested. The `toArray()` and `json()` methods omit them, while the `roster:scan` command accepts an `--approaches` flag to include them in its output.
 
 ## Caching
 
-The first call to the `Project` facade scans once and memoizes the result for the remainder of the process. Across processes, scans are cached using your application's configured cache driver, keyed on a hash of your lockfile contents and detector marker directories, so edits to `composer.lock` or a newly added `.claude` directory invalidate the persisted cache automatically. Roster gracefully falls back to a direct scan when no cache driver is configured or the driver fails.
+The first call through the `Project` facade scans the default project and memoizes the result for the remainder of the process. Across processes, Roster uses your application's configured cache driver. The cache key includes a hash of supported manifests and lockfiles, along with the presence of detector marker paths, so changes such as an edit to `composer.lock` or the addition of a `.claude` directory invalidate the persisted cache. Roster falls back to a direct scan when no cache driver is configured or the driver fails.
 
-In long-running processes such as Octane or queue workers, the memoized instance is kept until the worker restarts. You may call `Project::fresh()` to bypass both the memo and the persisted cache and force a re-read at any time.
+In long-running processes such as Octane or queue workers, the memoized instance is kept until the worker restarts. You may call `Project::fresh()` to bypass both the memoized result and the persisted cache and force a new scan at any time.
 
 ## The `roster:scan` Command
 
@@ -261,7 +260,7 @@ php artisan roster:scan
 php artisan roster:scan /path/to/project
 ```
 
-You may pass `--approaches` to include source-code approach detection (which scans every PHP source file):
+You may pass `--approaches` to include approach detection for PHP files under the project's PSR-4 autoload roots and `app/` directory:
 
 ```bash
 php artisan roster:scan /path/to/project --approaches
@@ -273,16 +272,16 @@ Please consult the [upgrade guide](UPGRADE.md) when upgrading from 0.x.
 
 ## Contributing
 
-Thank you for considering contributing to Roster! The contribution guide may be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Thank you for considering contributing to Roster! You can find the contribution guide in the [Laravel documentation](https://laravel.com/docs/contributions).
 
 ## Code of Conduct
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+To help ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
 ## Security Vulnerabilities
 
-Please review [our security policy](https://github.com/laravel/roster/security/policy) on how to report security vulnerabilities.
+Please review [our security policy](https://github.com/laravel/roster/security/policy) for instructions on reporting security vulnerabilities.
 
 ## License
 
-Laravel Roster is open-sourced software licensed under the [MIT license](LICENSE.md).
+Laravel Roster is open-source software licensed under the [MIT license](LICENSE.md).
