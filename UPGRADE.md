@@ -1,3 +1,157 @@
 # Upgrade Guide
 
-Upgrade notes will come here...
+## Upgrading To 1.0 From 0.x
+
+> [!NOTE]
+> We attempt to document every possible breaking change. Since some of these breaking changes are in obscure parts of the package, only a portion of these changes may actually affect your application.
+
+### Updating Dependencies
+
+Likelihood Of Impact: High
+
+You should update the following dependency in your application's `composer.json` file:
+
+- `laravel/roster` to `^1.0`
+
+### The `Roster` Class
+
+Likelihood Of Impact: High
+
+The `Laravel\Roster\Roster` class and its static `scan` entry point have been removed in favour of the `Laravel\Roster\Facades\Project` facade, which reads your project's lockfiles and configuration markers. Calls to `Roster::scan()` should be replaced with `Project::scan()`:
+
+```php
+// 0.x...
+use Laravel\Roster\Roster;
+
+Roster::scan();
+
+// 1.0...
+use Laravel\Roster\Facades\Project;
+
+Project::scan();
+```
+
+### The `Packages` Enum
+
+Likelihood Of Impact: High
+
+The curated `Packages` enum and its alias registry have been removed. Package checks now accept the raw package names you would write in your `composer.json` or `package.json` files, and are invoked on the `php()` or `js()` ecosystem of the `Project` facade:
+
+```php
+// 0.x...
+$roster->uses(Packages::INERTIA_LARAVEL);
+
+// 1.0...
+Project::php()->uses('inertiajs/inertia-laravel');
+```
+
+In addition, the `usesVersion` method has been removed. Its operator argument is replaced by a composer-semver constraint string passed as the second argument to the `uses` method:
+
+```php
+// 0.x...
+$roster->usesVersion(Packages::PEST, '3.0.0', '>=');
+$roster->usesVersion(Packages::PEST, '3.0.0', '=');
+
+// 1.0...
+Project::php()->uses('pestphp/pest', '>=3.0.0');
+Project::php()->uses('pestphp/pest', '3.0.0');
+```
+
+### Version Constraints
+
+Likelihood Of Impact: High
+
+A bare version string such as `1.2.3` means an exact match, mirroring the `usesVersion` method's default `=` operator in 0.x. Calls that passed an explicit operator should fold it into the constraint string:
+
+```php
+// 0.x...
+$roster->usesVersion(Packages::PEST, '3.0.0', '>=');
+
+// 1.0...
+Project::php()->uses('pestphp/pest', '>=3.0.0');
+```
+
+The constraint argument accepts any composer-semver expression, such as `^1.2.3`, `~1.2`, `>=11 <14`, or `1.0 || ^2.0`.
+
+### The `Package` Class
+
+Likelihood Of Impact: Medium
+
+Several methods on the `Laravel\Roster\Package` class have been renamed:
+
+| 0.x | 1.0 |
+| --- | --- |
+| `$package->majorVersion()` | `$package->major()` (returns `?int`, `null` when the version is unknown) |
+| `$package->direct()` / `$package->indirect()` | `$package->isDirect()` |
+
+Package collections are now retrieved per ecosystem via `Project::php()->packages()` and `Project::js()->packages()` instead of a single `$roster->packages()` call.
+
+### Stack Detection
+
+Likelihood Of Impact: Medium
+
+Stack detection is new in 1.0. The `Project` facade exposes a `stacks` method that returns an `EnumSet` containing every detected stack. Membership is checked via the `uses` method:
+
+```php
+Project::stacks()->uses(Stack::InertiaReact);
+```
+
+### The `Ides` Enum
+
+Likelihood Of Impact: Medium
+
+The `Ides` enum has been removed and split into two enums: `Laravel\Roster\Enums\Agent` for AI coding tools (Claude Code, Cursor, Codex, etc.) and `Laravel\Roster\Enums\Editor` for IDEs (PHPStorm, VSCode, Zed, Sublime Text). Each is detected through the project's filesystem markers:
+
+```php
+Project::agents()->uses(Agent::ClaudeCode);
+Project::editors()->uses(Editor::PhpStorm);
+```
+
+### JS Package Managers
+
+Likelihood Of Impact: Medium
+
+The `NodePackageManager` enum has been renamed to `JsPackageManager`, and the `nodePackageManager` method has been replaced by `Project::js()->packageManager()`, which returns a nullable `JsPackageManager` based on the committed lockfile:
+
+```php
+// 0.x...
+$roster->nodePackageManager();
+
+// 1.0...
+Project::js()->packageManager(); // ?JsPackageManager
+```
+
+Bun is detected via either `bun.lock` or `bun.lockb`. Since `bun.lockb` is a binary format, package scanning falls back to the direct dependencies declared in `package.json` when only `bun.lockb` is committed.
+
+### Removed Detections
+
+Likelihood Of Impact: Medium
+
+The `TestFramework` and `StarterKit` detections have been removed. Test frameworks may be checked as ordinary packages instead:
+
+```php
+Project::php()->uses('pestphp/pest');
+```
+
+Detection of binaries installed on the host machine has also been removed; Roster now only reports on the project itself.
+
+### The `Approaches` Enum
+
+Likelihood Of Impact: Low
+
+The `Approaches` enum has been renamed to `Approach` (singular), and its wrapping value class has been removed. Detected approaches are reported through the `approaches` method on the `Project` facade. Detection now reads the project's source code rather than its directory layout; the former directory-based cases (`ACTION`, `DDD`, `MODULAR`) have been removed in favour of stylistic conventions such as mass assignment, validation, and enum casing:
+
+```php
+Project::approaches()->uses(Approach::MassAssignmentFillable);
+Project::approaches()->uses([Approach::ValidationPipeSyntax, Approach::ValidationArraySyntax]);
+```
+
+### The `roster:scan` Command
+
+Likelihood Of Impact: Low
+
+The `roster:scan` Artisan command's directory argument is now optional and defaults to the application's base path. The command emits the project surface as a JSON document, and you may pass `--approaches` to include source-code approach detection:
+
+```bash
+php artisan roster:scan /path/to/project --approaches
+```

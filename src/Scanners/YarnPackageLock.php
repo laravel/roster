@@ -1,37 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laravel\Roster\Scanners;
 
-use Illuminate\Support\Collection;
-use Laravel\Roster\Approach;
-use Laravel\Roster\Package;
+use Laravel\Roster\PackageCollection;
 
-class YarnPackageLock extends BasePackageScanner
+class YarnPackageLock extends JsPackageScanner
 {
-    private const YARN_V1_HEADER = '/^("?)(@[^@"\/]+\/[^@"]+|[^@"]+)(@[^:"]+)?\1:$/';
-
     private const YARN_V4_HEADER = '/^"(@?[^@"]+(?:\/[^@"]+)?)@npm:[^"]*":\s*$/';
 
     private const YARN_V1_VERSION = '/^version\s+"([^"]+)"$/';
 
     private const YARN_V4_VERSION = '/^version:\s+(.+)$/';
 
-    protected function lockFile(): string
+    public function scan(): PackageCollection
     {
-        return 'yarn.lock';
-    }
+        $packages = new PackageCollection;
+        $lockFilePath = $this->path.'yarn.lock';
 
-    /**
-     * @return Collection<int, Package|Approach>
-     */
-    public function scan(): Collection
-    {
-        $mappedItems = collect();
-        $lockFilePath = $this->lockFilePath();
+        $contents = $this->readContents($lockFilePath, 'yarn.lock');
 
-        $contents = $this->validateFile($lockFilePath, 'Yarn lock');
         if ($contents === null) {
-            return $mappedItems;
+            $this->failed = true;
+
+            return $packages;
         }
 
         $dependencies = [];
@@ -41,7 +34,11 @@ class YarnPackageLock extends BasePackageScanner
         foreach ($lines as $line) {
             $line = trim($line);
 
-            if ($line === '' || str_starts_with($line, '#')) {
+            if ($line === '') {
+                continue;
+            }
+
+            if (str_starts_with($line, '#')) {
                 continue;
             }
 
@@ -61,23 +58,44 @@ class YarnPackageLock extends BasePackageScanner
             }
         }
 
-        // Yarn lock does not distinguish devDependencies :/
-        $this->processDependencies($dependencies, $mappedItems, false);
+        if ($dependencies === []) {
+            $this->failed = true;
 
-        return $mappedItems;
+            return $packages;
+        }
+
+        $this->processDependencies($dependencies, $packages, false);
+
+        return $packages;
     }
 
     private function parsePackageHeader(string $line): ?string
     {
-        if (preg_match(self::YARN_V1_HEADER, $line, $matches)) {
-            return $matches[2];
-        }
-
         if (preg_match(self::YARN_V4_HEADER, $line, $matches)) {
             return $matches[1];
         }
 
-        return null;
+        if (! str_ends_with($line, ':')) {
+            return null;
+        }
+
+        // yarn v1: `lodash@^4.0.0:`, `"@babel/core@^7.0.0", "@babel/core@^7.2.0":`.
+        $selector = trim((string) strtok(substr($line, 0, -1), ','), " \t\"");
+
+        // Split at the first `@` past the leading scope marker: package names
+        // cannot contain `@`, while ranges may (patch:, git+ssh:// selectors).
+        $position = strpos($selector, '@', 1);
+
+        if ($position === false || $position === 0) {
+            return null;
+        }
+
+        // Skip workspace selectors (`my-app@workspace:.`, `pkg-a@workspace:pkgs/a`):
+        if (str_starts_with(substr($selector, $position + 1), 'workspace:')) {
+            return null;
+        }
+
+        return substr($selector, 0, $position);
     }
 
     private function parseVersion(string $line): ?string

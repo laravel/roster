@@ -1,0 +1,4 @@
+{
+    "name": "acme/camel-enums-app",
+    "autoload": { "psr-4": { "App\\": "app/" } }
+}

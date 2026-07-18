@@ -8,3 +8,4 @@ composer.lock
 /phpunit.xml
 .phpunit.result.cache
 .claude
+approach-candidates.md

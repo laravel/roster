@@ -1,0 +1,4 @@
+{
+    "name": "acme/interpolated-enums-app",
+    "autoload": { "psr-4": { "App\\": "app/" } }
+}
