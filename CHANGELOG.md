@@ -1,6 +1,31 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/roster/compare/v0.5.1...main)
+## [Unreleased](https://github.com/laravel/roster/compare/v1.0.0...main)
+
+## [v1.0.0](https://github.com/laravel/roster/compare/v0.5.1...v1.0.0) - 2026-07-18
+
+Upgrade guide: https://github.com/laravel/roster/blob/main/UPGRADE.md
+
+### What's Changed
+
+* Makes imports consistent by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/roster/pull/45
+* Pin GitHub Actions to commit SHAs and add Dependabot config by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/roster/pull/47
+* chore(deps): bump shivammathur/setup-php from 2.37.0 to 2.37.1 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/roster/pull/51
+* Add Dependabot cooldown of 5 days by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/roster/pull/52
+* Enable Dependabot auto-merge by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/roster/pull/53
+* chore(deps): bump actions/checkout from 6.0.2 to 6.0.3 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/roster/pull/54
+* chore(deps): bump shivammathur/setup-php from 2.37.1 to 2.37.2 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/roster/pull/56
+* chore(deps): bump actions/checkout from 6.0.3 to 7.0.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/roster/pull/57
+* Redesign detection API around ecosystems and detectors by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/48
+* Sync 1.x into main by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/roster/pull/66
+
+### New Contributors
+
+* [@nunomaduro](https://github.com/nunomaduro) made their first contribution in https://github.com/laravel/roster/pull/45
+* [@joetannenbaum](https://github.com/joetannenbaum) made their first contribution in https://github.com/laravel/roster/pull/47
+* [@dependabot](https://github.com/dependabot)[bot] made their first contribution in https://github.com/laravel/roster/pull/51
+
+**Full Changelog**: https://github.com/laravel/roster/compare/v0.5.1...v1.0.0
 
 ## [v0.5.1](https://github.com/laravel/roster/compare/v0.5.0...v0.5.1) - 2026-03-05
 
