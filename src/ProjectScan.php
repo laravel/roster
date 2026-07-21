@@ -44,6 +44,7 @@ class ProjectScan
         protected EnumSet $frontends,
         protected EnumSet $agents,
         protected EnumSet $editors,
+        protected ?string $minimumPhpVersion = null,
     ) {
         //
     }
@@ -51,6 +52,11 @@ class ProjectScan
     public function php(): Ecosystem
     {
         return $this->php;
+    }
+
+    public function minimumPhpVersion(): string
+    {
+        return $this->minimumPhpVersion ?? PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
     }
 
     public function js(): JsEcosystem
@@ -99,7 +105,8 @@ class ProjectScan
     {
         $basePath = self::normalizeBasePath($basePath);
 
-        $phpPackages = (new ComposerLock($basePath))->scan();
+        $composer = new ComposerLock($basePath);
+        $phpPackages = $composer->scan();
 
         $jsLockfile = new JsLockfile($basePath);
         $jsPackages = $jsLockfile->scan();
@@ -116,6 +123,7 @@ class ProjectScan
             new EnumSet(FrontendDetector::detect($js)),
             new EnumSet(AgentsDetector::detect($basePath)),
             new EnumSet(EditorsDetector::detect($basePath)),
+            $composer->minimumPhpVersion(),
         );
     }
 
@@ -147,6 +155,7 @@ class ProjectScan
     {
         return [
             'php' => array_map(fn (Package $package): array => $package->toArray(), $this->php->packages()->all()),
+            'minimumPhpVersion' => $this->minimumPhpVersion(),
             'js' => array_map(fn (Package $package): array => $package->toArray(), $this->js->packages()->all()),
             'stacks' => $this->stacks->values(),
             'browserTestFrameworks' => $this->browserTestFrameworks->values(),
@@ -191,6 +200,7 @@ class ProjectScan
      *     frontends: EnumSet<Frontend>,
      *     agents: EnumSet<Agent>,
      *     editors: EnumSet<Editor>,
+     *     minimumPhpVersion: ?string,
      * }  $properties
      */
     public function __unserialize(array $properties): void
