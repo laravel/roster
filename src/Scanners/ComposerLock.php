@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Laravel\Roster\Scanners;
 
+use Composer\Semver\VersionParser;
 use Laravel\Roster\Enums\PackageSource;
 use Laravel\Roster\PackageCollection;
+use UnexpectedValueException;
 
 class ComposerLock extends PackageScanner
 {
@@ -27,6 +29,33 @@ class ComposerLock extends PackageScanner
         $this->processDependencies($this->versions($json['packages-dev'] ?? null), $packages, true, authoritative: true);
 
         return $packages;
+    }
+
+    public function minimumPhpVersion(): ?string
+    {
+        $require = $this->manifest()['require'] ?? null;
+
+        if (! is_array($require) || ! is_string($require['php'] ?? null)) {
+            return null;
+        }
+
+        try {
+            $lowerBound = (new VersionParser)
+                ->parseConstraints($require['php'])
+                ->getLowerBound();
+        } catch (UnexpectedValueException) {
+            return null;
+        }
+
+        if ($lowerBound->isZero()) {
+            return null;
+        }
+
+        if (preg_match('/^(\d+)\.(\d+)/', $lowerBound->getVersion(), $matches) !== 1) {
+            return null;
+        }
+
+        return $matches[1].'.'.$matches[2];
     }
 
     protected function source(): PackageSource
