@@ -118,11 +118,32 @@ class ComposerLock extends PackageScanner
             }
 
             $version = $raw['version'] ?? null;
+            $version = is_string($version) ? $version : '';
 
-            $versions[$name] = is_string($version) ? $version : '';
+            $versions[$name] = $this->resolveBranchAlias($raw, $version);
         }
 
         return $versions;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $raw
+     */
+    private function resolveBranchAlias(array $raw, string $version): string
+    {
+        if (! str_starts_with($version, 'dev-')) {
+            return $version;
+        }
+
+        $extra = $raw['extra'] ?? null;
+
+        if (! is_array($extra) || ! is_array($extra['branch-alias'] ?? null)) {
+            return $version;
+        }
+
+        $alias = $extra['branch-alias'][$version] ?? null;
+
+        return is_string($alias) ? $alias : $version;
     }
 
     private function vendorDir(): string
