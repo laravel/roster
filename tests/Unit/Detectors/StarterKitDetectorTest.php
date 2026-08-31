@@ -27,6 +27,21 @@ it('exposes the starter kit through the project scan', function (): void {
         ->and(unserialize(serialize($project))->starterKit())->toBe('laravel/agent-kit');
 });
 
+it('unserializes a payload cached before starter kit detection', function (): void {
+    $base = tempBase();
+    file_put_contents($base.'composer.json', json_encode([
+        'extra' => ['laravel' => ['starter-kit' => 'laravel/agent-kit']],
+    ]));
+
+    $properties = ProjectScan::scan($base)->__serialize();
+    unset($properties['starterKit']);
+
+    $restored = (new ReflectionClass(ProjectScan::class))->newInstanceWithoutConstructor();
+    $restored->__unserialize($properties);
+
+    expect($restored->starterKit())->toBeNull();
+});
+
 it('returns null without a composer.json', function (): void {
     expect(StarterKitDetector::detect(tempBase()))->toBeNull();
 });
