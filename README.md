@@ -11,6 +11,7 @@
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
 - [Detecting Packages](#detecting-packages)
+    - [Minimum PHP Version](#minimum-php-version)
     - [Version Constraints](#version-constraints)
     - [Checking Multiple Packages](#checking-multiple-packages)
     - [Retrieving Packages](#retrieving-packages)
@@ -79,6 +80,14 @@ The `uses` method returns `true` when **any** of the given packages is present, 
 ```php
 $project->php()->uses('pestphp/pest');
 $project->js()->uses('@inertiajs/react');
+```
+
+### Minimum PHP Version
+
+The PHP ecosystem reports the minimum major and minor version allowed by the root `composer.json` requirement. When the requirement is missing or has no usable lower bound, Roster falls back to the running PHP version:
+
+```php
+$project->minimumPhpVersion(); // "8.3"
 ```
 
 ### Version Constraints

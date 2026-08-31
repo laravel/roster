@@ -59,6 +59,11 @@ class ProjectManager
         return $this->instance()->php();
     }
 
+    public function minimumPhpVersion(): string
+    {
+        return $this->instance()->minimumPhpVersion();
+    }
+
     public function js(): JsEcosystem
     {
         return $this->instance()->js();
@@ -158,7 +163,7 @@ class ProjectManager
 
     private function cacheKey(string $basePath): string
     {
-        return 'roster:project:v3:'.md5(
+        return 'roster:project:v4:'.md5(
             $basePath.'|'.$this->lockfileHash($basePath).'|'.$this->markerHash($basePath)
         );
     }

@@ -156,3 +156,42 @@ it('leaves the constraint blank for transitive packages and normalizes the versi
 
     cleanup($base);
 });
+
+it('finds the minimum PHP minor version from the root requirement', function (string $constraint, string $version): void {
+    $base = tempBase();
+
+    file_put_contents($base.'composer.json', json_encode([
+        'require' => ['php' => $constraint],
+    ]));
+
+    expect((new ComposerLock($base))->minimumPhpVersion())->toBe($version);
+
+    cleanup($base);
+})->with([
+    'caret' => ['^8.3', '8.3'],
+    'tilde with patch' => ['~8.2.5', '8.2'],
+    'bounded range' => ['>=8.1 <8.5', '8.1'],
+    'disjunction' => ['^8.2 || ^8.4', '8.2'],
+    'exclusive lower bound' => ['>8.3.0', '8.3'],
+    'wildcard minor' => ['8.4.*', '8.4'],
+]);
+
+it('does not infer a minimum PHP version from an unusable requirement', function (?string $constraint): void {
+    $base = tempBase();
+
+    if ($constraint !== null) {
+        file_put_contents($base.'composer.json', json_encode([
+            'require' => ['php' => $constraint],
+        ]));
+    }
+
+    expect((new ComposerLock($base))->minimumPhpVersion())->toBeNull();
+
+    cleanup($base);
+})->with([
+    'missing manifest' => [null],
+    'unbounded wildcard' => ['*'],
+    'upper bound only' => ['<8.4'],
+    'development branch' => ['dev-main'],
+    'invalid constraint' => ['not-a-version'],
+]);

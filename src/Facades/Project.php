@@ -12,6 +12,7 @@ use Laravel\Roster\ProjectManager;
  * @method static \Laravel\Roster\ProjectScan fresh(?string $basePath = null)
  * @method static \Laravel\Roster\ProjectScan instance()
  * @method static \Laravel\Roster\Ecosystems\Ecosystem php()
+ * @method static string minimumPhpVersion()
  * @method static \Laravel\Roster\Ecosystems\JsEcosystem js()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\Stack> stacks()
  * @method static \Laravel\Roster\Support\EnumSet<\Laravel\Roster\Enums\BrowserTestFramework> browserTestFrameworks()
