@@ -180,6 +180,14 @@ $project->agents()->uses([Agent::ClaudeCode, Agent::Cursor]);
 $project->editors()->uses(Editor::PhpStorm);
 ```
 
+## Detecting Starter Kits
+
+Starter kits declare themselves through the `extra.laravel.starter-kit` key in the project's `composer.json`. The `starterKit` method returns that declaration, or `null` when the project does not declare one:
+
+```php
+$project->starterKit(); // 'laravel/agent-kit' or null
+```
+
 ## Detecting JS Package Managers
 
 The `$project->js()->packageManager()` method reports the package manager indicated by the project's lockfile as a nullable enum (`package-lock.json` indicates npm, `pnpm-lock.yaml` indicates pnpm, and so on):

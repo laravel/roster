@@ -94,6 +94,11 @@ class ProjectManager
         return $this->instance()->editors();
     }
 
+    public function starterKit(): ?string
+    {
+        return $this->instance()->starterKit();
+    }
+
     public function approaches(): ApproachSet
     {
         return $this->instance()->approaches();
