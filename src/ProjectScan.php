@@ -11,6 +11,7 @@ use Laravel\Roster\Detectors\BrowserTestFrameworkDetector;
 use Laravel\Roster\Detectors\EditorsDetector;
 use Laravel\Roster\Detectors\FrontendDetector;
 use Laravel\Roster\Detectors\StackDetector;
+use Laravel\Roster\Detectors\StarterKitDetector;
 use Laravel\Roster\Ecosystems\Ecosystem;
 use Laravel\Roster\Ecosystems\JsEcosystem;
 use Laravel\Roster\Enums\Agent;
@@ -45,6 +46,7 @@ class ProjectScan
         protected EnumSet $agents,
         protected EnumSet $editors,
         protected ?string $minimumPhpVersion = null,
+        protected ?string $starterKit = null,
     ) {
         //
     }
@@ -94,6 +96,11 @@ class ProjectScan
         return $this->editors;
     }
 
+    public function starterKit(): ?string
+    {
+        return $this->starterKit;
+    }
+
     public function approaches(): ApproachSet
     {
         return $this->approaches ??= new ApproachSet(
@@ -124,6 +131,7 @@ class ProjectScan
             new EnumSet(AgentsDetector::detect($basePath)),
             new EnumSet(EditorsDetector::detect($basePath)),
             $composer->minimumPhpVersion(),
+            StarterKitDetector::detect($basePath),
         );
     }
 
@@ -163,6 +171,7 @@ class ProjectScan
             'agents' => $this->agents->values(),
             'editors' => $this->editors->values(),
             'jsPackageManager' => $this->js->packageManager()?->value,
+            'starterKit' => $this->starterKit,
         ];
     }
 
@@ -201,6 +210,7 @@ class ProjectScan
      *     agents: EnumSet<Agent>,
      *     editors: EnumSet<Editor>,
      *     minimumPhpVersion: ?string,
+     *     starterKit?: string|null,
      * }  $properties
      */
     public function __unserialize(array $properties): void
@@ -208,6 +218,8 @@ class ProjectScan
         foreach ($properties as $property => $value) {
             $this->{$property} = $value;
         }
+
+        $this->starterKit = $properties['starterKit'] ?? null;
 
         $this->approaches = null;
     }

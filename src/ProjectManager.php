@@ -99,6 +99,11 @@ class ProjectManager
         return $this->instance()->editors();
     }
 
+    public function starterKit(): ?string
+    {
+        return $this->instance()->starterKit();
+    }
+
     public function approaches(): ApproachSet
     {
         return $this->instance()->approaches();
@@ -158,7 +163,7 @@ class ProjectManager
 
     private function cacheKey(string $basePath): string
     {
-        return 'roster:project:v4:'.md5(
+        return 'roster:project:v5:'.md5(
             $basePath.'|'.$this->lockfileHash($basePath).'|'.$this->markerHash($basePath)
         );
     }
