@@ -147,7 +147,7 @@ $project->php()->packages()->direct();
 ```
 
 > [!NOTE]
-> The development classification of *transitive* packages is available only for Composer and npm lockfiles. Yarn, pnpm, and Bun lockfiles report transitive packages as production dependencies. Direct dependencies are classified using authoritative lockfile metadata when available and manifest data otherwise.
+> The development classification of *transitive* packages is available only for Composer and npm lockfiles. Yarn, pnpm, Bun, and Nub lockfiles report transitive packages as production dependencies. Direct dependencies are classified using authoritative lockfile metadata when available and manifest data otherwise.
 
 ## Detecting Stacks and Frontends
 
@@ -214,7 +214,9 @@ $project->js()->usesPackageManager(JsPackageManager::Pnpm);
 $project->js()->usesPackageManager('pnpm');
 ```
 
-Projects should commit only one supported JavaScript lockfile. If multiple lockfiles are present, Roster selects the first match in this order: npm, pnpm, Yarn, then Bun.
+Nub projects are detected through `nub.lock` and reported as `JsPackageManager::Nub` (or `'nub'`). Its pnpm v9 format is scanned for direct and transitive dependencies using the same parser as pnpm.
+
+Projects should commit only one supported JavaScript lockfile. If multiple lockfiles are present, Roster selects the first match in this order: npm, pnpm, Yarn, Bun, then Nub.
 
 ## Detecting Approaches
 

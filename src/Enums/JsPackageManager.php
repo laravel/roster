@@ -10,6 +10,7 @@ enum JsPackageManager: string
     case Pnpm = 'pnpm';
     case Yarn = 'yarn';
     case Bun = 'bun';
+    case Nub = 'nub';
 
     public function lockFile(): string
     {
@@ -26,6 +27,7 @@ enum JsPackageManager: string
             self::Pnpm => ['pnpm-lock.yaml'],
             self::Yarn => ['yarn.lock'],
             self::Bun => ['bun.lock', 'bun.lockb'],
+            self::Nub => ['nub.lock'],
         };
     }
 }
