@@ -45,7 +45,7 @@ class JsLockfile
     {
         return match ($manager) {
             JsPackageManager::Npm => new NpmPackageLock($this->path),
-            JsPackageManager::Pnpm => new PnpmPackageLock($this->path),
+            JsPackageManager::Pnpm, JsPackageManager::Nub => new PnpmPackageLock($this->path, $manager->lockFile()),
             JsPackageManager::Yarn => new YarnPackageLock($this->path),
             JsPackageManager::Bun => new BunPackageLock($this->path),
         };

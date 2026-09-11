@@ -7,6 +7,7 @@ use Illuminate\Cache\Repository;
 use Illuminate\Contracts\Cache\Factory;
 use Laravel\Roster\Enums\Agent;
 use Laravel\Roster\Enums\Approach;
+use Laravel\Roster\Enums\JsPackageManager;
 use Laravel\Roster\ProjectManager;
 use Tests\TestCase;
 
@@ -57,6 +58,28 @@ it('returns the cached project for an unchanged directory', function (): void {
     expect($manager->scan($base))->toBe($manager->scan($base));
 
     cleanup($base);
+});
+
+it('invalidates the cache when nub.lock appears or changes', function (): void {
+    config()->set('cache.default', 'array');
+
+    $base = fixtureCopy(['fog/package.json' => 'package.json']);
+    $manager = new ProjectManager;
+
+    expect($manager->scan($base)->js()->packageManager())->toBeNull();
+
+    $contents = file_get_contents(__DIR__.'/../fixtures/fog/pnpm-lock.yaml');
+    file_put_contents($base.'nub.lock', $contents);
+
+    $project = $manager->scan($base);
+    expect($project->js()->usesPackageManager(JsPackageManager::Nub))->toBeTrue()
+        ->and($project->js()->usesPackageManager('nub'))->toBeTrue()
+        ->and($project->toArray()['jsPackageManager'])->toBe('nub')
+        ->and($project->js()->uses('tailwindcss', '3.4.3'))->toBeTrue();
+
+    file_put_contents($base.'nub.lock', str_replace('3.4.3', '3.4.4', $contents));
+
+    expect($manager->scan($base)->js()->uses('tailwindcss', '3.4.4'))->toBeTrue();
 });
 
 it('fresh bypasses the cache and forces a re-read', function (): void {
