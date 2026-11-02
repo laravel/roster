@@ -229,3 +229,57 @@ it('parses v5 keys with underscore peer suffixes', function (): void {
         ->and($babel)->not->toBeNull()
         ->and($babel->version())->toEqual('7.0.0');
 });
+
+it('parses pnpm 12 lockfiles with a leading package manager document', function (): void {
+    $lock = <<<'YAML'
+    ---
+    lockfileVersion: '9.0'
+
+    importers:
+
+      .:
+        configDependencies: {}
+        packageManagerDependencies:
+          pnpm:
+            specifier: 12.17.0
+            version: 12.17.0
+
+    packages:
+
+      pnpm@12.17.0:
+        resolution: {integrity: sha512-pnpm==}
+
+    ---
+    lockfileVersion: '9.0'
+
+    settings:
+      autoInstallPeers: true
+      excludeLinksFromLockfile: false
+
+    importers:
+
+      .:
+        devDependencies:
+          prettier:
+            specifier: 3.9.10
+            version: 3.9.10
+
+    packages:
+
+      prettier@3.9.10:
+        resolution: {integrity: sha512-abc==}
+    YAML;
+
+    $base = writePnpmProject($lock, json_encode(['devDependencies' => ['prettier' => '3.9.10']]));
+
+    $scanner = new PnpmPackageLock($base);
+    $packages = $scanner->scan();
+
+    $prettier = $packages->first(fn ($p): bool => $p->name() === 'prettier');
+
+    expect($scanner->failed())->toBeFalse()
+        ->and($prettier)->not->toBeNull()
+        ->and($prettier->version())->toEqual('3.9.10')
+        ->and($prettier->isDev())->toBeTrue()
+        ->and($packages->first(fn ($p): bool => $p->name() === 'pnpm'))->toBeNull();
+});

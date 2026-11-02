@@ -54,7 +54,7 @@ class BunPackageLock extends JsPackageScanner
                 continue;
             }
 
-            if (isset($byName[$name]) && ! ($topLevel && ! $byName[$name]['topLevel'])) {
+            if (isset($byName[$name]) && (! $topLevel || $byName[$name]['topLevel'])) {
                 continue;
             }
 

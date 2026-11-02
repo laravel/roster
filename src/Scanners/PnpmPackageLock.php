@@ -29,7 +29,12 @@ class PnpmPackageLock extends JsPackageScanner
         }
 
         try {
-            $parsed = Yaml::parse($contents);
+            $documents = array_filter(
+                preg_split('/^---\s*$/m', $contents) ?: [],
+                fn (string $document): bool => trim($document) !== '',
+            );
+
+            $parsed = Yaml::parse((string) end($documents));
         } catch (Exception) {
             $this->warn('Failed to parse '.$this->lockFile.': '.$lockFilePath);
 
