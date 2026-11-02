@@ -32,11 +32,11 @@ class Package
 
     public function major(): ?int
     {
-        if ($this->version === '') {
+        if (preg_match('/^v?(\d+)/', $this->version, $matches) !== 1) {
             return null;
         }
 
-        return (int) explode('.', $this->version)[0];
+        return (int) $matches[1];
     }
 
     public function isDev(): bool

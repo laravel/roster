@@ -16,3 +16,9 @@ it('reports null major when the version is unknown', function (): void {
 
     expect($package->major())->toBeNull();
 });
+
+it('reports null major for branch versions without a numeric alias', function (): void {
+    $package = new Package('laravel/wayfinder', 'dev-next', PackageSource::Composer);
+
+    expect($package->major())->toBeNull();
+});

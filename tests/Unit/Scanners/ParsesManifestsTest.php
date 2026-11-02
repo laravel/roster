@@ -26,7 +26,9 @@ it('pins normalizeVersion behavior for common constraint shapes', function (): v
         ->and($subject::normalize('1.0.0 - 2.0.0'))->toBe('1.0.0')
         ->and($subject::normalize('>=1.2.0 <2.0.0'))->toBe('1.2.0')
         ->and($subject::normalize('workspace:*'))->toBe('')
-        ->and($subject::normalize('*'))->toBe('');
+        ->and($subject::normalize('*'))->toBe('')
+        ->and($subject::normalize('dev-next'))->toBe('dev-next')
+        ->and($subject::normalize('dev-main'))->toBe('dev-main');
 });
 
 it('classifies a dependency listed in both sections as production', function (): void {

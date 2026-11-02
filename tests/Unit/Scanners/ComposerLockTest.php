@@ -43,6 +43,32 @@ it('strips composer version prefixes', function (): void {
     cleanup($base);
 });
 
+it('preserves branch versions and resolves declared branch aliases', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base.'composer.lock', json_encode([
+        'packages' => [
+            ['name' => 'laravel/wayfinder', 'version' => 'dev-next'],
+            ['name' => 'livewire/livewire', 'version' => 'dev-main', 'extra' => ['branch-alias' => ['dev-main' => '3.x-dev']]],
+        ],
+        'packages-dev' => [],
+    ]));
+
+    $packages = (new ComposerLock($base))->scan();
+
+    $wayfinder = $packages->first(fn ($p): bool => $p->name() === 'laravel/wayfinder');
+    expect($wayfinder)->not->toBeNull();
+    expect($wayfinder->version())->toEqual('dev-next');
+    expect($wayfinder->major())->toBeNull();
+
+    $livewire = $packages->first(fn ($p): bool => $p->name() === 'livewire/livewire');
+    expect($livewire)->not->toBeNull();
+    expect($livewire->version())->toEqual('3');
+    expect($livewire->major())->toBe(3);
+
+    cleanup($base);
+});
+
 it('respects composer vendor-dir config', function (): void {
     $base = tempBase();
 
